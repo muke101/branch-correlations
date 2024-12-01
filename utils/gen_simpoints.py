@@ -18,19 +18,18 @@ bench_names = []
 def run_test():
     sub_spec = ["602.gcc_s", "657.xs_s", "648.exchange2_s"]
     for bench in sub_spec:
-        os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000")
+        os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/modified/run_peak_refspeed_mytest-64.0000")
         specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
         commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if line.startswith(b".")]
         for c, command in enumerate(commands):
             command = command.split('>')[0]
             bench_name = bench+"."+str(c)
             bench_names.append(bench_name)
-            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs/bb.out."+bench_name+" "+command, shell=True)
+            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs-expanded/bb.out."+bench_name+" "+command, shell=True)
             procs.append(p)
 
     return procs
 
-#FIXME: names for new workloads
 def run_train():
     for bench in spec:
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_train_mytest-64.0000")
@@ -38,15 +37,13 @@ def run_train():
         commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if line.startswith(b".")]
         for c, command in enumerate(commands):
             command = command.split('>')[0]
-            bench_name = bench+"."+str(c)
+            bench_name = bench+".train."+str(c)
             bench_names.append(bench_name)
-            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs/bb.out."+bench_name+" "+command, shell=True)
+            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs-expanded/bb.out."+bench_name+" "+command, shell=True)
             procs.append(p)
 
     return procs
 
-#NOTE: make sure test is running before this runs
-#TODO: handle x264 input gen
 def run_alberta():
     for bench in spec:
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000")
@@ -58,9 +55,12 @@ def run_alberta():
             control = open("control", "r")
             flags = control.readlines()[0].strip()
             command = binary + ' ' + flags
-            bench_name = bench+"."+str(c)
+            bench_name = bench+"."+workload
             bench_names.append(bench_name)
-            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs/bb.out."+bench_name+" "+command, shell=True)
+            if bench == "625.x264_s":
+                input_name = workload[0].upper()+workload[1:]+".264"
+                subprocess.run("./ldecod_s_peak.mytest-64 -i "+input_name+".264 -o "+input_name+".yuv", capture_output=True, shell=True)
+            p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs-expanded/bb.out."+bench_name+" "+command, shell=True)
             procs.append(p)
 
     return procs
@@ -72,7 +72,7 @@ for p in procs:
     Popen.wait(p)
 
 for bench in bench_names:
-    subprocess.run([simpoint, "-loadFVFile", "/sim_home/luke/bbvs/bb.out."+bench,
+    subprocess.run([simpoint, "-loadFVFile", "/sim_home/luke/bbvs-expanded/bb.out."+bench,
             "-k", "search", "-maxK", "10", "-saveSimpoints",
-            "/sim_home/luke/simpoints/"+bench+".simpts", "-saveSimpointWeights",
-            "/sim_home/luke/simpoints/"+bench+".weights"])
+            "/sim_home/luke/simpoints-expanded/"+bench+".simpts", "-saveSimpointWeights",
+            "/sim_home/luke/simpoints-expanded/"+bench+".weights"])
