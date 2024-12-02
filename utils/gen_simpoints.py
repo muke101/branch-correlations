@@ -58,7 +58,7 @@ def run_alberta():
             bench_name = bench+"."+workload
             bench_names.append(bench_name)
             if bench == "625.x264_s":
-                input_name = workload[0].upper()+workload[1:]+".264"
+                input_name = workload[0].upper()+workload[1:]
                 subprocess.run("./ldecod_s_peak.mytest-64 -i "+input_name+".264 -o "+input_name+".yuv", capture_output=True, shell=True)
             p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs-expanded/bb.out."+bench_name+" "+command, shell=True)
             procs.append(p)
