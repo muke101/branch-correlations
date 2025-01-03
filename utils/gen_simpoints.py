@@ -47,19 +47,17 @@ def run_train():
 def run_alberta():
     for bench in spec:
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000")
-        bench_name = bench.split('.')[1].split('_')[0]
-        for workload in os.listdir(workloads+bench_name):
-            subprocess.run("cp -r "+workloads+bench_name+"/"+workload+"/input/* .", shell=True)
+        stripped_name = bench.split('.')[1].split('_')[0]
+        for workload in os.listdir(workloads+stripped_name):
+            subprocess.run("cp -r "+workloads+stripped_name+"/"+workload+"/input/* .", shell=True)
             if bench == "602.gcc_s": binary = "sgcc_peak.mytest-64"
-            else: binary = bench.split('.')[1]+"_s_peak.mytest-64"
+            else: binary = bench.split('.')[1]+"_peak.mytest-64"
             control = open("control", "r")
             flags = control.readlines()[0].strip()
-            command = binary + ' ' + flags
+            control.close()
+            command = "./"+binary + ' ' + flags
             bench_name = bench+"."+workload
             bench_names.append(bench_name)
-            if bench == "625.x264_s":
-                input_name = workload[0].upper()+workload[1:]
-                subprocess.run("./ldecod_s_peak.mytest-64 -i "+input_name+".264 -o "+input_name+".yuv", capture_output=True, shell=True)
             p = Popen(valgrind+" --tool=exp-bbv " + " --bb-out-file=/sim_home/luke/bbvs-expanded/bb.out."+bench_name+" "+command, shell=True)
             procs.append(p)
 
@@ -69,7 +67,8 @@ procs += run_test()
 procs += run_train()
 procs += run_alberta()
 for p in procs:
-    Popen.wait(p)
+    code = Popen.wait(p)
+    if code is not None and code != 0: print("CRASH: ", p.args); exit(1)
 
 for bench in bench_names:
     subprocess.run([simpoint, "-loadFVFile", "/sim_home/luke/bbvs-expanded/bb.out."+bench,
