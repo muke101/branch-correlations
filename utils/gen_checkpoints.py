@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 bench = args.bench.split(',')[0]
 run = args.run.split(',')[0]
-checkpoint_path = "/work/muke/checkpoints-expanded/"+bench
+checkpoint_path = "/mnt/data/checkpoints-expanded/"+bench
 if 'train' in run:
     run_number = int(run.split('.')[1])
     work_dir = "modified/run_peak_train_mytest-64.0000"

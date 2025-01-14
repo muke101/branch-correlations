@@ -14,7 +14,7 @@ parser.add_argument('--bench', type=str, required=True)
 args = parser.parse_args()
 
 bench = args.bench.split(',')[0]
-checkpoint_path = "/work/muke/checkpoints-expanded/"+bench
+checkpoint_path = "/mnt/data/checkpoints-expanded/"+bench
 
 os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000")
 stripped_name = bench.split('.')[1].split('_')[0]

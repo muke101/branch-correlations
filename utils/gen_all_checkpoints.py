@@ -17,12 +17,12 @@ procs = []
 
 def load_balance():
     time.sleep(60*5)
-    while psutil.virtual_memory().percent > 70 and psutil.cpu_percent() > 80: time.sleep(60*5)
+    while psutil.virtual_memory().percent > 70 or psutil.cpu_percent() > 80: time.sleep(60*5)
 
 def run_test():
     for bench in spec:
-        if bench not in ["602.gcc_s", "657.xs_s", "648.exchange2_s"]: continue
-        checkpoint_path = "/work/muke/checkpoints-expanded/"+bench
+        if bench not in ["602.gcc_s", "657.xz_s", "648.exchange2_s"]: continue
+        checkpoint_path = "/mnt/data/checkpoints-expanded/"+bench
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/modified/run_peak_refspeed_mytest-64.0000")
         specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
         commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if line.startswith(b".")]
@@ -35,7 +35,7 @@ def run_test():
 
 def run_train():
     for bench in spec:
-        checkpoint_path = "/work/muke/checkpoints-expanded/"+bench
+        checkpoint_path = "/mnt/data/checkpoints-expanded/"+bench
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_train_mytest-64.0000")
         specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
         commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if line.startswith(b".")]
@@ -49,7 +49,7 @@ def run_train():
 def run_alberta():
     for bench in spec:
         if bench == "600.perlbench_s": continue
-        checkpoint_path = "/work/muke/checkpoints-expanded/"+bench
+        checkpoint_path = "/mnt/data/checkpoints-expanded/"+bench
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000")
         stripped_name = bench.split('.')[1].split('_')[0]
         for workload in os.listdir(workloads+stripped_name):
