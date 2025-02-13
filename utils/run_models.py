@@ -23,10 +23,6 @@ benches = ""
 if args.benches != None:
     benches = args.benches 
 
-if label_types[0] == 'all': label_types = [label_type for label_type in os.listdir(label_file_dir)]
-elif label_types[0] == 'all-with-base': label_types = [label_type for label_type in os.listdir(label_file_dir)] + ['base']
-if cpu_models[0] == 'all': cpu_models = [model.split('.')[0] for model in os.listdir(cpu_moddel_dir)]
-
 os.chdir(gem5_dir)
 
 #run all models on base first to generate comparison results

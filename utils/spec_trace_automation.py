@@ -6,29 +6,13 @@ import psutil
 import random
 import time
 
-cache_sizes = {
-    "default": "",
-    "scaled": " --l1d_size=128KiB --l1i_size=128KiB --l2_size=2MB",
-    "very_scaled": " --l1d_size=256KiB --l1i_size=256KiB --l2_size=4MB",
-    "x925": " --l1d_size=64KiB --l1i_size=64KiB --l2_size=4MB",
-    "a725": " --l1d_size=64KiB --l1i_size=64KiB --l2_size=1MB",
-    "a14": " --l1d_size=64KiB --l1i_size=128KiB --l2_size=4MB",
-    "a14-tournament": " --l1d_size=64KiB --l1i_size=128KiB --l2_size=4MB",
-    "a14-small-mdp": " --l1d_size=64KiB --l1i_size=128KiB --l2_size=4MB",
-    "m4": " --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB",
-}
-
 #run from base spec dir
 base_dir = os.getcwd() # = /mnt/data/checkpoints-expanded/benchmark
 base_run = False
-run_type = sys.argv[1]
-label_file_type = sys.argv[2]
-if label_file_type == "base": base_run = True
-cpu_model = sys.argv[3]
 spec_path = "/work/muke/spec2017/"
 expanded_spec_path = "/work/muke/spec2017-expanded/"
 gem5 = "/work/muke/Branch-Correlations/gem5/"
-results_dir = "/mnt/data/results/branch-project/"+run_type+"/"+label_file_type+"/"+cpu_model+"/"
+results_dir = "/mnt/data/results/branch-project/traces/"
 label_file_dir = "/work/muke/Branch-Correlations/label_files/"
 workloads = "/work/muke/alberta-workloads/"
 benchmark = base_dir.split("/")[4]
@@ -48,6 +32,7 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = commands[int(run_name)]
         command = command.split('>')[0]
+        command += " 2> /dev/null"
     #train
     elif len(run_name.split('train.')) > 1 and run_name.split('train.')[1].isdigit():
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_train_mytest-64.0000/"
@@ -57,6 +42,7 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = commands[int(run_name.split('train.')[1])]
         command = command.split('>')[0]
+        command += " 2> /dev/null"
     #alberta
     else:
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
@@ -70,6 +56,7 @@ def get_bench_flags(run_name):
         control.close()
         os.chdir(base_dir)
         command = binary+" "+flags
+        command += " 2> /dev/null"
     return (run_dir,command)
 
 #iterate over all checkpoint.n dirs
@@ -87,15 +74,10 @@ for out_dir in os.listdir(base_dir):
             cpt_number += 1
             binary = command.split()[0]
             benchmark_name = benchmark.split("_")[0].split(".")[1]
-            if base_run:
-                label_file = "/work/muke/empty"
-            else:
-                label_file = label_file_dir+label_file_type+"/"+benchmark
             outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
             if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
             outdir += str(cpt_number)+".out"
-            run = "LABEL_FILE="+label_file+" "+gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\""
-            run += cache_sizes[cpu_model]
+            run = gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=NonCachingSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(tail -n +7 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
             p = Popen(run, shell=True)

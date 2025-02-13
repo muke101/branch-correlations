@@ -19,10 +19,10 @@ label_file_dir = "/work/muke/Branch-Correlations/label_files/"
 chkpt_dir = "/mnt/data/checkpoints-expanded/"
 results_dir = "/mnt/data/results/branch-project/"+run_type+"/"+label_file_type+"/"+cpu_model+"/"
 base_results_dir = "/mnt/data/results/branch-project/"+run_type+"/base/"+cpu_model+"/"
-benches = ["600.perlbench_s", "605.mcf_s", "619.lbm_s",
-           "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s",
+benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+           "625.x264_s", "631.deepsjeng_s",
            "641.leela_s", "657.xz_s", "602.gcc_s",
-           "620.omnetpp_s", "644.nab_s"] #"638.imagick_s"]
+           "620.omnetpp_s", "648.exchange2_s"]
 
 if len(sys.argv) > 5:
     sub_benches = []
@@ -41,12 +41,12 @@ for bench in benches:
     os.chdir(chkpt_dir+bench)
 
     if run_labelled:
-        while psutil.virtual_memory().percent > 60 and psutil.cpu_ercent() > 90: time.sleep(60*5)
+        while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
         p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" " +label_file_type+" "+cpu_model, shell=True)
         processes.append(p)
 
     if run_base:
-        while psutil.virtual_memory().percent > 60 and psutil.cpu_ercent() > 90: time.sleep(60*5)
+        while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
         p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" base "+cpu_model, shell=True)
         processes.append(p)
 
