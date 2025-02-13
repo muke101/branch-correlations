@@ -50,7 +50,7 @@ def get_bench_flags(run_name):
         command = command.split('>')[0]
         command += " 2> /dev/null"
     #train
-    elif run_name.split('train.')[1].isdigit():
+    elif len(run_name.split('train.')) > 1 and run_name.split('train.')[1].isdigit():
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_train_mytest-64.0000/"
         os.chdir(run_dir)
         specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
