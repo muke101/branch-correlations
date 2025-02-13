@@ -7,18 +7,18 @@ import psutil
 import time
 
 run_type = sys.argv[1]
-addr_file_type = sys.argv[2]
+label_file_type = sys.argv[2]
 cpu_model = sys.argv[3]
-run_pnd = True
+run_labelled = True
 run_base = True if sys.argv[4] == 'with_base' else False
-if addr_file_type == "base":
+if label_file_type == "base":
     run_base = True
-    run_pnd = False
+    run_labelled = False
 if run_base: print("Running with base model")
-addr_file_dir = "/work/muke/PND-Loads/addr_files/"
-chkpt_dir = "/work/muke/checkpoints/"
-results_dir = "/work/muke/results/"+run_type+"/"+addr_file_type+"/"+cpu_model+"/"
-base_results_dir = "/work/muke/results/"+run_type+"/base/"+cpu_model+"/"
+label_file_dir = "/work/muke/Branch-Correlations/label_files/"
+chkpt_dir = "/mnt/data/checkpoints-expanded/"
+results_dir = "/mnt/data/results/branch-project/"+run_type+"/"+label_file_type+"/"+cpu_model+"/"
+base_results_dir = "/mnt/data/results/branch-project/"+run_type+"/base/"+cpu_model+"/"
 benches = ["600.perlbench_s", "605.mcf_s", "619.lbm_s",
            "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s",
            "641.leela_s", "657.xz_s", "602.gcc_s",
@@ -40,14 +40,14 @@ processes = []
 for bench in benches:
     os.chdir(chkpt_dir+bench)
 
-    if run_pnd:
+    if run_labelled:
         while psutil.virtual_memory().percent > 60 and psutil.cpu_ercent() > 90: time.sleep(60*5)
-        p = subprocess.Popen("python3 /work/muke/PND-Loads/utils/spec_automation.py "+run_type+" " +addr_file_type+" "+cpu_model, shell=True)
+        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" " +label_file_type+" "+cpu_model, shell=True)
         processes.append(p)
 
     if run_base:
         while psutil.virtual_memory().percent > 60 and psutil.cpu_ercent() > 90: time.sleep(60*5)
-        p = subprocess.Popen("python3 /work/muke/PND-Loads/utils/spec_automation.py "+run_type+" base "+cpu_model, shell=True)
+        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" base "+cpu_model, shell=True)
         processes.append(p)
 
 for p in processes:
@@ -62,19 +62,21 @@ for bench in benches:
         if os.path.exists(results_dir+name+'.'+str(i)):
             raw_results_dir = results_dir+name+'.'+str(i)+"/raw/"
             os.chdir(raw_results_dir)
-            p = subprocess.Popen("python3 /work/muke/PND-Loads/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
+            p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
             p.wait()
             subprocess.Popen("cp results.txt ../", shell=True)
             raw_results_dir = base_results_dir+name+'.'+str(i)+"/raw/"
             os.chdir(raw_results_dir)
-            p = subprocess.Popen("python3 /work/muke/PND-Loads/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
+            p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
             p.wait()
             subprocess.Popen("cp results.txt ../", shell=True)
 
 #generate differences between labelled and base
-if addr_file_type == "base": exit(0) #nothing to compare to
+if label_file_type == "base": exit(0) #nothing to compare to
 
 prefix = "system.switch_cpus."
+
+#FIXME: new stats for new project
 
 stats = {
     "CPI", prefix+"iew.memOrderViolationEvents",

@@ -19,30 +19,68 @@ cache_sizes = {
 }
 
 #run from base spec dir
-base_dir = os.getcwd() # = /work/muke/checkpoints/benchmark
+base_dir = os.getcwd() # = /mnt/data/checkpoints-expanded/benchmark
 base_run = False
 run_type = sys.argv[1]
-addr_file_type = sys.argv[2]
-if addr_file_type == "base": base_run = True
+label_file_type = sys.argv[2]
+if label_file_type == "base": base_run = True
 cpu_model = sys.argv[3]
 spec_path = "/work/muke/spec2017/"
-gem5 = "/work/muke/PND-Loads/gem5/"
-results_dir = "/work/muke/results/"+run_type+"/"+addr_file_type+"/"+cpu_model+"/"
-addr_file_dir = "/work/muke/PND-Loads/addr_files/"
+expanded_spec_path = "/work/muke/spec2017-expanded/"
+gem5 = "/work/muke/Branch-Correlations/gem5/"
+results_dir = "/mnt/data/results/branch-project/"+run_type+"/"+label_file_type+"/"+cpu_model+"/"
+label_file_dir = "/work/muke/Branch-Correlations/label_files/"
+workloads = "/work/muke/alberta-workloads/"
 benchmark = base_dir.split("/")[4]
-run_dir = spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
-os.chdir(run_dir)
-specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
-commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if not line.startswith(b"#")]
-os.chdir(base_dir)
 random.seed(sum(ord(c) for c in base_dir))
 procs = []
 
+def get_bench_flags(run_name):
+    #test
+    if run_name.isdigit():
+        if benchmark in ["602.gcc_s", "657.xs_s", "648.exchange2_s"]:
+            run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/modified/run_peak_refspeed_mytest-64.0000/"
+        else:
+            run_dir = spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
+        os.chdir(run_dir)
+        specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
+        commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if not line.startswith(b"#")]
+        os.chdir(base_dir)
+        command = commands[int(run_name)]
+        command = command.split('>')[0]
+        command += " 2> /dev/null"
+    #train
+    elif run_name.split('train.')[1].isdigit():
+        run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_train_mytest-64.0000/"
+        os.chdir(run_dir)
+        specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)
+        commands = [line.decode().strip() for line in specinvoke.stdout.split(b"\n") if not line.startswith(b"#")]
+        os.chdir(base_dir)
+        command = commands[int(run_name.split('train.')[1])]
+        command = command.split('>')[0]
+        command += " 2> /dev/null"
+    #alberta
+    else:
+        run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
+        os.chdir(run_dir)
+        stripped_name = benchmark.split('.')[1].split('_')[0]
+        subprocess.run("cp -r "+workloads+stripped_name+"/"+run_name+"/input/* .", shell=True)
+        if benchmark == "602.gcc_s": binary = run_dir+"sgcc_peak.mytest-64"
+        else: binary = benchmark.split('.')[1]+"_peak.mytest-64"
+        control = open("control", "r")
+        flags = control.readlines()[0].strip()
+        control.close()
+        os.chdir(base_dir)
+        command = binary+" "+flags
+        command += " 2> /dev/null"
+    return (run_dir,command)
+
+#if .n index commands from normal, if .train.n, if .name open control file
+
 #iterate over all checkpoint.n dirs
 for out_dir in os.listdir(base_dir):
-    run_number = out_dir[-1]
-    command = commands[int(run_number)]
-    command = command.split('>')[0]
+    run_name = out_dir.split("checkpoints.")[1]
+    run_dir, command = get_bench_flags(run_name)
     cpt_number = 0
     out_dir = os.path.join(base_dir,out_dir)
     #iterate over checkpoint.n
@@ -52,16 +90,16 @@ for out_dir in os.listdir(base_dir):
             waited = 0
             finished = False
             cpt_number += 1
-            binary = run_dir+command.split()[0]
+            binary = command.split()[0]
             benchmark_name = benchmark.split("_")[0].split(".")[1]
             if base_run:
-                addr_file = "/work/muke/empty"
+                label_file = "/work/muke/empty"
             else:
-                addr_file = addr_file_dir+addr_file_type+"/"+benchmark
-            outdir = results_dir+benchmark_name+"."+run_number+"/raw/"
+                label_file = label_file_dir+label_file_type+"/"+benchmark
+            outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
             if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
             outdir += str(cpt_number)+".out"
-            run = "ADDR_FILE="+addr_file+" "+gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\""
+            run = "LABEL_FILE="+label_file+" "+gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\""
             run += cache_sizes[cpu_model]
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
