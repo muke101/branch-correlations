@@ -13,7 +13,7 @@ benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
            "641.leela_s", "657.xz_s", "602.gcc_s",
            "620.omnetpp_s", "648.exchange2_s"]
 
-if len(sys.argv) > 5:
+if len(sys.argv) > 1:
     sub_benches = []
     for bench in sys.argv[5:]:
         if bench in benches:

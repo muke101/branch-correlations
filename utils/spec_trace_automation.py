@@ -59,7 +59,6 @@ def get_bench_flags(run_name):
 #iterate over all checkpoint.n dirs
 for out_dir in os.listdir(base_dir):
     run_name = out_dir.split("checkpoints.")[1]
-    print(benchmark, run_name)
     run_dir, command = get_bench_flags(run_name)
     cpt_number = 0
     out_dir = os.path.join(base_dir,out_dir)
@@ -78,12 +77,9 @@ for out_dir in os.listdir(base_dir):
             run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=NonCachingSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-            print(run)
-            print()
-            #p = Popen(run, shell=True)
+            p = Popen(run, shell=True, executable='/bin/bash')
             os.chdir(base_dir)
-            #procs.append(p)
-            continue
+            procs.append(p)
             while waited < 60*2 and finished == False:
                 time.sleep(10)
                 waited += 10
