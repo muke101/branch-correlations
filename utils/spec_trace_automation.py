@@ -32,7 +32,6 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = commands[int(run_name)]
         command = command.split('>')[0]
-        command += " 2> /dev/null"
     #train
     elif len(run_name.split('train.')) > 1 and run_name.split('train.')[1].isdigit():
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_train_mytest-64.0000/"
@@ -42,7 +41,6 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = commands[int(run_name.split('train.')[1])]
         command = command.split('>')[0]
-        command += " 2> /dev/null"
     #alberta
     else:
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
@@ -56,7 +54,6 @@ def get_bench_flags(run_name):
         control.close()
         os.chdir(base_dir)
         command = binary+" "+flags
-        command += " 2> /dev/null"
     return (run_dir,command)
 
 #iterate over all checkpoint.n dirs
@@ -78,7 +75,7 @@ for out_dir in os.listdir(base_dir):
             outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
             if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
             outdir += str(cpt_number)+".out"
-            run = gem5+"build/ARM/gem5.fast --outdir=/dev/null "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=NonCachingSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(tail -n +7 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
+            run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=NonCachingSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
             print(run)
