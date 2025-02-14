@@ -77,7 +77,7 @@ def U74Memory():
     """
     Memory for the U74 board.
 
-    DDR4 Subsystem with 16GiB of memory.
+    DDR4 Subsystem with 16GB of memory.
 
     Starts at 0x80000000.
 
@@ -85,7 +85,7 @@ def U74Memory():
 
     :return: ChanneledMemory
     """
-    memory = SingleChannelDDR4_2400("16GiB")
+    memory = SingleChannelDDR4_2400("16GB")
     memory.set_memory_range(
         [AddrRange(start=0x80000000, size=memory.get_size())]
     )
@@ -121,7 +121,7 @@ class RISCVMatchedBoard(
         :param clk_freq: The clock frequency of the system,
         default: 1.2GHz
         :param l2_size: The size of the L2 cache,
-        default: 2MiB
+        default: 2MB
         :param is_fs: Whether the system is a full system or not,
         default: False (SE Mode)
 
@@ -230,9 +230,9 @@ class RISCVMatchedBoard(
                 ]
 
                 # PCI
-                self.bridge.ranges.append(AddrRange(0x2F000000, size="16MiB"))
-                self.bridge.ranges.append(AddrRange(0x30000000, size="256MiB"))
-                self.bridge.ranges.append(AddrRange(0x40000000, size="512MiB"))
+                self.bridge.ranges.append(AddrRange(0x2F000000, size="16MB"))
+                self.bridge.ranges.append(AddrRange(0x30000000, size="256MB"))
+                self.bridge.ranges.append(AddrRange(0x40000000, size="512MB"))
 
     def _setup_pma(self) -> None:
         """Set the PMA devices on each core"""
@@ -243,9 +243,9 @@ class RISCVMatchedBoard(
         ]
 
         # PCI
-        uncacheable_range.append(AddrRange(0x2F000000, size="16MiB"))
-        uncacheable_range.append(AddrRange(0x30000000, size="256MiB"))
-        uncacheable_range.append(AddrRange(0x40000000, size="512MiB"))
+        uncacheable_range.append(AddrRange(0x2F000000, size="16MB"))
+        uncacheable_range.append(AddrRange(0x30000000, size="256MB"))
+        uncacheable_range.append(AddrRange(0x40000000, size="512MB"))
 
         # TODO: Not sure if this should be done per-core like in the example
         for cpu in self.get_processor().get_cores():
@@ -313,7 +313,7 @@ class RISCVMatchedBoard(
             memory.set_memory_range(self.mem_ranges)
 
     @overrides(AbstractSystemBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
+    def _pre_instantiate(self):
         if self._fs:
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x0
@@ -326,7 +326,7 @@ class RISCVMatchedBoard(
                 self.workload.kernel_addr = 0x0
                 self.workload.entry_point = 0x80000000
 
-        super()._pre_instantiate(full_system=full_system)
+        self._connect_things()
 
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the ``dtb`` and ``dts`` files.

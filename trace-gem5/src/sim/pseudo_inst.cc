@@ -322,6 +322,10 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick repeat = period * sim_clock::as_int::ns;
 
     statistics::schedStatEvent(false, true, when, repeat);
+
+    if (tc->getCpuPtr()->system->params().exit_on_reset_stats) {
+        m5exit(tc, delay);
+    }
 }
 
 void
@@ -336,6 +340,10 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
     Tick repeat = period * sim_clock::as_int::ns;
 
     statistics::schedStatEvent(true, false, when, repeat);
+
+    if (tc->getCpuPtr()->system->params().exit_on_dump_stats) {
+        m5exit(tc, delay);
+    }
 }
 
 void
@@ -351,6 +359,10 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick repeat = period * sim_clock::as_int::ns;
 
     statistics::schedStatEvent(true, true, when, repeat);
+
+    if (tc->getCpuPtr()->system->params().exit_on_dump_reset_stats) {
+        m5exit(tc, delay);
+    }
 }
 
 void

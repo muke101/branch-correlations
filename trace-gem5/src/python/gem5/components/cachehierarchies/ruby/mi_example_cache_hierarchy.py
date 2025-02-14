@@ -32,13 +32,9 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
-from ....utils.override import overrides
-from ....utils.requires import requires
-
-requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
-
 from ....isas import ISA
 from ....utils.override import overrides
+from ....utils.requires import requires
 from ...boards.abstract_board import AbstractBoard
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
@@ -65,12 +61,9 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
         self._assoc = assoc
 
     @overrides(AbstractCacheHierarchy)
-    def get_coherence_protocol(self):
-        return CoherenceProtocol.MI_EXAMPLE
-
-    @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        super().incorporate_cache(board)
+        requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
+
         self.ruby_system = RubySystem()
 
         # Ruby's global network.
@@ -101,7 +94,6 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
                 version=i,
                 dcache=cache.cacheMemory,
                 clk_domain=cache.clk_domain,
-                ruby_system=self.ruby_system,
             )
 
             if board.has_io_bus():
@@ -147,11 +139,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
                 ctrl = DMAController(
                     self.ruby_system.network, board.get_cache_line_size()
                 )
-                ctrl.dma_sequencer = DMASequencer(
-                    version=i,
-                    in_ports=port,
-                    ruby_system=self.ruby_system,
-                )
+                ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
 
                 ctrl.ruby_system = self.ruby_system
                 ctrl.dma_sequencer.ruby_system = self.ruby_system
@@ -178,13 +166,5 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy(
-            ruby_system=self.ruby_system
-        )
+        self.ruby_system.sys_port_proxy = RubyPortProxy()
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
-
-    @overrides(AbstractRubyCacheHierarchy)
-    def _reset_version_numbers(self):
-        Directory._version = 0
-        L1Cache._version = 0
-        DMAController._version = 0

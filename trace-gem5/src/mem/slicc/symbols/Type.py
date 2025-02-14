@@ -63,13 +63,10 @@ class Enumeration(PairContainer):
 
 
 class Type(Symbol):
-    def __init__(
-        self, table, ident, location, pairs, shared=False, machine=None
-    ):
+    def __init__(self, table, ident, location, pairs, machine=None):
         super().__init__(table, ident, location, pairs)
         self.c_ident = ident
         self.abstract_ident = ""
-        self.shared = shared
         if machine:
             if self.isExternal or self.isPrimitive:
                 if "external_name" in self:
@@ -77,14 +74,6 @@ class Type(Symbol):
             else:
                 # Append with machine name
                 self.c_ident = f"{machine}_{ident}"
-        if shared or not table.slicc.protocol or self.isExternal:
-            self.protocol_specific = ""
-            self.gen_filename = self.c_ident
-            self.header_string = self.c_ident
-        else:
-            self.protocol_specific = table.slicc.protocol
-            self.gen_filename = self.protocol_specific + "/" + self.c_ident
-            self.header_string = self.protocol_specific + "_" + self.c_ident
 
         self.pairs.setdefault("desc", "No description avaliable")
 
@@ -129,10 +118,6 @@ class Type(Symbol):
     @property
     def isMessage(self):
         return "message" in self
-
-    @property
-    def isTBE(self):
-        return "tbe" in self
 
     @property
     def isBuffer(self):
@@ -238,8 +223,8 @@ class Type(Symbol):
         code = self.symtab.codeFormatter()
         code(
             """
-#ifndef __${{self.header_string}}_HH__
-#define __${{self.header_string}}_HH__
+#ifndef __${{self.c_ident}}_HH__
+#define __${{self.c_ident}}_HH__
 
 #include <iostream>
 
@@ -250,9 +235,7 @@ class Type(Symbol):
 
         for dm in self.data_members.values():
             if not dm.type.isPrimitive:
-                code(
-                    '#include "mem/ruby/protocol/$0.hh"', dm.type.gen_filename
-                )
+                code('#include "mem/ruby/protocol/$0.hh"', dm.type.c_ident)
 
         parent = ""
         if "interface" in self:
@@ -267,69 +250,18 @@ namespace gem5
 namespace ruby
 {
 
-class RubySystem;
-
-"""
-        )
-        # For protocol-specific types, wrap in the protocol namespace
-        if not self.shared:
-            code(
-                """
-namespace ${{protocol}}
-{
-"""
-            )
-
-        code(
-            """
-
 $klass ${{self.c_ident}}$parent
 {
   public:
+    ${{self.c_ident}}
 """,
             klass="class",
         )
 
         if self.isMessage:
-            code(
-                "${{self.c_ident}}(Tick curTime, int blockSize, RubySystem* rs) : %s(curTime, blockSize, rs)"
-                % self["interface"]
-            )
-
-            for dm in self.data_members.values():
-                if dm.real_c_type in ("DataBlock", "WriteMask"):
-                    code(f"\t\t, m_{dm.ident}(blockSize)")
-
-            code("{")
-            code("        setRubySystem(rs);")
-        elif self.isTBE:
-            code("${{self.c_ident}}(int block_size)")
-
-            ctor_count = 0
-            for dm in self.data_members.values():
-                if dm.real_c_type in ("DataBlock", "WriteMask"):
-                    if ctor_count == 0:
-                        code("\t:")
-                    else:
-                        code("\t, ")
-                    code(f"\t\tm_{dm.ident}(block_size)")
-                    ctor_count += 1
-
-            code("{")
+            code("(Tick curTime) : %s(curTime) {" % self["interface"])
         else:
-            code("${{self.c_ident}}()")
-
-            ctor_count = 0
-            for dm in self.data_members.values():
-                if dm.real_c_type in ("DataBlock", "WriteMask"):
-                    if ctor_count == 0:
-                        code("\t:")
-                    else:
-                        code("\t, ")
-                    code(f"\t\tm_{dm.ident}(0)")
-                    ctor_count += 1
-
-            code("{")
+            code("()\n\t\t{")
 
         code.indent()
         if not self.isGlobal:
@@ -348,12 +280,6 @@ $klass ${{self.c_ident}}$parent
                     code(" // default value of $tid")
                 else:
                     code("// m_$ident has no default")
-
-                # These parts of Messages need RubySystem pointers. For things
-                # like Entry which only store NetDest, RubySystem is not needed.
-                if self.isMessage and dm.real_c_type == "NetDest":
-                    code("// m_$ident requires RubySystem")
-                    code("m_$ident.setRubySystem(rs);")
             code.dedent()
         code("}")
 
@@ -374,45 +300,21 @@ $klass ${{self.c_ident}}$parent
             params = ", ".join(params)
 
             if self.isMessage:
-                params = (
-                    "const Tick curTime, const int blockSize, const RubySystem *rs, "
-                    + params
-                )
+                params = "const Tick curTime, " + params
 
             code("${{self.c_ident}}($params)")
 
             # Call superclass constructor
             if "interface" in self:
                 if self.isMessage:
-                    code(
-                        '    : ${{self["interface"]}}(curTime, blockSize, rs)'
-                    )
-
-                    for dm in self.data_members.values():
-                        if dm.real_c_type in ("DataBlock", "WriteMask"):
-                            code(f"\t\t, m_{dm.ident}(blockSize)")
+                    code('    : ${{self["interface"]}}(curTime)')
                 else:
                     code('    : ${{self["interface"]}}()')
-
-                    for dm in self.data_members.values():
-                        if dm.real_c_type in ("DataBlock", "WriteMask"):
-                            code(f"\t\t, m_{dm.ident}(local_{dm.ident})")
-            else:
-                ctor_count = 0
-                for dm in self.data_members.values():
-                    if dm.real_c_type in ("DataBlock", "WriteMask"):
-                        if ctor_count == 0:
-                            code("\t:")
-                        else:
-                            code("\t, ")
-                        code(f"\t\tm_{dm.ident}(local_{dm.ident})")
-                        ctor_count += 1
 
             code("{")
             code.indent()
             for dm in self.data_members.values():
-                if not dm.real_c_type in ("DataBlock", "WriteMask"):
-                    code("m_${{dm.ident}} = local_${{dm.ident}};")
+                code("m_${{dm.ident}} = local_${{dm.ident}};")
 
             code.dedent()
             code("}")
@@ -440,35 +342,6 @@ clone() const
             )
 
         if not self.isGlobal:
-            # Block size setter for fields that require block size
-            # Intentionally do not begin function name with "set" in case
-            # the user has a field named BlockSize which would conflict
-            # with the method generated below.
-            code("\nvoid initBlockSize(int block_size)")
-            code("{")
-            code("\tblock_size_bits = floorLog2(block_size);")
-
-            needs_block_size = (
-                "DataBlock",
-                "WriteMask",
-                "PersistentTable",
-                "TimerTable",
-                "PerfectCacheMemory",
-            )
-
-            for dm in self.data_members.values():
-                if dm.real_c_type in needs_block_size:
-                    code(f"\tm_{dm.ident}.setBlockSize(block_size);")
-            code("}\n")
-
-            code("\nvoid setRubySystem(RubySystem *ruby_system)")
-            code("{")
-            for dm in self.data_members.values():
-                if dm.real_c_type in ("NetDest"):
-                    code(f"// m_{dm.ident} requires RubySystem")
-                    code(f"\tm_{dm.ident}.setRubySystem(ruby_system);")
-            code("}\n")
-
             # const Get methods for each field
             code("// Const accessors methods for each field")
             for dm in self.data_members.values():
@@ -520,9 +393,6 @@ set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
         code("  //private:")
         code.indent()
 
-        # block_size_bits for print methods
-        code("int block_size_bits = 0;")
-
         # Data members for each field
         for dm in self.data_members.values():
             if "abstract" not in dm:
@@ -563,26 +433,14 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
     return out;
 }
 
-"""
-        )
-        # For protocol-specific types, close the protocol namespace
-        if not self.shared:
-            code(
-                """
-} // namespace ${{protocol}}
-"""
-            )
-
-        code(
-            """
 } // namespace ruby
 } // namespace gem5
 
-#endif // __${{self.header_string}}_HH__
+#endif // __${{self.c_ident}}_HH__
 """
         )
 
-        code.write(path, f"{self.gen_filename}.hh")
+        code.write(path, f"{self.c_ident}.hh")
 
     def printTypeCC(self, path):
         code = self.symtab.codeFormatter()
@@ -592,7 +450,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 #include <memory>
 
-#include "mem/ruby/protocol/${{self.gen_filename}}.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
@@ -600,20 +458,6 @@ namespace gem5
 
 namespace ruby
 {
-"""
-        )
-        # For protocol-specific types, wrap in the protocol namespace
-        if not self.shared:
-            code(
-                """
-
-namespace ${{protocol}}
-{
-"""
-            )
-
-        code(
-            """
 
 /** \\brief Print the state of this object */
 void
@@ -629,7 +473,7 @@ ${{self.c_ident}}::print(std::ostream& out) const
             if dm.type.c_ident == "Addr":
                 code(
                     """
-out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}, block_size_bits) << " ";"""
+out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
                 )
             else:
                 code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";' "")
@@ -647,15 +491,6 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}, block_size_bits) << "
         for item in self.methods:
             code(self.methods[item].generateCode())
 
-        # For protocol-specific types, close the protocol namespace
-        if not self.shared:
-            code(
-                """
-
-} // namespace ${{protocol}}
-"""
-            )
-
         code(
             """
 } // namespace ruby
@@ -663,14 +498,14 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}, block_size_bits) << "
 """
         )
 
-        code.write(path, f"{self.gen_filename}.cc")
+        code.write(path, f"{self.c_ident}.cc")
 
     def printEnumHH(self, path):
         code = self.symtab.codeFormatter()
         code(
             """
-#ifndef __${{self.header_string}}_HH__
-#define __${{self.header_string}}_HH__
+#ifndef __${{self.c_ident}}_HH__
+#define __${{self.c_ident}}_HH__
 
 #include <iostream>
 #include <string>
@@ -696,15 +531,6 @@ namespace ruby
 
 """
         )
-        # For protocol-specific types, wrap in the protocol namespace
-        if not self.shared:
-            code(
-                """
-
-namespace ${{protocol}}
-{
-"""
-            )
 
         if self.isMachineType:
             code("struct MachineID;")
@@ -782,19 +608,6 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj);
 ::std::ostream&
 operator<<(::std::ostream& out, const ${{self.c_ident}}& obj);
 
-"""
-        )
-
-        # For protocol-specific types, close the protocol namespace
-        if not self.shared:
-            code(
-                """
-} // namespace ${{protocol}}
-"""
-            )
-
-        code(
-            """
 } // namespace ruby
 } // namespace gem5
 """
@@ -823,11 +636,11 @@ struct hash<gem5::ruby::MachineType>
         # Trailer
         code(
             """
-#endif // __${{self.header_string}}_HH__
+#endif // __${{self.c_ident}}_HH__
 """
         )
 
-        code.write(path, f"{self.gen_filename}.hh")
+        code.write(path, f"{self.c_ident}.hh")
 
     def printEnumCC(self, path):
         code = self.symtab.codeFormatter()
@@ -838,7 +651,7 @@ struct hash<gem5::ruby::MachineType>
 #include <string>
 
 #include "base/logging.hh"
-#include "mem/ruby/protocol/${{self.gen_filename}}.hh"
+#include "mem/ruby/protocol/${{self.c_ident}}.hh"
 
 """
         )
@@ -851,20 +664,6 @@ namespace gem5
 
 namespace ruby
 {
-"""
-            )
-            # For protocol-specific types, wrap in the protocol namespace
-            if not self.shared:
-                code(
-                    """
-
-namespace ${{protocol}}
-{
-"""
-                )
-
-            code(
-                """
 
 // Code to convert the current state to an access permission
 AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
@@ -887,20 +686,6 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
     return AccessPermission_Invalid;
 }
 
-"""
-            )
-
-            # For protocol-specific types, close the protocol namespace
-            if not self.shared:
-                code(
-                    """
-} // namespace ${{protocol}}
-"""
-                )
-
-            code(
-                """
-
 } // namespace ruby
 } // namespace gem5
 
@@ -908,8 +693,13 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
             )
 
         if self.isMachineType:
+            for enum in self.enums.values():
+                if enum.primary:
+                    code(
+                        '#include "mem/ruby/protocol/${{enum.ident}}'
+                        '_Controller.hh"'
+                    )
             code('#include "mem/ruby/common/MachineID.hh"')
-            code('#include "mem/ruby/system/RubySystem.hh"')
 
         code(
             """
@@ -918,19 +708,6 @@ namespace gem5
 
 namespace ruby
 {
-"""
-        )
-        # For protocol-specific types, wrap in the protocol namespace
-        if not self.shared:
-            code(
-                """
-
-namespace ${{protocol}}
-{
-"""
-            )
-        code(
-            """
 
 // Code for output operator
 ::std::ostream&
@@ -1069,7 +846,7 @@ ${{self.c_ident}}_from_base_level(int type)
  * \\return the base number of components for each machine
  */
 int
-RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
+${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 {
     int base = 0;
     switch(obj) {
@@ -1080,9 +857,13 @@ RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             code.indent()
             code("  case ${{self.c_ident}}_NUM:")
             for enum in reversed(list(self.enums.values())):
-                code(
-                    "    base += m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
-                )
+                # Check if there is a defined machine with this type
+                if enum.primary:
+                    code(
+                        "    base += ${{enum.ident}}_Controller::getNumControllers();"
+                    )
+                else:
+                    code("    base += 0;")
                 code("    [[fallthrough]];")
                 code("  case ${{self.c_ident}}_${{enum.ident}}:")
             code("    break;")
@@ -1101,7 +882,7 @@ RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
  * \\return the total number of components for each machine
  */
 int
-RubySystem::${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
+${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 """
@@ -1110,9 +891,12 @@ RubySystem::${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
             # For each field
             for enum in self.enums.values():
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
-                code(
-                    "return m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
-                )
+                if enum.primary:
+                    code(
+                        "return ${{enum.ident}}_Controller::getNumControllers();"
+                    )
+                else:
+                    code("return 0;")
 
             # total num
             code(
@@ -1140,15 +924,6 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
 """
                 )
 
-        # For protocol-specific types, close the protocol namespace
-        if not self.shared:
-            code(
-                """
-
-} // namespace ${{protocol}}
-"""
-            )
-
         code(
             """
 } // namespace ruby
@@ -1157,7 +932,7 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
         )
 
         # Write the file
-        code.write(path, f"{self.gen_filename}.cc")
+        code.write(path, f"{self.c_ident}.cc")
 
 
 __all__ = ["Type"]

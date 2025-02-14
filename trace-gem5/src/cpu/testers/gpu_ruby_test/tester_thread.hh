@@ -36,7 +36,6 @@
 #ifndef CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_
 #define CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_
 
-#include "base/random.hh"
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 #include "cpu/testers/gpu_ruby_test/episode.hh"
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
@@ -133,7 +132,6 @@ class TesterThread : public ClockedObject
         {}
     };
 
-    int cacheLineSize;
     // the unique global id of this thread
     int threadId;
     // width of this thread (1 for cpu thread & wf size for gpu wavefront)
@@ -206,11 +204,6 @@ class TesterThread : public ClockedObject
 
     void printOutstandingReqs(const OutstandingReqTable& table,
                               std::stringstream& ss) const;
-
-    std::string printAddress(Addr addr) const;
-
-  private:
-    Random::RandomPtr rng = Random::genRandom();
 };
 
 } // namespace gem5

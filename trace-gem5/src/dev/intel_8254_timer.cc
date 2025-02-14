@@ -210,10 +210,8 @@ Intel8254Timer::Counter::setRW(int rw_val)
 void
 Intel8254Timer::Counter::setMode(int mode_val)
 {
-    if (mode_val == SoftwareStrobe)
-        warn_once("SoftwareStrobe mode is used and it is not well tested\n");
     if (mode_val != InitTc && mode_val != RateGen &&
-       mode_val != SquareWave && mode_val != SoftwareStrobe)
+       mode_val != SquareWave)
         panic("PIT mode %#x is not implemented: \n", mode_val);
 
     mode = mode_val;
@@ -294,7 +292,6 @@ Intel8254Timer::Counter::CounterEvent::process()
         break;
       case RateGen:
       case SquareWave:
-      case SoftwareStrobe:
         setTo(counter->period);
         break;
       default:

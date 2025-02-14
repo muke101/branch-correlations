@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "base/inet.hh"
-#include "base/random.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherlink.hh"
 #include "dev/net/etherpkt.hh"
@@ -96,7 +95,6 @@ class EtherSwitch : public SimObject
         const Tick switchDelay;
         const Tick delayVar;
         const unsigned interfaceId;
-        Random::RandomPtr rng = Random::genRandom();
 
         EtherSwitch *parent;
       protected:

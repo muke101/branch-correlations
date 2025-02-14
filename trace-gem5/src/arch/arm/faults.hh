@@ -141,12 +141,17 @@ class ArmFault : public FaultBase
                // the abort is triggered by a CMO. The faulting address is
                // then the address specified in the register argument of the
                // instruction and not the cacheline address (See FAR doc)
-        WnR,  // Write or Read. it should be forced to 1 when
-              // Cache maintainance and address translation instruction.
 
         // AArch64 only
         SF,    // DataAbort: width of the accessed register is SixtyFour
         AR     // DataAbort: Acquire/Release semantics
+    };
+
+    enum TranMethod
+    {
+        LpaeTran,
+        VmsaTran,
+        UnknownTran
     };
 
     enum DebugType
@@ -222,7 +227,7 @@ class ArmFault : public FaultBase
                   nullStaticInstPtr);
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   nullStaticInstPtr);
-    virtual void update(ThreadContext *tc);
+    void update(ThreadContext *tc);
     bool isResetSPSR(){ return bStep; }
 
     bool vectorCatch(ThreadContext *tc, const StaticInstPtr &inst);
@@ -249,7 +254,6 @@ class ArmFault : public FaultBase
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
     virtual bool getFaultVAddr(Addr &va) const { return false; }
     OperatingMode getToMode() const { return toMode; }
-    virtual bool isExternalAbort() const { return false; }
 };
 
 template<typename T>
@@ -259,7 +263,7 @@ class ArmFaultVals : public ArmFault
     static FaultVals vals;
 
   public:
-    ArmFaultVals(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
+    ArmFaultVals<T>(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
         ArmFault(mach_inst, _iss) {}
     FaultName name() const override { return vals.name; }
     FaultOffset offset(ThreadContext *tc) override;
@@ -475,18 +479,18 @@ class AbortFault : public ArmFaultVals<T>
      */
     Addr OVAddr;
     bool write;
-    DomainType domain;
+    TlbEntry::DomainType domain;
     uint8_t source;
     uint8_t srcEncoded;
     bool stage2;
     bool s1ptw;
-    TranMethod tranMethod;
+    ArmFault::TranMethod tranMethod;
     ArmFault::DebugType debugType;
 
   public:
-    AbortFault(Addr _faultAddr, bool _write, DomainType _domain,
+    AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
                uint8_t _source, bool _stage2,
-               TranMethod _tranMethod = TranMethod::UnknownTran,
+               ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
                ArmFault::DebugType _debug = ArmFault::NODEBUG) :
         faultAddr(_faultAddr), OVAddr(0), write(_write),
         domain(_domain), source(_source), srcEncoded(0),
@@ -498,7 +502,6 @@ class AbortFault : public ArmFaultVals<T>
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 nullStaticInstPtr) override;
-    void update(ThreadContext *tc) override;
 
     FSR getFsr(ThreadContext *tc) const override;
     uint8_t getFaultStatusCode(ThreadContext *tc) const;
@@ -507,7 +510,6 @@ class AbortFault : public ArmFaultVals<T>
     void annotate(ArmFault::AnnotationIDs id, uint64_t val) override;
     void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg) override;
     bool isMMUFault() const;
-    bool isExternalAbort() const override;
 };
 
 class PrefetchAbort : public AbortFault<PrefetchAbort>
@@ -518,10 +520,10 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     static const MiscRegIndex HFarIndex = MISCREG_HIFAR;
 
     PrefetchAbort(Addr _addr, uint8_t _source, bool _stage2 = false,
-                  TranMethod _tran_method = TranMethod::UnknownTran,
+                  ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
                   ArmFault::DebugType _debug = ArmFault::NODEBUG) :
-        AbortFault<PrefetchAbort>(_addr, false, DomainType::NoAccess,
-                _source, _stage2, _tran_method, _debug)
+        AbortFault<PrefetchAbort>(_addr, false, TlbEntry::DomainType::NoAccess,
+                _source, _stage2, _tranMethod, _debug)
     {}
 
     // @todo: external aborts should be routed if SCR.EA == 1
@@ -551,12 +553,12 @@ class DataAbort : public AbortFault<DataAbort>
     bool sf;
     bool ar;
 
-    DataAbort(Addr _addr, DomainType _domain, bool _write, uint8_t _source,
+    DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write, uint8_t _source,
               bool _stage2=false,
-              TranMethod _tran_method=TranMethod::UnknownTran,
+              ArmFault::TranMethod _tranMethod=ArmFault::UnknownTran,
               ArmFault::DebugType _debug_type=ArmFault::NODEBUG) :
         AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
-                              _tran_method, _debug_type),
+                              _tranMethod, _debug_type),
         isv(false), sas (0), sse(0), srt(0), cm(0), sf(false), ar(false)
     {}
 
@@ -579,7 +581,7 @@ class VirtualDataAbort : public AbortFault<VirtualDataAbort>
     static const MiscRegIndex FarIndex  = MISCREG_DFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HDFAR;
 
-    VirtualDataAbort(Addr _addr, DomainType _domain, bool _write,
+    VirtualDataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write,
                      uint8_t _source) :
         AbortFault<VirtualDataAbort>(_addr, _write, _domain, _source, false)
     {}

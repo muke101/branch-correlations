@@ -38,11 +38,10 @@
 #ifndef __MEM_CACHE_PREFETCH_IRREGULAR_STREAM_BUFFER_HH__
 #define __MEM_CACHE_PREFETCH_IRREGULAR_STREAM_BUFFER_HH__
 
-#include "base/cache/associative_cache.hh"
 #include "base/callback.hh"
 #include "base/sat_counter.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5
 {
@@ -67,16 +66,11 @@ class IrregularStreamBuffer : public Queued
      */
     struct TrainingUnitEntry : public TaggedEntry
     {
-        TrainingUnitEntry(TagExtractor ext)
-          : TaggedEntry(), lastAddress(0), lastAddressSecure(false)
-        {
-            registerTagExtractor(ext);
-        }
         Addr lastAddress;
         bool lastAddressSecure;
     };
     /** Map of PCs to Training unit entries */
-    AssociativeCache<TrainingUnitEntry> trainingUnit;
+    AssociativeSet<TrainingUnitEntry> trainingUnit;
 
     /** Address Mapping entry, holds an address and a confidence counter */
     struct AddressMapping
@@ -94,11 +88,9 @@ class IrregularStreamBuffer : public Queued
     struct AddressMappingEntry : public TaggedEntry
     {
         std::vector<AddressMapping> mappings;
-        AddressMappingEntry(size_t num_mappings, unsigned counter_bits,
-                            TagExtractor ext)
+        AddressMappingEntry(size_t num_mappings, unsigned counter_bits)
           : TaggedEntry(), mappings(num_mappings, counter_bits)
         {
-            registerTagExtractor(ext);
         }
 
         void
@@ -113,9 +105,9 @@ class IrregularStreamBuffer : public Queued
     };
 
     /** Physical-to-Structured mappings table */
-    AssociativeCache<AddressMappingEntry> psAddressMappingCache;
+    AssociativeSet<AddressMappingEntry> psAddressMappingCache;
     /** Structured-to-Physical mappings table */
-    AssociativeCache<AddressMappingEntry> spAddressMappingCache;
+    AssociativeSet<AddressMappingEntry> spAddressMappingCache;
     /**
      * Counter of allocated structural addresses, increased by "chunkSize",
      * each time a new structured address is allocated

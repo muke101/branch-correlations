@@ -173,7 +173,7 @@ class SectorTags : public BaseTags
      * @param is_secure True if the target memory space is secure.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* findBlock(const CacheBlk::KeyType &key) const override;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find replacement victim based on address.
@@ -185,7 +185,7 @@ class SectorTags : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(const CacheBlk::KeyType &key,
+    CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks,
                          const uint64_t partition_id) override;

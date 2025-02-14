@@ -338,6 +338,14 @@ class ROB
         statistics::Scalar reads;
         // The number of rob_writes
         statistics::Scalar writes;
+
+        statistics::Scalar squashedLoads;
+        statistics::Scalar squashedRMWLoads;
+        statistics::Scalar squashedRMWALoads;
+
+        statistics::Scalar squashedStores;
+        statistics::Scalar squashedRMWStores;
+        statistics::Scalar squashedRMWAStores;
     } stats;
 };
 

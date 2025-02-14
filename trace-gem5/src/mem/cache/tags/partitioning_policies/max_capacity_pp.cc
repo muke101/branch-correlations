@@ -52,9 +52,8 @@ namespace partitioning_policy
 
 MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
     (const MaxCapacityPartitioningPolicyParams &params):
-    BasePartitioningPolicy(params),
-    totalBlockCount(params.cache_size / params.blk_size),
-    partitionIDs(params.partition_ids),
+    BasePartitioningPolicy(params), cacheSize(params.cache_size),
+    blkSize(params.blk_size), partitionIDs(params.partition_ids),
     capacities(params.capacities)
 {
     // check if ids and capacities vectors are the same length
@@ -63,33 +62,30 @@ MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
             "capacities arrays are not equal lengths");
     }
 
+    // calculate total cache block count to use when creating allocation maps
+    const uint64_t total_block_cnt = this->cacheSize / this->blkSize;
+
     // check allocations and create map
     for (auto i = 0; i < this->partitionIDs.size(); i++) {
         const uint64_t partition_id = this->partitionIDs[i];
         const double cap_frac = capacities[i];
 
-        // Configure partition
-        configurePartition(partition_id, cap_frac);
+        // check Capacity Fraction (cap_frac) is actually a fraction in [0,1]
+        if (!(cap_frac >= 0 && cap_frac <= 1)) {
+            fatal("MaxCapacity Partitioning Policy for PartitionID %d has "
+                "Capacity Fraction %f outside of [0,1] range", partition_id,
+                cap_frac);
+        }
+
+        const uint64_t allocated_block_cnt = cap_frac * total_block_cnt;
+        partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
+
+        DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
+            "for PartitionID: %d to use portion of size %f (%d cache blocks "
+            "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
+            total_block_cnt);
+
     }
-}
-
-void
-MaxCapacityPartitioningPolicy::configurePartition(uint64_t partition_id,
-                                                  double cap_frac)
-{
-    // check Capacity Fraction (cap_frac) is actually a fraction in [0,1]
-    panic_if(!(cap_frac >= 0 && cap_frac <= 1),
-             "MaxCapacity Partitioning Policy for PartitionID %d has "
-             "Capacity Fraction %f outside of [0,1] range", partition_id,
-             cap_frac);
-
-    const uint64_t allocated_block_cnt = cap_frac * totalBlockCount;
-    partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
-
-    DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
-        "for PartitionID: %d to use portion of size %f (%d cache blocks "
-        "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
-        totalBlockCount);
 }
 
 void

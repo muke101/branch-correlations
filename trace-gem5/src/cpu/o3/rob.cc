@@ -353,6 +353,26 @@ ROB::doSquash(ThreadID tid)
 
         (*squashIt[tid])->setCanCommit();
 
+        if ((*squashIt[tid])->isLoad()) {
+            stats.squashedLoads++;
+            if ((*squashIt[tid])->isRMW()) {
+                stats.squashedRMWLoads++;
+            }
+            if ((*squashIt[tid])->isRMWA()) {
+                stats.squashedRMWALoads++;
+            }
+        }
+        
+        if ((*squashIt[tid])->isStore()) {
+            stats.squashedStores++;
+            if ((*squashIt[tid])->isRMW()) {
+                stats.squashedRMWStores++;
+            }
+            if ((*squashIt[tid])->isRMWA()) {
+                stats.squashedRMWAStores++;
+            }
+        }
+
 
         if (squashIt[tid] == instList[tid].begin()) {
             DPRINTF(ROB, "Reached head of instruction list while "
@@ -526,7 +546,20 @@ ROB::ROBStats::ROBStats(statistics::Group *parent)
     ADD_STAT(reads, statistics::units::Count::get(),
         "The number of ROB reads"),
     ADD_STAT(writes, statistics::units::Count::get(),
-        "The number of ROB writes")
+        "The number of ROB writes"),
+    ADD_STAT(squashedLoads, statistics::units::Count::get(),
+        "The number of load instructions squashed"),
+    ADD_STAT(squashedRMWLoads, statistics::units::Count::get(),
+        "The number of read-modify-write load instructions squashed"),
+    ADD_STAT(squashedRMWALoads, statistics::units::Count::get(),
+        "The number of atomic read-modify-write load instructions squashed"),
+    ADD_STAT(squashedStores, statistics::units::Count::get(),
+        "The number of store instructions squashed"),
+    ADD_STAT(squashedRMWStores, statistics::units::Count::get(),
+        "The number of read-modify-write store instructions squashed"),
+    ADD_STAT(squashedRMWAStores, statistics::units::Count::get(),
+        "The number of atomic read-modify-write store instructions squashed")
+    
 {
 }
 

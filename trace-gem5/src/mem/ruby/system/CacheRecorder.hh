@@ -73,15 +73,13 @@ class TraceRecord
 class CacheRecorder
 {
   public:
-    // Construction requires block size.
-    CacheRecorder() = delete;
+    CacheRecorder();
+    ~CacheRecorder();
+
     CacheRecorder(uint8_t* uncompressed_trace,
                   uint64_t uncompressed_trace_size,
                   std::vector<RubyPort*>& ruby_port_map,
-                  uint64_t trace_block_size_bytes,
-                  uint64_t system_block_size_bytes);
-    ~CacheRecorder();
-
+                  uint64_t block_size_bytes);
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
                    RubyRequestType type, Tick time, DataBlock& data);
 

@@ -291,8 +291,14 @@ class GPUCoalescer : public RubyPort
 
     void readCallback(Addr address,
                       MachineType mach,
+                      DataBlock& data);
+
+    void readCallback(Addr address,
+                      MachineType mach,
                       DataBlock& data,
-                      bool externalHit);
+                      Cycles initialRequestTime,
+                      Cycles forwardRequestTime,
+                      Cycles firstResponseTime);
 
     void readCallback(Addr address,
                       MachineType mach,
@@ -300,16 +306,7 @@ class GPUCoalescer : public RubyPort
                       Cycles initialRequestTime,
                       Cycles forwardRequestTime,
                       Cycles firstResponseTime,
-                      bool externalHit);
-
-    void readCallback(Addr address,
-                      MachineType mach,
-                      DataBlock& data,
-                      Cycles initialRequestTime,
-                      Cycles forwardRequestTime,
-                      Cycles firstResponseTime,
-                      bool isRegion,
-                      bool externalHit);
+                      bool isRegion);
 
     /* atomics need their own callback because the data
        might be const coming from SLICC */
@@ -340,8 +337,6 @@ class GPUCoalescer : public RubyPort
     void completeIssue();
 
     void insertKernel(int wavefront_id, PacketPtr pkt);
-
-    RubySystem *getRubySystem() { return m_ruby_system; }
 
     GMTokenPort& getGMTokenPort() { return gmTokenPort; }
 
@@ -397,8 +392,7 @@ class GPUCoalescer : public RubyPort
                      Cycles initialRequestTime,
                      Cycles forwardRequestTime,
                      Cycles firstResponseTime,
-                     bool isRegion,
-                     bool externalHit);
+                     bool isRegion);
     void recordMissLatency(CoalescedRequest* crequest,
                            MachineType mach,
                            Cycles initialRequestTime,

@@ -39,6 +39,7 @@
 
 #include <algorithm>
 
+#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
@@ -117,7 +118,7 @@ DramRotGen::getNextPacket()
         }
     }
 
-    DPRINTF(TrafficGen, "DramRotGen::getNextPacket: %c to addr %#x, "
+    DPRINTF(TrafficGen, "DramRotGen::getNextPacket: %c to addr %x, "
             "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
             isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 

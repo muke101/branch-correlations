@@ -964,17 +964,6 @@ Commit::commitInsts()
 
             // Record that the number of ROB entries has changed.
             changedROBNumEntries[tid] = true;
-        // Inst at head of ROB cannot execute because the CPU
-        // does not know how to (lack of FU). This is a misconfiguration,
-        // so panic.
-        } else if (head_inst->noCapableFU() &&
-            head_inst->getFault() == NoFault)  {
-            panic("CPU cannot execute [sn:%llu] op_class: %u but"
-              " did not trigger a fault. Do you need to update"
-              " the configuration and add a functional unit for"
-              " that op class?\n",
-              head_inst->seqNum,
-              head_inst->opClass());
         } else {
             set(pc[tid], head_inst->pcState());
 
@@ -1105,6 +1094,41 @@ Commit::commitInsts()
     }
 }
 
+void Commit::trace_branch(const DynInstPtr &inst){
+
+    std::unique_ptr<PCStateBase> next_pc(inst->pcState().clone());
+    inst->staticInst->advancePC(*next_pc);
+
+    std::cerr << "TRACE: ";
+
+    // tick
+    std::cerr << ::gem5::curTick() << ",";
+
+    // Instruction address
+    std::cerr << inst->pcState().instAddr() << ',';
+
+    // Predicted target address
+    std::cerr << inst->predPC->instAddr() << ',';
+
+    // Jump address
+    std::cerr << next_pc->instAddr() << ',';
+
+    if (*next_pc == *inst->predPC) {
+        //not mispredicted
+        std::cerr << inst->readPredTaken() << ',';
+    }
+    else {
+        //mispredicted
+        std::cerr << !(inst->readPredTaken()) << ',';
+    }
+
+    // Mispredicted
+    std::cerr << (*next_pc == *inst->predPC);
+
+    std::cerr << std::endl;
+
+}
+
 bool
 Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 {
@@ -1222,11 +1246,6 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 
         commitStatus[tid] = TrapPending;
 
-        // Trace Dynamic Branch Instruction
-        if (cpu->m_branch_tracer != nullptr)
-            cpu->m_branch_tracer->traceDynBranch(head_inst);
-
-
         DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with fault\n",
             tid, head_inst->seqNum);
@@ -1252,11 +1271,8 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 
     updateComInstStats(head_inst);
 
-    // Trace Dynamic Branch Instruction
-    if (cpu->m_branch_tracer != nullptr) {
-        cpu->m_branch_tracer->traceDynBranch(head_inst);
-    }
-
+    if (head_inst->isCondCtrl())
+        trace_branch(head_inst);
 
     DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with PC %s\n",
@@ -1385,10 +1401,22 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 
         if (inst->isLoad()) {
             cpu->commitStats[tid]->numLoadInsts++;
+            if (inst->isRMW()) {
+                cpu->commitStats[tid]->numRMWLoadInsts++;
+            }
+            if (inst->isRMWA()) {
+                cpu->commitStats[tid]->numRMWALoadInsts++;
+            }
         }
 
         if (inst->isStore()) {
             cpu->commitStats[tid]->numStoreInsts++;
+            if (inst->isRMW()) {
+                cpu->commitStats[tid]->numRMWStoreInsts++;
+            }
+            if (inst->isRMWA()) {
+                cpu->commitStats[tid]->numRMWAStoreInsts++;
+            }
         }
     }
 

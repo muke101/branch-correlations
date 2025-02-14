@@ -44,7 +44,6 @@
 #ifndef __CPU_TRAFFIC_GEN_STREAM_GEN_HH__
 #define __CPU_TRAFFIC_GEN_STREAM_GEN_HH__
 
-#include "base/random.hh"
 #include "params/BaseTrafficGen.hh"
 
 namespace gem5
@@ -138,8 +137,6 @@ class RandomStreamGen : public StreamGen
   protected:
     /** Function to pick one of the preset Stream or Substream ID */
     uint32_t randomPick(const std::vector<uint32_t> &svec);
-
-    Random::RandomPtr rng = Random::genRandom();
 };
 
 } // namespace gem5

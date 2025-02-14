@@ -92,6 +92,7 @@ FUPool::FUPool(const Params &p)
 
     maxOpLatencies.fill(Cycles(0));
     pipelined.fill(true);
+    issueLatencies.fill(Cycles(0));
 
     //
     //  Iterate through the list of FUDescData structures
@@ -124,13 +125,17 @@ FUPool::FUPool(const Params &p)
                     fuPerCapList[(*j)->opClass].addFU(numFU + k);
 
                 // indicate that this FU has the capability
-                fu->addCapability((*j)->opClass, (*j)->opLat, (*j)->pipelined);
+                fu->addCapability((*j)->opClass, (*j)->opLat, (*j)->pipelined,
+                                 (*j)->issue_latency);
 
                 if ((*j)->opLat > maxOpLatencies[(*j)->opClass])
                     maxOpLatencies[(*j)->opClass] = (*j)->opLat;
 
                 if (!(*j)->pipelined)
                     pipelined[(*j)->opClass] = false;
+
+                if ((*j)->opLat > issueLatencies[(*j)->opClass])
+                    issueLatencies[(*j)->opClass] = (*j)->issue_latency;
             }
 
             numFU++;
@@ -158,13 +163,25 @@ FUPool::FUPool(const Params &p)
     }
 }
 
+void
+FUPool::freeUnitXCycles(int fu_idx, int cycles)
+{
+  assert(unitBusy[fu_idx]);
+
+  unit_cycles newUnit;
+  newUnit.idx = fu_idx;
+  newUnit.cycles = cycles;
+
+  unitsToBeFreedFuture.push_back(newUnit);
+}
+
 int
 FUPool::getUnit(OpClass capability)
 {
     //  If this pool doesn't have the specified capability,
     //  return this information to the caller
     if (!capabilityList[capability])
-        return NoCapableFU;
+        return -2;
 
     int fu_idx = fuPerCapList[capability].getFU();
     int start_idx = fu_idx;
@@ -175,7 +192,7 @@ FUPool::getUnit(OpClass capability)
         fu_idx = fuPerCapList[capability].getFU();
         if (fu_idx == start_idx) {
             // No FU available
-            return NoFreeFU;
+            return -1;
         }
     }
 
@@ -204,6 +221,22 @@ FUPool::processFreeUnits()
 
         unitBusy[fu_idx] = false;
     }
+}
+
+void
+FUPool::evaluateUnits()
+{
+  if(!unitsToBeFreedFuture.empty()){
+    for (auto itr = unitsToBeFreedFuture.begin(); itr != unitsToBeFreedFuture.end(); /*nothing*/){
+      itr->cycles--;
+      if(!itr->cycles){
+        unitsToBeFreed.push_back(itr->idx);
+        itr = unitsToBeFreedFuture.erase(itr);
+      }
+      else
+        ++itr;
+    }
+  }
 }
 
 void

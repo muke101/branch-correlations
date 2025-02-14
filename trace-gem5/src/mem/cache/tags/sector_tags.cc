@@ -156,7 +156,7 @@ SectorTags::invalidate(CacheBlk *blk)
 CacheBlk*
 SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
 {
-    CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
+    CacheBlk *blk = findBlock(pkt->getAddr(), pkt->isSecure());
 
     // Access all tags in parallel, hence one in each way.  The data side
     // either accesses all blocks in parallel, or one block sequentially on
@@ -262,20 +262,23 @@ SectorTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
 }
 
 CacheBlk*
-SectorTags::findBlock(const CacheBlk::KeyType &key) const
+SectorTags::findBlock(Addr addr, bool is_secure) const
 {
+    // Extract sector tag
+    const Addr tag = extractTag(addr);
+
     // The address can only be mapped to a specific location of a sector
     // due to sectors being composed of contiguous-address entries
-    const Addr offset = extractSectorOffset(key.address);
+    const Addr offset = extractSectorOffset(addr);
 
     // Find all possible sector entries that may contain the given address
     const std::vector<ReplaceableEntry*> entries =
-        indexingPolicy->getPossibleEntries(key);
+        indexingPolicy->getPossibleEntries(addr);
 
     // Search for block
     for (const auto& sector : entries) {
         auto blk = static_cast<SectorBlk*>(sector)->blks[offset];
-        if (blk->match(key)) {
+        if (blk->matchTag(tag, is_secure)) {
             return blk;
         }
     }
@@ -285,24 +288,24 @@ SectorTags::findBlock(const CacheBlk::KeyType &key) const
 }
 
 CacheBlk*
-SectorTags::findVictim(const CacheBlk::KeyType &key,
-                       const std::size_t size,
+SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
                        std::vector<CacheBlk*>& evict_blks,
                        const uint64_t partition_id)
 {
     // Get possible entries to be victimized
     std::vector<ReplaceableEntry*> sector_entries =
-        indexingPolicy->getPossibleEntries(key);
+        indexingPolicy->getPossibleEntries(addr);
 
     // Filter entries based on PartitionID
     if (partitionManager)
         partitionManager->filterByPartition(sector_entries, partition_id);
 
     // Check if the sector this address belongs to has been allocated
+    Addr tag = extractTag(addr);
     SectorBlk* victim_sector = nullptr;
     for (const auto& sector : sector_entries) {
         SectorBlk* sector_blk = static_cast<SectorBlk*>(sector);
-        if (sector_blk->match(key)) {
+        if (sector_blk->matchTag(tag, is_secure)) {
             victim_sector = sector_blk;
             break;
         }
@@ -322,12 +325,11 @@ SectorTags::findVictim(const CacheBlk::KeyType &key,
     }
 
     // Get the entry of the victim block within the sector
-    SectorSubBlk* victim = victim_sector->blks[
-        extractSectorOffset(key.address)];
+    SectorSubBlk* victim = victim_sector->blks[extractSectorOffset(addr)];
 
     // Get evicted blocks. Blocks are only evicted if the sectors mismatch and
     // the currently existing sector is valid.
-    if (victim_sector->match(key)) {
+    if (victim_sector->matchTag(tag, is_secure)) {
         // It would be a hit if victim was valid, and upgrades do not call
         // findVictim, so it cannot happen
         assert(!victim->isValid());
@@ -358,8 +360,7 @@ SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
     const SectorSubBlk* blk_cast = static_cast<const SectorSubBlk*>(blk);
     const SectorBlk* sec_blk = blk_cast->getSectorBlock();
     const Addr sec_addr =
-        indexingPolicy->regenerateAddr(
-            {blk->getTag(), blk->isSecure()}, sec_blk);
+        indexingPolicy->regenerateAddr(blk->getTag(), sec_blk);
     return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
 }
 

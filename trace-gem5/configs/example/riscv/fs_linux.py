@@ -81,9 +81,8 @@ requires(isa_required=ISA.RISCV)
 # of 25 March 2021).
 #
 # Options (Full System):
-# --kernel (required):          Bootloader + kernel binary if no --bootloader
-#                               is specified, kernel only binary otherwise
-# --bootloader (optional):      Bootloader (OpenSBI: fw_jump.elf)
+# --kernel (required):          Bootloader + kernel binary (e.g. bbl with
+#                               linux kernel payload)
 # --disk-image (optional):      Path to disk image file. Not needed if using
 #                               ramfs (might run into issues though).
 # --virtio-rng (optional):      Enable VirtIO entropy source device
@@ -92,7 +91,6 @@ requires(isa_required=ISA.RISCV)
 # --bare-metal (boolean):       Use baremetal Riscv (default False). Use this
 #                               if bbl is built with "--with-dts" option.
 #                               (do not forget to include bootargs in dts file)
-# --riscv-32bits (boolean):     Use 32 bits core of Riscv CPU
 #
 # Not Used:
 # --command-line-file, --script, --frame-capture, --os-type, --timesync,
@@ -134,11 +132,6 @@ def generateDtb(system):
             else:
                 root.append(node)
 
-    node = FdtNode("chosen")
-    node.append(FdtPropertyStrings("bootargs", [system.workload.command_line]))
-    node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
-    root.append(node)
-
     fdt = Fdt()
     fdt.add_rootnode(root)
     fdt.writeDtsFile(path.join(m5.options.outdir, "device.dts"))
@@ -149,12 +142,6 @@ def generateDtb(system):
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser, ISA.RISCV)
 Options.addFSOptions(parser)
-parser.add_argument(
-    "--bootloader",
-    action="store",
-    type=str,
-    help="File that contains the bootloader",
-)
 parser.add_argument(
     "--virtio-rng", action="store_true", help="Enable VirtIORng device"
 )
@@ -169,15 +156,8 @@ parser.add_argument(
     type=str,
     help="The root directory for files exposed to semihosting",
 )
-parser.add_argument(
-    "--riscv-32bits",
-    action="store_true",
-    help="Use 32 bits core of Riscv CPU",
-)
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
-if not args.kernel:
-    parser.error("--kernel argument is required")
 
 # CPU and Memory
 (CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
@@ -207,12 +187,8 @@ if args.semihosting:
 if args.bare_metal:
     system.workload = RiscvBareMetal(**workload_args)
     system.workload.bootloader = args.kernel
-elif not args.bootloader:
-    system.workload = RiscvLinux(**workload_args)
-    system.workload.object_file = args.kernel
 else:
-    system.workload = RiscvBootloaderKernelWorkload(**workload_args)
-    system.workload.bootloader_filename = args.bootloader
+    system.workload = RiscvLinux(**workload_args)
     system.workload.object_file = args.kernel
 
 system.iobus = IOXBar()
@@ -286,10 +262,6 @@ system.cpu = [
     CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i) for i in range(np)
 ]
 
-if args.riscv_32bits:
-    for core in system.cpu:
-        core.ArchISA.riscv_type = "RV32"
-
 if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock
     system.iocache = IOCache(addr_ranges=system.mem_ranges)
@@ -339,7 +311,15 @@ for cpu in system.cpu:
 # --------------------------- DTB Generation --------------------------- #
 
 if not args.bare_metal:
-    # Default DTB address if bbl is built with --with-dts option
+    if args.dtb_filename:
+        system.workload.dtb_filename = args.dtb_filename
+    else:
+        generateDtb(system)
+        system.workload.dtb_filename = path.join(
+            m5.options.outdir, "device.dtb"
+        )
+
+    # Default DTB address if bbl is bulit with --with-dts option
     system.workload.dtb_addr = 0x87E00000
 
     # Linux boot command flags
@@ -348,15 +328,6 @@ if not args.bare_metal:
     else:
         kernel_cmd = ["console=ttyS0", "root=/dev/vda", "ro"]
         system.workload.command_line = " ".join(kernel_cmd)
-
-    # DTB filename (auto-generate if not specified)
-    if args.dtb_filename:
-        system.workload.dtb_filename = args.dtb_filename
-    else:
-        generateDtb(system)
-        system.workload.dtb_filename = path.join(
-            m5.options.outdir, "device.dtb"
-        )
 
 # ---------------------------- Default Setup --------------------------- #
 

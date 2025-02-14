@@ -54,7 +54,6 @@
 #include <array>
 #include <vector>
 
-#include "base/random.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "params/MultiperspectivePerceptron.hh"
 
@@ -306,8 +305,6 @@ class MultiperspectivePerceptron : public BPredUnit
     static int xlat[];
     /** Transfer function for 5-width tables */
     static int xlat4[];
-
-    Random::RandomPtr rng = Random::genRandom();
 
     /** History data is kept for each thread */
     struct ThreadData

@@ -81,14 +81,14 @@ requires(isa_required=ISA.X86)
 # The cache hierarchy can be different from the cache hierarchy used in taking
 # the checkpoints
 cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
-    l1d_size="32KiB",
-    l1i_size="32KiB",
-    l2_size="256KiB",
+    l1d_size="32kB",
+    l1i_size="32kB",
+    l2_size="256kB",
 )
 
 # The memory structure can be different from the memory structure used in
 # taking the checkpoints, but the size of the memory must be maintained
-memory = DualChannelDDR4_2400(size="2GiB")
+memory = DualChannelDDR4_2400(size="2GB")
 
 processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING,

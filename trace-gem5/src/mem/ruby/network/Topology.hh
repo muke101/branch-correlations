@@ -80,8 +80,7 @@ class Topology
   public:
     Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_vnets,
              const std::vector<BasicExtLink *> &ext_links,
-             const std::vector<BasicIntLink *> &int_links,
-             RubySystem *ruby_system);
+             const std::vector<BasicIntLink *> &int_links);
 
     uint32_t numSwitches() const { return m_number_of_switches; }
     void createLinks(Network *net);
@@ -109,7 +108,7 @@ class Topology
                                   const Matrix &weights, const Matrix &dist,
                                   int vnet);
 
-    uint32_t m_nodes;
+    const uint32_t m_nodes;
     const uint32_t m_number_of_switches;
     int m_vnets;
 
@@ -117,8 +116,6 @@ class Topology
     std::vector<BasicIntLink*> m_int_link_vector;
 
     LinkMap m_link_map;
-
-    RubySystem *m_ruby_system = nullptr;
 };
 
 inline std::ostream&

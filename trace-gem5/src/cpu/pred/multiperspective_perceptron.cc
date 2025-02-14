@@ -50,6 +50,7 @@
 
 #include "cpu/pred/multiperspective_perceptron.hh"
 
+#include "base/random.hh"
 #include "debug/Branch.hh"
 
 namespace gem5
@@ -512,7 +513,7 @@ MultiperspectivePerceptron::train(ThreadID tid, MPPBranchInfo &bi, bool taken)
             do {
                 // udpate a random weight
                 int besti = -1;
-                int nrand = rng->random<int>() % specs.size();
+                int nrand = random_mt.random<int>() % specs.size();
                 int pout;
                 found = false;
                 for (int j = 0; j < specs.size(); j += 1) {
@@ -684,7 +685,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr pc,  bool taken,
         // filter, blow a random filter entry away
         if (decay && transition &&
             ((threadData[tid]->occupancy > decay) || (decay == 1))) {
-            int rnd = rng->random<int>() %
+            int rnd = random_mt.random<int>() %
                       threadData[tid]->filterTable.size();
             FilterEntry &frand = threadData[tid]->filterTable[rnd];
             if (frand.seenTaken && frand.seenUntaken) {

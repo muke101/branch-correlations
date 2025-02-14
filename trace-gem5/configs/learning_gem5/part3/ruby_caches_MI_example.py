@@ -48,7 +48,7 @@ from m5.util import (
 
 class MyCacheSystem(RubySystem):
     def __init__(self):
-        if "MI_example" not in buildEnv:
+        if buildEnv["PROTOCOL"] != "MI_example":
             fatal("This system assumes MI_example!")
 
         super().__init__()
@@ -84,7 +84,6 @@ class MyCacheSystem(RubySystem):
                 # I/D cache is combined and grab from ctrl
                 dcache=self.controllers[i].cacheMemory,
                 clk_domain=self.controllers[i].clk_domain,
-                ruby_system=self,
             )
             for i in range(len(cpus))
         ]
@@ -109,8 +108,7 @@ class MyCacheSystem(RubySystem):
             self.sequencers[i].connectCpuPorts(cpu)
 
 
-class L1Cache(MI_example_L1Cache_Controller):
-
+class L1Cache(L1Cache_Controller):
     _version = 0
 
     @classmethod
@@ -127,9 +125,7 @@ class L1Cache(MI_example_L1Cache_Controller):
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
         self.cacheMemory = RubyCache(
-            size="16KiB",
-            assoc=8,
-            start_index_bit=self.getBlockSizeBits(system),
+            size="16kB", assoc=8, start_index_bit=self.getBlockSizeBits(system)
         )
         self.clk_domain = cpu.clk_domain
         self.send_evictions = self.sendEvicts(cpu)
@@ -166,8 +162,7 @@ class L1Cache(MI_example_L1Cache_Controller):
         self.responseToCache.in_port = ruby_system.network.out_port
 
 
-class DirController(MI_example_Directory_Controller):
-
+class DirController(Directory_Controller):
     _version = 0
 
     @classmethod
@@ -183,9 +178,7 @@ class DirController(MI_example_Directory_Controller):
         self.version = self.versionCount()
         self.addr_ranges = ranges
         self.ruby_system = ruby_system
-        self.directory = RubyDirectoryMemory(
-            block_size=ruby_system.block_size_bytes
-        )
+        self.directory = RubyDirectoryMemory()
         # Connect this directory to the memory side.
         self.memory = mem_ctrls[0].port
         self.connectQueues(ruby_system)

@@ -57,10 +57,10 @@ namespace ruby
 *       - The same line has been accessed in the past accessLatency ticks
 */
 
-ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Cycles access_clocks)
+ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Tick access_latency)
 {
     this->numALUs = num_ALUs;
-    this->accessClocks = access_clocks;
+    this->accessLatency = access_latency;
 }
 
 bool ALUFreeListArray::tryAccess(Addr addr)
@@ -85,7 +85,7 @@ bool ALUFreeListArray::tryAccess(Addr addr)
         }
 
         // Block access if the line is already being used
-        if (record.lineAddr == makeLineAddress(addr, m_block_size_bits)) {
+        if (record.lineAddr == makeLineAddress(addr)) {
             return false;
         }
     }
@@ -99,9 +99,7 @@ void ALUFreeListArray::reserve(Addr addr)
     // the access is valid
 
     // Add record to queue
-    accessQueue.push_front(
-        AccessRecord(makeLineAddress(addr, m_block_size_bits), curTick())
-    );
+    accessQueue.push_front(AccessRecord(makeLineAddress(addr), curTick()));
 }
 
 } // namespace ruby

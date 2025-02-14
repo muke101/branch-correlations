@@ -40,7 +40,6 @@
 
 #include <unordered_map>
 
-#include "base/random.hh"
 #include "cpu/testers/traffic_gen/base.hh"
 
 namespace gem5
@@ -119,8 +118,6 @@ class TrafficGen : public BaseTrafficGen
 
     /** Map of generator states */
     std::unordered_map<uint32_t, std::shared_ptr<BaseGen>> states;
-
-    Random::RandomPtr rng = Random::genRandom();
 
   protected: // BaseTrafficGen
     std::shared_ptr<BaseGen> nextGenerator() override;

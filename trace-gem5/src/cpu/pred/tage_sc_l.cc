@@ -54,6 +54,7 @@
 
 #include "cpu/pred/tage_sc_l.hh"
 
+#include "base/random.hh"
 #include "debug/TageSCL.hh"
 
 namespace gem5
@@ -72,7 +73,7 @@ TAGE_SC_L_LoopPredictor::calcConf(int index) const
 bool
 TAGE_SC_L_LoopPredictor::optionalAgeInc() const
 {
-    return (rng->random<int>() & 7) == 0;
+    return (random_mt.random<int>() & 7) == 0;
 }
 
 TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams &p)
@@ -307,7 +308,7 @@ void
 TAGE_SC_L_TAGE::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
 {
     // Do not allocate too often if the prediction is ok
-    if ((taken == pred_taken) && ((rng->random<int>() & 31) != 0)) {
+    if ((taken == pred_taken) && ((random_mt.random<int>() & 31) != 0)) {
         alloc = false;
     }
 }
@@ -316,11 +317,11 @@ int
 TAGE_SC_L_TAGE::calcDep(TAGEBase::BranchInfo* bi)
 {
     int a = 1;
-    if ((rng->random<int>() & 127) < 32) {
+    if ((random_mt.random<int>() & 127) < 32) {
         a = 2;
     }
     return ((((bi->hitBank - 1 + 2 * a) & 0xffe)) ^
-            (rng->random<int>() & 1));
+            (random_mt.random<int>() & 1));
 }
 
 void
@@ -442,7 +443,7 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
         return;
     }
 
-    int nrand = rng->random<int>() & 3;
+    int nrand = random_mt.random<int>() & 3;
     if (tage_bi->condBranch) {
         DPRINTF(TageSCL, "Updating tables for branch:%lx; taken?:%d\n",
                 pc, taken);

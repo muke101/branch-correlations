@@ -27,24 +27,16 @@
 from m5.objects import (
     ClockDomain,
     MessageBuffer,
-    MI_example_L1Cache_Controller,
     RubyCache,
 )
 
 from ......isas import ISA
 from ......utils.override import overrides
 from .....processors.abstract_core import AbstractCore
+from ..abstract_l1_cache import AbstractL1Cache
 
 
-class L1Cache(MI_example_L1Cache_Controller):
-
-    _version = 0
-
-    @classmethod
-    def versionCount(cls):
-        cls._version += 1  # Use count for this particular type
-        return cls._version - 1
-
+class L1Cache(AbstractL1Cache):
     def __init__(
         self,
         size: str,
@@ -55,18 +47,16 @@ class L1Cache(MI_example_L1Cache_Controller):
         target_isa: ISA,
         clk_domain: ClockDomain,
     ):
-        super().__init__()
-        self.version = self.versionCount()
-        self._cache_line_size = cache_line_size
-        self.connectQueues(network)
+        super().__init__(network, cache_line_size)
 
         self.cacheMemory = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self._cache_line_size
+            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
         )
 
         self.clk_domain = clk_domain
         self.send_evictions = core.requires_send_evicts()
 
+    @overrides(AbstractL1Cache)
     def connectQueues(self, network):
         self.mandatoryQueue = MessageBuffer()
         self.requestFromCache = MessageBuffer(ordered=True)

@@ -41,6 +41,8 @@ def macroop ROL_R_I
 
 def macroop ROL_M_I
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     roli t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -48,6 +50,8 @@ def macroop ROL_M_I
 
 def macroop ROL_P_I
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     roli t1, t1, imm, flags=(OF,CF)
@@ -61,6 +65,8 @@ def macroop ROL_1_R
 
 def macroop ROL_1_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     roli t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -68,6 +74,8 @@ def macroop ROL_1_M
 
 def macroop ROL_1_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     roli t1, t1, 1, flags=(OF,CF)
@@ -81,6 +89,8 @@ def macroop ROL_R_R
 
 def macroop ROL_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rol t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -88,6 +98,8 @@ def macroop ROL_M_R
 
 def macroop ROL_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rol t1, t1, reg, flags=(OF,CF)
@@ -101,6 +113,8 @@ def macroop ROR_R_I
 
 def macroop ROR_M_I
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rori t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -108,6 +122,8 @@ def macroop ROR_M_I
 
 def macroop ROR_P_I
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rori t1, t1, imm, flags=(OF,CF)
@@ -121,6 +137,8 @@ def macroop ROR_1_R
 
 def macroop ROR_1_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rori t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -128,6 +146,8 @@ def macroop ROR_1_M
 
 def macroop ROR_1_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rori t1, t1, 1, flags=(OF,CF)
@@ -141,6 +161,8 @@ def macroop ROR_R_R
 
 def macroop ROR_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     ror t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -148,6 +170,8 @@ def macroop ROR_M_R
 
 def macroop ROR_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     ror t1, t1, reg, flags=(OF,CF)
@@ -161,6 +185,8 @@ def macroop RCL_R_I
 
 def macroop RCL_M_I
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcli t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -168,6 +194,8 @@ def macroop RCL_M_I
 
 def macroop RCL_P_I
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcli t1, t1, imm, flags=(OF,CF)
@@ -181,6 +209,8 @@ def macroop RCL_1_R
 
 def macroop RCL_1_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcli t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -188,6 +218,8 @@ def macroop RCL_1_M
 
 def macroop RCL_1_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcli t1, t1, 1, flags=(OF,CF)
@@ -201,6 +233,8 @@ def macroop RCL_R_R
 
 def macroop RCL_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcl t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -208,6 +242,8 @@ def macroop RCL_M_R
 
 def macroop RCL_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcl t1, t1, reg, flags=(OF,CF)
@@ -221,6 +257,8 @@ def macroop RCR_R_I
 
 def macroop RCR_M_I
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcri t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -228,6 +266,8 @@ def macroop RCR_M_I
 
 def macroop RCR_P_I
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcri t1, t1, imm, flags=(OF,CF)
@@ -241,6 +281,8 @@ def macroop RCR_1_R
 
 def macroop RCR_1_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcri t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -248,6 +290,8 @@ def macroop RCR_1_M
 
 def macroop RCR_1_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcri t1, t1, 1, flags=(OF,CF)
@@ -261,6 +305,8 @@ def macroop RCR_R_R
 
 def macroop RCR_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     rcr t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
@@ -268,6 +314,8 @@ def macroop RCR_M_R
 
 def macroop RCR_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     rcr t1, t1, reg, flags=(OF,CF)

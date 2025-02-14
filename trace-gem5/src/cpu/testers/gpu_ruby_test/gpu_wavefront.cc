@@ -67,7 +67,7 @@ GpuWavefront::issueLoadOps()
             Addr address = addrManager->getAddress(location);
             DPRINTF(ProtocolTest, "%s Episode %d: Issuing Load - Addr %s\n",
                     this->getName(), curEpisode->getEpisodeId(),
-                    printAddress(address));
+                    ruby::printAddress(address));
 
             int load_size = sizeof(Value);
 
@@ -124,7 +124,7 @@ GpuWavefront::issueStoreOps()
 
             DPRINTF(ProtocolTest, "%s Episode %d: Issuing Store - Addr %s - "
                     "Value %d\n", this->getName(),
-                    curEpisode->getEpisodeId(), printAddress(address),
+                    curEpisode->getEpisodeId(), ruby::printAddress(address),
                     new_value);
 
             auto req = std::make_shared<Request>(address, sizeof(Value),
@@ -178,7 +178,7 @@ GpuWavefront::issueAtomicOps()
 
         DPRINTF(ProtocolTest, "%s Episode %d: Issuing Atomic_Inc - Addr %s\n",
                 this->getName(), curEpisode->getEpisodeId(),
-                printAddress(address));
+                ruby::printAddress(address));
 
         // must be aligned with store size
         assert(address % sizeof(Value) == 0);
@@ -268,7 +268,7 @@ GpuWavefront::hitCallback(PacketPtr pkt)
     DPRINTF(ProtocolTest, "%s Episode %d: hitCallback - Command %s - "
                     "Addr %s\n", this->getName(),
                     curEpisode->getEpisodeId(), resp_cmd.toString(),
-                    printAddress(addr));
+                    ruby::printAddress(addr));
 
     // whether the transaction is done after this hitCallback
     bool isTransactionDone = true;

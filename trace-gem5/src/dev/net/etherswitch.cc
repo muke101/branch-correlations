@@ -32,6 +32,7 @@
 
 #include "dev/net/etherswitch.hh"
 
+#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/EthernetAll.hh"
 #include "sim/core.hh"
@@ -203,7 +204,7 @@ EtherSwitch::Interface::switchingDelay()
     Tick delay = (Tick)ceil(((double)outputFifo.front()->simLength
                                      * ticksPerByte) + 1.0);
     if (delayVar != 0)
-                delay += rng->random<Tick>(0, delayVar);
+                delay += random_mt.random<Tick>(0, delayVar);
     delay += switchDelay;
     return delay;
 }

@@ -59,6 +59,16 @@ def test_boot(
         additional_config_args.append("--tick-exit")
         additional_config_args.append(str(to_tick))
 
+    if mem_system == "mesi_two_level":
+        protocol_to_use = None
+        isa_to_use = constants.all_compiled_tag
+    elif mem_system == "mi_example":
+        protocol_to_use = "MI_example"
+        isa_to_use = constants.x86_tag
+    else:
+        protocol_to_use = None
+        isa_to_use = constants.all_compiled_tag
+
     gem5_verify_config(
         name=name,
         verifiers=verifiers,
@@ -86,8 +96,9 @@ def test_boot(
             resource_path,
         ]
         + additional_config_args,
-        valid_isas=(constants.all_compiled_tag,),
+        valid_isas=(isa_to_use,),
         valid_hosts=constants.supported_hosts,
+        protocol=protocol_to_use,
         length=length,
     )
 

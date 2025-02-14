@@ -118,8 +118,8 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
 
     // add a very basic sanity check on the port to ensure the
     // invisible buffer is not growing beyond reasonable limits
-    if (!_disableSanityCheck && transmitList.size() > 1024) {
-        panic("Packet queue %s has grown beyond 1024 packets\n",
+    if (!_disableSanityCheck && transmitList.size() > 4096) {
+        panic("Packet queue %s has grown beyond 4096 packets\n",
               name());
     }
 
@@ -148,11 +148,17 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
     // either the packet list is empty or this has to be inserted
     // before every other packet
     transmitList.emplace_front(when, pkt);
-    schedSendEvent(when);
+    schedSendEvent(when, pkt);
 }
 
 void
 PacketQueue::schedSendEvent(Tick when)
+{
+    schedSendEvent(when,NULL);
+}
+
+void
+PacketQueue::schedSendEvent(Tick when, PacketPtr pkt)
 {
     // if we are waiting on a retry just hold off
     if (waitingOnRetry) {
@@ -164,8 +170,14 @@ PacketQueue::schedSendEvent(Tick when)
     if (when != MaxTick) {
         // we cannot go back in time, and to be consistent we stick to
         // one tick in the future
-        when = std::max(when, curTick() + 1);
+        Tick initWhen = when;
+        when = std::max(initWhen, curTick() + 1);
         // @todo Revisit the +1
+        if(pkt != NULL) {
+            if(pkt->req->wasHandledByRuby()) {
+                when = std::max(initWhen, curTick());
+            }
+        }
 
         if (!sendEvent.scheduled()) {
             em.schedule(&sendEvent, when);

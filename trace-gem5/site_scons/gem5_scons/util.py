@@ -82,18 +82,14 @@ def readCommand(cmd, **kwargs):
     kwargs.setdefault("stdout", PIPE)
     kwargs.setdefault("stderr", STDOUT)
     kwargs.setdefault("close_fds", True)
-
-    p = Popen(cmd, **kwargs)
-    return_code = p.wait()
-    output = p.communicate()[0].decode("utf-8")
-
-    if return_code != 0:
+    try:
+        subp = Popen(cmd, **kwargs)
+    except Exception as e:
         if no_exception:
-            return return_code, None
-        raise Exception(
-            f"Command '{cmd}' failed with return code {return_code}:\n{output}"
-        )
+            return -1, exception
+        raise
 
+    output = subp.communicate()[0].decode("utf-8")
     return output
 
 

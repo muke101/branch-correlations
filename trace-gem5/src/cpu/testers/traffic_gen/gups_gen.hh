@@ -41,7 +41,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/random.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "params/GUPSGen.hh"
@@ -301,8 +300,6 @@ class GUPSGen : public ClockedObject
      * @brief The number of read requests currently created.
      */
     int readRequests;
-
-    Random::RandomPtr rng = Random::genRandom();
 
     struct GUPSGenStat : public statistics::Group
     {

@@ -104,7 +104,6 @@ class Switch : public BasicRouter
 
     void print(std::ostream& out) const;
     void init_net_ptr(SimpleNetwork* net_ptr) { m_network_ptr = net_ptr; }
-    SimpleNetwork* getNetPtr() const { return m_network_ptr; }
 
     bool functionalRead(Packet *);
     bool functionalRead(Packet *, WriteMask&);

@@ -52,7 +52,6 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
 
-#include "base/random.hh"
 #include "base/sat_counter.hh"
 #include "mem/cache/replacement_policies/base.hh"
 
@@ -111,8 +110,6 @@ class BRRIP : public Base
      * if a new entry is inserted with long or distant re-reference.
      */
     const unsigned btp;
-
-    mutable Random::RandomPtr rng = Random::genRandom();
 
   public:
     typedef BRRIPRPParams Params;

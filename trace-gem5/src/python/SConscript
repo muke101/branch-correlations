@@ -50,6 +50,7 @@ PySource('gem5.components.boards.experimental',
 PySource('gem5.components.boards', 'gem5/components/boards/simple_board.py')
 PySource('gem5.components.boards', 'gem5/components/boards/test_board.py')
 PySource('gem5.components.boards', 'gem5/components/boards/x86_board.py')
+PySource('gem5.components.boards', 'gem5/components/boards/x86_two_disks.py')
 PySource('gem5.components.boards', 'gem5/components/boards/arm_board.py')
 PySource('gem5.components.boards',
     "gem5/components/boards/kernel_disk_workload.py")
@@ -120,6 +121,14 @@ PySource('gem5.components.cachehierarchies.ruby',
     'gem5/components/cachehierarchies/ruby/mi_example_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.ruby.caches',
     'gem5/components/cachehierarchies/ruby/caches/__init__.py')
+PySource('gem5.components.cachehierarchies.ruby.caches',
+    'gem5/components/cachehierarchies/ruby/caches/abstract_directory.py')
+PySource('gem5.components.cachehierarchies.ruby.caches',
+    'gem5/components/cachehierarchies/ruby/caches/abstract_dma_controller.py')
+PySource('gem5.components.cachehierarchies.ruby.caches',
+    'gem5/components/cachehierarchies/ruby/caches/abstract_l1_cache.py')
+PySource('gem5.components.cachehierarchies.ruby.caches',
+    'gem5/components/cachehierarchies/ruby/caches/abstract_l2_cache.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
     'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
@@ -149,21 +158,16 @@ PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
     'l3_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
-    '__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache',
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
     'octopi.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache',
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
     'core_complex.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache',
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
     'octopi_network.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache',
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
     'ruby_network_components.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
@@ -175,34 +179,10 @@ PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
     'dma_controller.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
     'gem5/components/cachehierarchies/ruby/caches/mi_example/l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/corepair_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/tcp.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/sqc.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.viper',
-    'gem5/components/cachehierarchies/ruby/caches/viper/tcc.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py')
-
-PySource('gem5.components.devices',
-    'gem5/components/devices/__init__.py')
-PySource('gem5.components.devices.gpus',
-    'gem5/components/devices/gpus/__init__.py')
-PySource('gem5.components.devices.gpus',
-    'gem5/components/devices/gpus/amdgpu.py')
-PySource('gem5.components.devices.gpus',
-    'gem5/components/devices/gpus/viper_shader.py')
-
 PySource('gem5.components.memory', 'gem5/components/memory/__init__.py')
 PySource('gem5.components.memory', 'gem5/components/memory/abstract_memory_system.py')
 PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
@@ -284,9 +264,13 @@ PySource('gem5.components.processors.spatter_gen',
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_core.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/custom_core.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/base_cpu_core.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_processor.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/custom_processor.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/base_cpu_processor.py')
 PySource('gem5.components.processors',
@@ -301,8 +285,6 @@ PySource('gem5.components.processors',
 PySource('gem5.prebuilt', 'gem5/prebuilt/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/x86_demo_board.py')
-PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/riscv_demo_board.py')
-PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/arm_demo_board.py')
 PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/__init__.py')
 PySource('gem5.prebuilt.riscvmatched',
@@ -313,14 +295,6 @@ PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/riscvmatched_processor.py')
 PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/riscvmatched_core.py')
-PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/__init__.py')
-PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/board.py')
-PySource('gem5.prebuilt.viper',
-    'gem5/prebuilt/viper/cpu_cache_hierarchy.py')
-PySource('gem5.prebuilt.viper',
-    'gem5/prebuilt/viper/gpu_cache_hierarchy.py')
-PySource('gem5.prebuilt.viper',
-    'gem5/prebuilt/viper/viper_network.py')
 PySource('gem5.resources', 'gem5/resources/__init__.py')
 PySource('gem5.resources', 'gem5/resources/client.py')
 PySource('gem5.resources', 'gem5/resources/downloader.py')

@@ -77,7 +77,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="128MiB")
+memory = SingleChannelDDR3_1600(size="128MB")
 # Setup a single core Processor.
 if args.cpu_type == "atomic":
     processor = SimpleProcessor(
@@ -110,7 +110,8 @@ board.set_kernel_disk_workload(
 # Begin running of the simulation.
 print("Running with ISA: " + processor.get_isa().name)
 print()
-root = board._pre_instantiate()
+root = Root(full_system=True, system=board)
+board._pre_instantiate()
 m5.instantiate()
 print("Beginning simulation!")
 

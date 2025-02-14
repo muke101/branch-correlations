@@ -30,6 +30,7 @@
 
 #include <memory>
 
+#include "base/random.hh"
 #include "params/BIPRP.hh"
 #include "sim/cur_tick.hh"
 
@@ -51,7 +52,7 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
         std::static_pointer_cast<LRUReplData>(replacement_data);
 
     // Entries are inserted as MRU if lower than btp, LRU otherwise
-    if (rng->random<unsigned>(1, 100) <= btp) {
+    if (random_mt.random<unsigned>(1, 100) <= btp) {
         casted_replacement_data->lastTouchTick = curTick();
     } else {
         // Make their timestamps as old as possible, so that they become LRU

@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2018 Metempsy Technology Consulting
- * Copyright (c) 2024 Samsung Electronics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -117,14 +116,13 @@ class BOP : public Queued
          *  @param addr: address to hash
          *  @param way:  RR table to which is addressed (left/right)
          */
-        unsigned int index(Addr addr, unsigned int way) const;
+        unsigned int hash(Addr addr, unsigned int way) const;
 
         /** Insert the specified address into the RR table
          *  @param addr: address to insert
-         *  @param addr_tag: The tag to insert in the RR table
          *  @param way: RR table to which the address will be inserted
          */
-        void insertIntoRR(Addr addr, Addr addr_tag, unsigned int way);
+        void insertIntoRR(Addr addr, unsigned int way);
 
         /** Insert the specified address into the delay queue. This will
          *  trigger an event after the delay cycles pass
@@ -153,8 +151,6 @@ class BOP : public Queued
         void notifyFill(const CacheAccessProbeArg &arg) override;
 
     public:
-        /** The prefetch degree, i.e. the number of prefetches to generate */
-        unsigned int degree;
 
         BOP(const BOPPrefetcherParams &p);
         ~BOP() = default;

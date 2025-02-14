@@ -122,7 +122,7 @@ ElasticTrace::regEtraceListeners()
 {
     assert(!allProbesReg);
     inform("@%llu: No. of instructions committed = %llu, registering elastic"
-        " probe listeners", curTick(), cpu->totalNumSimulatedInsts());
+        " probe listeners", curTick(), cpu->numSimulatedInsts());
     // Create new listeners: provide method to be called upon a notify() for
     // each probe point.
     listeners.push_back(new ProbeListenerArg<ElasticTrace, RequestPtr>(this,

@@ -62,7 +62,6 @@
 
 #include <vector>
 
-#include "base/random.hh"
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/tage_base.hh"
@@ -78,8 +77,6 @@ class TAGE: public BPredUnit
 {
   protected:
     TAGEBase *tage;
-
-    Random::RandomPtr rng = Random::genRandom();
 
     struct TageBranchInfo
     {

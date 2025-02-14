@@ -140,38 +140,38 @@ class SingleChannel(AbstractMemorySystem):
 
 
 def SingleChannelDDR3_1600(
-    size: Optional[str] = "2048MiB",
+    size: Optional[str] = "2048MB",
 ) -> SingleChannel:
     """
     A single channel DDR3_1600.
 
-    :param size: The size of the memory system. Default value of 2048MiB.
+    :param size: The size of the memory system. Default value of 2048MB.
     """
     return SingleChannel("DDR3_8Gb_x8_1600", size)
 
 
-def SingleChannelDDR4_2400(size: Optional[str] = "1024MiB") -> SingleChannel:
+def SingleChannelDDR4_2400(size: Optional[str] = "1024MB") -> SingleChannel:
     """
     A single channel DDR3_2400.
 
-    :param size: The size of the memory system. Default value of 1024MiB.
+    :param size: The size of the memory system. Default value of 1024MB.
     """
     return SingleChannel("DDR4_4Gb_x8_2400", size)
 
 
-def SingleChannelLPDDR3_1600(size: Optional[str] = "256MiB") -> SingleChannel:
+def SingleChannelLPDDR3_1600(size: Optional[str] = "256MB") -> SingleChannel:
     """
     A single channel LPDDR3_1600.
 
-    :param size: The size of the memory system. Default value of 256MiB.
+    :param size: The size of the memory system. Default value of 256MB.
     """
     return SingleChannel("LPDDR3_8Gb_x32_1600", size)
 
 
-def SingleChannelHBM(size: Optional[str] = "64MiB") -> SingleChannel:
+def SingleChannelHBM(size: Optional[str] = "64MB") -> SingleChannel:
     """
     A single channel HBM.
 
-    :param size: The size of the memory system. Default value of 64MiB.
+    :param size: The size of the memory system. Default value of 64MB.
     """
     return SingleChannel("HBM1_4Gb_x128", size)

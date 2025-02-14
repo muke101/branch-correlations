@@ -59,7 +59,7 @@ requires(isa_required=ISA.POWER)
 cache_hierarchy = NoCache()
 
 # We use a single channel DDR4_2400 memory system
-memory = SingleChannelDDR4_2400(size="32MiB")
+memory = SingleChannelDDR4_2400(size="32MB")
 
 # We use a simple ATOMIC processor with one core.
 processor = SimpleProcessor(

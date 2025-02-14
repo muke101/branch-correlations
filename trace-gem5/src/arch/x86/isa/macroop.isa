@@ -152,6 +152,11 @@ let {{
         def control_indirect(self):
             self.control_indirect = True
 
+        def rmw(self):
+            self.rmw = True
+        def rmwa(self):
+            self.rmwa = True
+
         def __init__(self, name):
             super().__init__(name)
             self.directives = {
@@ -163,7 +168,9 @@ let {{
                 "function_call" : self.function_call,
                 "function_return" : self.function_return,
                 "control_direct" : self.control_direct,
-                "control_indirect" : self.control_indirect
+                "control_indirect" : self.control_indirect,
+                "rmw" : self.rmw,
+                "rmwa" : self.rmwa
             }
             self.declared = False
             self.adjust_env = ""
@@ -184,6 +191,8 @@ let {{
             self.function_return = False
             self.control_direct = False
             self.control_indirect = False
+            self.rmw = False
+            self.rmwa = False
 
         def getAllocator(self, env):
             return "new x86_macroop::%s(machInst, %s)" % \
@@ -212,6 +221,11 @@ let {{
             micropc = 0
             for op in self.microops:
                 flags = ["IsMicroop"]
+                if self.rmw:
+                    flags.append('IsRMW')
+                if self.rmwa:
+                    flags.append('IsRMWA')
+
                 if micropc == 0:
                     flags.append("IsFirstMicroop")
 

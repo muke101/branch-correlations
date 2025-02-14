@@ -29,7 +29,6 @@
 
 from math import log
 from typing import (
-    List,
     Optional,
     Sequence,
     Tuple,
@@ -41,7 +40,6 @@ from m5.objects import (
     AddrRange,
     DRAMInterface,
     HBMCtrl,
-    MemInterface,
     Port,
 )
 
@@ -172,12 +170,6 @@ class HighBandwidthMemory(ChanneledMemory):
             )
         return [
             (addr_ranges[i], ctrl.port) for i, ctrl in enumerate(self.mem_ctrl)
-        ]
-
-    @overrides(ChanneledMemory)
-    def get_mem_interfaces(self) -> List[MemInterface]:
-        return [ctrl.dram for ctrl in self.get_memory_controllers()] + [
-            ctrl.dram_2 for ctrl in self.get_memory_controllers()
         ]
 
 

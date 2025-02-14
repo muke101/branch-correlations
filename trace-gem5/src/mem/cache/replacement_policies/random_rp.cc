@@ -31,6 +31,7 @@
 #include <cassert>
 #include <memory>
 
+#include "base/random.hh"
 #include "params/RandomRP.hh"
 
 namespace gem5
@@ -72,7 +73,7 @@ Random::getVictim(const ReplacementCandidates& candidates) const
     assert(candidates.size() > 0);
 
     // Choose one candidate at random
-    ReplaceableEntry* victim = candidates[rng->random<unsigned>(0,
+    ReplaceableEntry* victim = candidates[random_mt.random<unsigned>(0,
                                     candidates.size() - 1)];
 
     // Visit all candidates to search for an invalid entry. If one is found,

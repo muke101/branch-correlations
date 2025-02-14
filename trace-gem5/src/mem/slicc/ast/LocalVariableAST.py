@@ -73,8 +73,6 @@ class LocalVariableAST(StatementAST):
             )
         ):
             code += f"{type.c_ident}* {ident}"
-        elif "implicit_ctor" in type and not "is_assign" in kwargs:
-            code += f"{type.c_ident} {ident}({type['implicit_ctor']})"
         else:
             code += f"{type.c_ident} {ident}"
         return type

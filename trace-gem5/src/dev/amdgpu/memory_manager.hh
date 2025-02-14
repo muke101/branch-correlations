@@ -125,8 +125,6 @@ class AMDGPUMemoryManager : public ClockedObject
      */
     RequestorID getRequestorID() const { return _requestorId; }
 
-    Addr getCacheLineSize() const { return cacheLineSize; }
-
     Port &
     getPort(const std::string &if_name, PortID idx) override
     {

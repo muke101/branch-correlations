@@ -68,7 +68,7 @@ class RemoteGDB : public BaseRemoteGDB
         } r;
 
       public:
-        char *data() { return (char *)&r; }
+        char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
@@ -97,7 +97,7 @@ class RemoteGDB : public BaseRemoteGDB
         } r;
 
       public:
-        char *data() { return (char *)&r; }
+        char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;

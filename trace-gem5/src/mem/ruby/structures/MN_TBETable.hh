@@ -41,16 +41,13 @@
 #include <algorithm>
 #include <vector>
 
-#include "mem/ruby/protocol/CHI/MiscNode_TBE.hh"
+#include "mem/ruby/protocol/MiscNode_TBE.hh"
 #include "mem/ruby/structures/TBETable.hh"
 
 namespace gem5
 {
 
 namespace ruby
-{
-
-namespace CHI
 {
 
 // Custom class only used for the CHI protocol Misc Node
@@ -65,8 +62,6 @@ class MN_TBETable : public TBETable<MiscNode_TBE>
 
     MiscNode_TBE* chooseNewDistributor();
 };
-
-} // namespace CHI
 
 } // namespace ruby
 

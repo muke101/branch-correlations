@@ -187,8 +187,6 @@ class DynInst : public ExecContext, public RefCounted
         ReqMade,
         MemOpDone,
         HtmFromTransaction,
-        NoCapableFU,           /// Processor does not have capability to
-                               /// execute the instruction
         MaxFlags
     };
 
@@ -576,6 +574,8 @@ class DynInst : public ExecContext, public RefCounted
     bool isQuiesce() const { return staticInst->isQuiesce(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
     bool isSyscall() const { return staticInst->isSyscall(); }
+    bool isRMW() const { return staticInst->isRMW(); }
+    bool isRMWA() const { return staticInst->isRMWA(); }
     bool isMacroop() const { return staticInst->isMacroop(); }
     bool isMicroop() const { return staticInst->isMicroop(); }
     bool isDelayedCommit() const { return staticInst->isDelayedCommit(); }
@@ -842,16 +842,6 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Returns whether or not this instruction is squashed in the ROB. */
     bool isSquashedInROB() const { return status[SquashedInROB]; }
-
-    /** Mark this instruction as having attempted to execute
-     * but CPU did not have a capable functional unit.
-     */
-    void setNoCapableFU() { instFlags.set(NoCapableFU); }
-
-    /** Returns whether or not this instruction attempted
-     * to execute and found not capable FU.
-     */
-    bool noCapableFU() const { return instFlags[NoCapableFU]; }
 
     /** Returns whether pinned registers are renamed */
     bool isPinnedRegsRenamed() const { return status[PinnedRegsRenamed]; }

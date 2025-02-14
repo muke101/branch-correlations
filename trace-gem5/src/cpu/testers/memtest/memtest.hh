@@ -44,7 +44,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "base/random.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "params/MemTest.hh"
@@ -199,8 +198,6 @@ class MemTest : public ClockedObject
 
     void recvRetry();
 
-  private:
-    Random::RandomPtr rng = Random::genRandom();
 };
 
 } // namespace gem5

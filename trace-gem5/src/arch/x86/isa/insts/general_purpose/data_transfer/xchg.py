@@ -48,6 +48,9 @@ def macroop XCHG_R_R
 
 def macroop XCHG_R_M
 {
+    .rmw
+    .rmwa
+
     mfence
     ldstl t1, seg, sib, disp
     stul reg, seg, sib, disp
@@ -57,6 +60,9 @@ def macroop XCHG_R_M
 
 def macroop XCHG_R_P
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -67,6 +73,9 @@ def macroop XCHG_R_P
 
 def macroop XCHG_M_R
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     stul reg, seg, sib, disp
@@ -76,6 +85,9 @@ def macroop XCHG_M_R
 
 def macroop XCHG_P_R
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -86,6 +98,9 @@ def macroop XCHG_P_R
 
 def macroop XCHG_LOCKED_M_R
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     stul reg, seg, sib, disp
@@ -95,6 +110,9 @@ def macroop XCHG_LOCKED_M_R
 
 def macroop XCHG_LOCKED_P_R
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp

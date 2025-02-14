@@ -110,7 +110,7 @@ SelfDebug::triggerException(ThreadContext *tc, Addr vaddr)
     if (to32) {
         return std::make_shared<PrefetchAbort>(vaddr,
                                    ArmFault::DebugEvent, false,
-                                   TranMethod::UnknownTran,
+                                   ArmFault::UnknownTran,
                                    ArmFault::BRKPOINT);
     } else {
         return std::make_shared<HardwareBreakpoint>(vaddr, 0x22);
@@ -145,9 +145,9 @@ SelfDebug::triggerWatchpointException(ThreadContext *tc, Addr vaddr,
         ArmFault::DebugType d = cm? ArmFault::WPOINT_CM:
                                     ArmFault::WPOINT_NOCM;
         return std::make_shared<DataAbort>(vaddr,
-                                           DomainType::NoAccess,
+                                           TlbEntry::DomainType::NoAccess,
                                            write, ArmFault::DebugEvent, cm,
-                                           TranMethod::UnknownTran, d);
+                                           ArmFault::UnknownTran, d);
     } else {
         return std::make_shared<Watchpoint>(0, vaddr, write, cm);
     }

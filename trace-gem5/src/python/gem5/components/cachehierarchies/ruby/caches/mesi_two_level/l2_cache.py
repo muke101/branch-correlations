@@ -27,29 +27,19 @@
 import math
 
 from m5.objects import (
-    MESI_Two_Level_L2Cache_Controller,
     MessageBuffer,
     RubyCache,
 )
 
+from ......utils.override import *
+from ..abstract_l2_cache import AbstractL2Cache
 
-class L2Cache(MESI_Two_Level_L2Cache_Controller):
 
-    _version = 0
-
-    @classmethod
-    def versionCount(cls):
-        cls._version += 1  # Use count for this particular type
-        return cls._version - 1
-
+class L2Cache(AbstractL2Cache):
     def __init__(
         self, l2_size, l2_assoc, network, num_l2Caches, cache_line_size
     ):
-        super().__init__()
-
-        self.version = self.versionCount()
-        self._cache_line_size = cache_line_size
-        self.connectQueues(network)
+        super().__init__(network, cache_line_size)
 
         # This is the cache memory object that stores the cache data and tags
         self.L2cache = RubyCache(
@@ -65,6 +55,7 @@ class L2Cache(MESI_Two_Level_L2Cache_Controller):
         bits = int(math.log(self._cache_line_size, 2)) + l2_bits
         return bits
 
+    @overrides(AbstractL2Cache)
     def connectQueues(self, network):
         self.DirRequestFromL2Cache = MessageBuffer()
         self.DirRequestFromL2Cache.out_port = network.in_port

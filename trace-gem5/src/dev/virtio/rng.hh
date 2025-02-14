@@ -40,7 +40,6 @@
 #define __DEV_VIRTIO_RNG_HH__
 
 #include "base/compiler.hh"
-#include "base/random.hh"
 #include "dev/virtio/base.hh"
 
 namespace gem5
@@ -71,7 +70,8 @@ class VirtIORng : public VirtIODeviceBase
     /**
      * Virtqueue for data going from the host to the guest.
      */
-    class RngQueue : public VirtQueue
+    class RngQueue
+        : public VirtQueue
     {
       public:
         RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
@@ -87,8 +87,6 @@ class VirtIORng : public VirtIODeviceBase
 
       protected:
         VirtIORng &parent;
-
-        Random::RandomPtr rng = Random::genRandom();
     };
     /** Receive queue for port 0 */
     RngQueue qReq;

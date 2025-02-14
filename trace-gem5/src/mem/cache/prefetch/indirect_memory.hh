@@ -41,10 +41,9 @@
 
 #include <vector>
 
-#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5
 {
@@ -99,14 +98,12 @@ class IndirectMemory : public Queued
          */
         bool increasedIndirectCounter;
 
-        PrefetchTableEntry(unsigned indirect_counter_bits, TagExtractor ext)
+        PrefetchTableEntry(unsigned indirect_counter_bits)
             : TaggedEntry(), address(0), secure(false), streamCounter(0),
               enabled(false), index(0), baseAddr(0), shift(0),
               indirectCounter(indirect_counter_bits),
               increasedIndirectCounter(false)
-        {
-            registerTagExtractor(ext);
-        }
+        {}
 
         void
         invalidate() override
@@ -124,7 +121,7 @@ class IndirectMemory : public Queued
         }
     };
     /** Prefetch table */
-    AssociativeCache<PrefetchTableEntry> prefetchTable;
+    AssociativeSet<PrefetchTableEntry> prefetchTable;
 
     /** Indirect Pattern Detector entrt */
     struct IndirectPatternDetectorEntry : public TaggedEntry
@@ -145,13 +142,11 @@ class IndirectMemory : public Queued
         std::vector<std::vector<Addr>> baseAddr;
 
         IndirectPatternDetectorEntry(unsigned int num_addresses,
-                                     unsigned int num_shifts,
-                                     TagExtractor ext)
+                                     unsigned int num_shifts)
           : TaggedEntry(), idx1(0), idx2(0), secondIndexSet(false),
             numMisses(0),
             baseAddr(num_addresses, std::vector<Addr>(num_shifts))
         {
-            registerTagExtractor(ext);
         }
 
         void

@@ -153,7 +153,7 @@ class CacheBlk : public TaggedEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk() : TaggedEntry()
+    CacheBlk()
     {
         invalidate();
     }
@@ -177,7 +177,7 @@ class CacheBlk : public TaggedEntry
         assert(!isValid());
         assert(other.isValid());
 
-        insert({other.getTag(), other.isSecure()});
+        insert(other.getTag(), other.isSecure());
 
         if (other.wasPrefetched()) {
             setPrefetched();
@@ -323,7 +323,7 @@ class CacheBlk : public TaggedEntry
      * @param task_ID The new task ID.
      * @param partition_id The source partition ID.
      */
-    void insert(const KeyType &tag,
+    void insert(const Addr tag, const bool is_secure,
         const int src_requestor_ID, const uint32_t task_ID,
         const uint64_t partition_id);
     using TaggedEntry::insert;
@@ -461,7 +461,7 @@ class CacheBlk : public TaggedEntry
 
   protected:
     /** The current coherence status of this block. @sa CoherenceBits */
-    unsigned coherence = 0;
+    unsigned coherence;
 
     // The following setters have been marked as protected because their
     // respective variables should only be modified at 2 moments:
@@ -526,10 +526,9 @@ class TempCacheBlk final : public CacheBlk
      * Creates a temporary cache block, with its own storage.
      * @param size The size (in bytes) of this cache block.
      */
-    TempCacheBlk(unsigned size, TagExtractor ext) : CacheBlk()
+    TempCacheBlk(unsigned size) : CacheBlk()
     {
         data = new uint8_t[size];
-        registerTagExtractor(ext);
     }
     TempCacheBlk(const TempCacheBlk&) = delete;
     using CacheBlk::operator=;
@@ -546,10 +545,10 @@ class TempCacheBlk final : public CacheBlk
     }
 
     void
-    insert(const KeyType &tag) override
+    insert(const Addr addr, const bool is_secure) override
     {
-        CacheBlk::insert(tag);
-        _addr = tag.address;
+        CacheBlk::insert(addr, is_secure);
+        _addr = addr;
     }
 
     /**

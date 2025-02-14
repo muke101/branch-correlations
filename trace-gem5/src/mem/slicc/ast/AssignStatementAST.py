@@ -41,8 +41,8 @@ class AssignStatementAST(StatementAST):
         lcode = self.slicc.codeFormatter()
         rcode = self.slicc.codeFormatter()
 
-        ltype = self.lvalue.generate(lcode, is_assign=True)
-        rtype = self.rvalue.generate(rcode, is_assign=True)
+        ltype = self.lvalue.generate(lcode)
+        rtype = self.rvalue.generate(rcode)
 
         code("$lcode = $rcode;")
 

@@ -1,4 +1,5 @@
-protocol "MESI_Two_Level" use_secondary_load_linked;
+protocol "MESI_Two_Level";
+include "RubySlicc_interfaces.slicc";
 include "MESI_Two_Level-msg.sm";
 include "MESI_Two_Level-L1cache.sm";
 include "MESI_Two_Level-L2cache.sm";

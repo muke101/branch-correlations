@@ -97,7 +97,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="3GiB")
+memory = SingleChannelDDR3_1600(size="3GB")
 
 
 def get_processor(isa):

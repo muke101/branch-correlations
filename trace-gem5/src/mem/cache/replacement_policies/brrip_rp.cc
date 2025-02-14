@@ -32,6 +32,7 @@
 #include <memory>
 
 #include "base/logging.hh" // For fatal_if
+#include "base/random.hh"
 #include "params/BRRIPRP.hh"
 
 namespace gem5
@@ -83,7 +84,7 @@ BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     // Replacement data is inserted as "long re-reference" if lower than btp,
     // "distant re-reference" otherwise
     casted_replacement_data->rrpv.saturate();
-    if (rng->random<unsigned>(1, 100) <= btp) {
+    if (random_mt.random<unsigned>(1, 100) <= btp) {
         casted_replacement_data->rrpv--;
     }
 

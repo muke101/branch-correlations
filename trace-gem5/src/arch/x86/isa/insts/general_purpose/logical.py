@@ -41,6 +41,8 @@ def macroop OR_R_R
 
 def macroop OR_M_I
 {
+    .rmw
+    
     limm t2, imm
     ldst t1, seg, sib, disp
     or t1, t1, t2, flags=(OF,SF,ZF,PF,CF,AF)
@@ -49,6 +51,8 @@ def macroop OR_M_I
 
 def macroop OR_P_I
 {
+    .rmw
+    
     limm t2, imm
     rdip t7
     ldst t1, seg, riprel, disp
@@ -58,6 +62,9 @@ def macroop OR_P_I
 
 def macroop OR_LOCKED_M_I
 {
+    .rmw
+    .rmwa
+
     limm t2, imm
     mfence
     ldstl t1, seg, sib, disp
@@ -68,6 +75,9 @@ def macroop OR_LOCKED_M_I
 
 def macroop OR_LOCKED_P_I
 {
+    .rmw
+    .rmwa
+    
     limm t2, imm
     rdip t7
     mfence
@@ -79,6 +89,8 @@ def macroop OR_LOCKED_P_I
 
 def macroop OR_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     or t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
     st t1, seg, sib, disp
@@ -86,6 +98,8 @@ def macroop OR_M_R
 
 def macroop OR_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     or t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -94,6 +108,9 @@ def macroop OR_P_R
 
 def macroop OR_LOCKED_M_R
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     or t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -103,6 +120,9 @@ def macroop OR_LOCKED_M_R
 
 def macroop OR_LOCKED_P_R
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -143,6 +163,8 @@ def macroop XOR_R_I
 
 def macroop XOR_M_I
 {
+    .rmw
+    
     limm t2, imm
     ldst t1, seg, sib, disp
     xor t1, t1, t2, flags=(OF,SF,ZF,PF,CF,AF)
@@ -151,6 +173,8 @@ def macroop XOR_M_I
 
 def macroop XOR_P_I
 {
+    .rmw
+    
     limm t2, imm
     rdip t7
     ldst t1, seg, riprel, disp
@@ -160,6 +184,9 @@ def macroop XOR_P_I
 
 def macroop XOR_LOCKED_M_I
 {
+    .rmw
+    .rmwa
+    
     limm t2, imm
     mfence
     ldstl t1, seg, sib, disp
@@ -170,6 +197,9 @@ def macroop XOR_LOCKED_M_I
 
 def macroop XOR_LOCKED_P_I
 {
+    .rmw
+    .rmwa
+    
     limm t2, imm
     rdip t7
     mfence
@@ -181,6 +211,8 @@ def macroop XOR_LOCKED_P_I
 
 def macroop XOR_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
     st t1, seg, sib, disp
@@ -188,6 +220,8 @@ def macroop XOR_M_R
 
 def macroop XOR_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -196,6 +230,9 @@ def macroop XOR_P_R
 
 def macroop XOR_LOCKED_M_R
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -205,6 +242,9 @@ def macroop XOR_LOCKED_M_R
 
 def macroop XOR_LOCKED_P_R
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -252,6 +292,8 @@ def macroop AND_R_I
 
 def macroop AND_M_I
 {
+    .rmw
+    
     ldst t2, seg, sib, disp
     limm t1, imm
     and t2, t2, t1, flags=(OF,SF,ZF,PF,CF,AF)
@@ -260,6 +302,8 @@ def macroop AND_M_I
 
 def macroop AND_P_I
 {
+    .rmw
+    
     rdip t7
     ldst t2, seg, riprel, disp
     limm t1, imm
@@ -269,6 +313,9 @@ def macroop AND_P_I
 
 def macroop AND_LOCKED_M_I
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t2, seg, sib, disp
     limm t1, imm
@@ -279,6 +326,9 @@ def macroop AND_LOCKED_M_I
 
 def macroop AND_LOCKED_P_I
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t2, seg, riprel, disp
@@ -290,6 +340,8 @@ def macroop AND_LOCKED_P_I
 
 def macroop AND_M_R
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
     st t1, seg, sib, disp
@@ -297,6 +349,8 @@ def macroop AND_M_R
 
 def macroop AND_P_R
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -305,6 +359,9 @@ def macroop AND_P_R
 
 def macroop AND_LOCKED_M_R
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF,AF)
@@ -314,6 +371,9 @@ def macroop AND_LOCKED_M_R
 
 def macroop AND_LOCKED_P_R
 {
+    .rmw
+    .rmwa
+    
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -330,6 +390,8 @@ def macroop NOT_R
 
 def macroop NOT_M
 {
+    .rmw
+    
     limm t1, -1
     ldst t2, seg, sib, disp
     xor t2, t2, t1
@@ -338,6 +400,8 @@ def macroop NOT_M
 
 def macroop NOT_P
 {
+    .rmw
+    
     limm t1, -1
     rdip t7
     ldst t2, seg, riprel, disp
@@ -347,6 +411,9 @@ def macroop NOT_P
 
 def macroop NOT_LOCKED_M
 {
+    .rmw
+    .rmwa
+    
     limm t1, -1
     mfence
     ldstl t2, seg, sib, disp
@@ -357,6 +424,9 @@ def macroop NOT_LOCKED_M
 
 def macroop NOT_LOCKED_P
 {
+    .rmw
+    .rmwa
+    
     limm t1, -1
     rdip t7
     mfence

@@ -114,8 +114,7 @@ CPU::CPU(const BaseO3CPUParams &params)
       globalSeqNum(1),
       system(params.system),
       lastRunningCycle(curCycle()),
-      cpuStats(this),
-      m_branch_tracer(params.branchTracer)
+      cpuStats(this)
 {
     fatal_if(FullSystem && params.numThreads > 1,
             "SMT is not supported in O3 in full system mode currently.");
@@ -536,11 +535,13 @@ CPU::activateContext(ThreadID tid)
         activityRec.activity();
         fetch.wakeFromQuiesce();
 
-        Cycles cycles(curCycle() - lastRunningCycle);
-        // @todo: This is an oddity that is only here to match the stats
-        if (cycles != 0)
-            --cycles;
-        cpuStats.quiesceCycles += cycles;
+        if(lastRunningCycle != 0) {
+            Cycles cycles(curCycle() - lastRunningCycle);
+            // @todo: This is an oddity that is only here to match the stats
+            if (cycles != 0)
+                --cycles;
+            cpuStats.quiesceCycles += cycles;
+        }
 
         lastActivatedCycle = curTick();
 

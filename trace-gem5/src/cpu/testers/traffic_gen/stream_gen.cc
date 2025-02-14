@@ -37,6 +37,8 @@
 
 #include "stream_gen.hh"
 
+#include "base/random.hh"
+
 namespace gem5
 {
 
@@ -58,7 +60,7 @@ uint32_t
 RandomStreamGen::randomPick(const std::vector<uint32_t> &svec)
 {
     // Pick a random entry in the vector of IDs
-    return svec[rng->random<size_t>(0, svec.size()-1)];
+    return svec[random_mt.random<size_t>(0, svec.size()-1)];
 }
 
 } // namespace gem5

@@ -51,6 +51,12 @@ arch-arm:
         - Giacomo Travaglini <giacomo.travaglini@arm.com>
         - Andreas Sandberg <andreas.sandberg@arm.com>
 
+arch-gcn3:
+    status: maintained
+    maintainers:
+        - Matt Sinclair <sinclair@cs.wisc.edu>
+        - Matt Poremba <matthew.poremba@amd.com>
+
 arch-vega:
     status: maintained
     maintainers:
@@ -113,13 +119,11 @@ dev-hsa:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
-        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 dev-amdgpu:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
-        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 dev-virtio:
     status: maintained
@@ -156,7 +160,6 @@ gpu-compute:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
-        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 learning-gem5:
     desc: >-

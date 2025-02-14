@@ -31,7 +31,6 @@
 
 #include <unordered_map>
 
-#include "base/random.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "params/SimpleCache.hh"
@@ -50,6 +49,7 @@ namespace gem5
 class SimpleCache : public ClockedObject
 {
   private:
+
     /**
      * Port on the CPU-side that receives requests.
      * Mostly just forwards requests to the cache (owner)
@@ -293,8 +293,6 @@ class SimpleCache : public ClockedObject
 
     /// An incredibly simple cache storage. Maps block addresses to data
     std::unordered_map<Addr, uint8_t*> cacheStore;
-
-    Random::RandomPtr rng = Random::genRandom();
 
     /// Cache statistics
   protected:

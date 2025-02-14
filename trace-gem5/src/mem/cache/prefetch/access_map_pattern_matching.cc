@@ -29,6 +29,7 @@
 #include "mem/cache/prefetch/access_map_pattern_matching.hh"
 
 #include "debug/HWPrefetch.hh"
+#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/AMPMPrefetcher.hh"
 #include "params/AccessMapPatternMatching.hh"
 
@@ -55,8 +56,7 @@ AccessMapPatternMatching::AccessMapPatternMatching(
                      p.access_map_table_assoc,
                      p.access_map_table_replacement_policy,
                      p.access_map_table_indexing_policy,
-                     AccessMapEntry(hotZoneSize / blkSize,
-                        genTagExtractor(p.access_map_table_indexing_policy))),
+                     AccessMapEntry(hotZoneSize / blkSize)),
       numGoodPrefetches(0), numTotalPrefetches(0), numRawCacheMisses(0),
       numRawCacheHits(0), degree(startDegree), usefulDegree(startDegree),
       epochEvent([this]{ processEpochEvent(); }, name())
@@ -109,15 +109,14 @@ AccessMapPatternMatching::AccessMapEntry *
 AccessMapPatternMatching::getAccessMapEntry(Addr am_addr,
                 bool is_secure)
 {
-    const TaggedEntry::KeyType key{am_addr, is_secure};
-    AccessMapEntry *am_entry = accessMapTable.findEntry(key);
+    AccessMapEntry *am_entry = accessMapTable.findEntry(am_addr, is_secure);
     if (am_entry != nullptr) {
         accessMapTable.accessEntry(am_entry);
     } else {
-        am_entry = accessMapTable.findVictim(key);
+        am_entry = accessMapTable.findVictim(am_addr);
         assert(am_entry != nullptr);
 
-        accessMapTable.insertEntry(key, am_entry);
+        accessMapTable.insertEntry(am_addr, is_secure, am_entry);
     }
     return am_entry;
 }

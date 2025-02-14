@@ -42,7 +42,6 @@ sim_pybind(pybind11::module_ &m_internal)
     pybind11::class_<
         Port, std::unique_ptr<Port, pybind11::nodelete>>(m, "Port")
         .def("bind", &Port::bind)
-        .def("name", &Port::name)
         ;
 }
 EmbeddedPyBind embed_("sim", &sim_pybind);

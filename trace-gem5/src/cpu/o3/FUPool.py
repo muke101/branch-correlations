@@ -1,4 +1,4 @@
-# Copyright (c) 2017, 2024 Arm Limited
+# Copyright (c) 2017 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -57,7 +57,6 @@ class DefaultFUPool(FUPool):
         FP_MultDiv(),
         ReadPort(),
         SIMD_Unit(),
-        Matrix_Unit(),
         PredALU(),
         WritePort(),
         RdWrPort(),

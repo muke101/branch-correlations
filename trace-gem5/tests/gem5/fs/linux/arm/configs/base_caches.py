@@ -81,5 +81,5 @@ class IOCache(Cache):
     data_latency = 50
     response_latency = 50
     mshrs = 20
-    size = "1KiB"
+    size = "1kB"
     tgts_per_mshr = 12

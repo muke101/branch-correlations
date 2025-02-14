@@ -960,14 +960,11 @@ class PackedReg
         uint64_t elem_mask = (1ULL << ELEM_SIZE) - 1;
         value &= elem_mask;
 
-        // Clear the bits where the value goes so that operator| can be used.
         elem_mask <<= qw_lbit;
-        qword &= ~elem_mask;
+        qword &= elem_mask;
 
-        // Promote to 64-bit to prevent shifting out of range
-        uint64_t value64 = value;
-        value64 <<= qw_lbit;
-        qword |= value64;
+        value <<= qw_lbit;
+        qword |= value;
 
         dwords[udw] = uint32_t(qword >> 32);
         dwords[ldw] = uint32_t(qword & mask(32));

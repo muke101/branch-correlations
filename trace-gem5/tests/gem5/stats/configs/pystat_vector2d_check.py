@@ -138,11 +138,9 @@ for x in range(args.num_vectors):
 
     vectors[x_index] = {
         "type": "Vector",
-        "description": (
-            stat_tester.subdescs[x]
-            if x in stat_tester.subdescs
-            else stat_tester.description
-        ),
+        "description": stat_tester.subdescs[x]
+        if x in stat_tester.subdescs
+        else stat_tester.description,
         "value": vector,
     }
 

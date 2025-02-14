@@ -199,9 +199,7 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
             // Move the message
             in->dequeue(current_time);
             out->enqueue(msg_ptr, current_time,
-                         m_switch->cyclesToTicks(m_link_latency),
-                         m_ruby_system->getRandomization(),
-                         m_ruby_system->getWarmupEnabled());
+                         m_switch->cyclesToTicks(m_link_latency));
 
             // Count the message
             (*(throttleStats.

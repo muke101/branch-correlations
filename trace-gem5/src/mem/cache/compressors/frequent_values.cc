@@ -36,6 +36,7 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "debug/CacheComp.hh"
+#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/FrequentValuesCompressor.hh"
 
 namespace gem5
@@ -52,8 +53,7 @@ FrequentValues::FrequentValues(const Params &p)
     numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
     VFT((name() + ".VFT").c_str(),
         p.vft_entries, p.vft_assoc, p.vft_replacement_policy,
-        p.vft_indexing_policy,
-        VFTEntry(counterBits, genTagExtractor(p.vft_indexing_policy))),
+        p.vft_indexing_policy, VFTEntry(counterBits)),
     codeGenerationEvent([this]{ phase = COMPRESSING; }, name())
 {
     fatal_if((numVFTEntries - 1) > mask(chunkSizeBits),

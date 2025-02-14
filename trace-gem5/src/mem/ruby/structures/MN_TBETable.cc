@@ -43,9 +43,6 @@ namespace gem5
 namespace ruby
 {
 
-namespace CHI
-{
-
 // Based on the current set of TBEs, choose a new "distributor"
 // Can return null -> no distributor
 MiscNode_TBE*
@@ -146,8 +143,6 @@ MN_TBETable::chooseNewDistributor()
     assert(it != ready_nonsync_tbes.end());
     return *it;
 }
-
-} // namespace CHI
 
 } // namespace ruby
 

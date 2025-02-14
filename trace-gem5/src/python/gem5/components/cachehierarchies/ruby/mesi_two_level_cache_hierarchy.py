@@ -33,14 +33,9 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
-from ....utils.override import overrides
-from ....utils.requires import requires
-
-requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
-
 from ....isas import ISA
+from ....utils.requires import requires
 from ...boards.abstract_board import AbstractBoard
-from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .caches.mesi_two_level.directory import Directory
@@ -84,12 +79,9 @@ class MESITwoLevelCacheHierarchy(
 
         self._num_l2_banks = num_l2_banks
 
-    @overrides(AbstractCacheHierarchy)
-    def get_coherence_protocol(self):
-        return CoherenceProtocol.MESI_TWO_LEVEL
-
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        super().incorporate_cache(board)
+        requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
+
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()
@@ -116,10 +108,7 @@ class MESITwoLevelCacheHierarchy(
             )
 
             cache.sequencer = RubySequencer(
-                version=i,
-                dcache=cache.L1Dcache,
-                clk_domain=cache.clk_domain,
-                ruby_system=self.ruby_system,
+                version=i, dcache=cache.L1Dcache, clk_domain=cache.clk_domain
             )
 
             if board.has_io_bus():
@@ -173,11 +162,7 @@ class MESITwoLevelCacheHierarchy(
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(self.ruby_system.network, cache_line_size)
-                ctrl.dma_sequencer = DMASequencer(
-                    version=i,
-                    in_ports=port,
-                    ruby_system=self.ruby_system,
-                )
+                ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
                 self._dma_controllers.append(ctrl)
                 ctrl.ruby_system = self.ruby_system
 
@@ -202,14 +187,5 @@ class MESITwoLevelCacheHierarchy(
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy(
-            ruby_system=self.ruby_system
-        )
+        self.ruby_system.sys_port_proxy = RubyPortProxy()
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
-
-    @overrides(AbstractRubyCacheHierarchy)
-    def _reset_version_numbers(self):
-        Directory._version = 0
-        L1Cache._version = 0
-        L2Cache._version = 0
-        DMAController._version = 0

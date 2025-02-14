@@ -48,7 +48,6 @@
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"
-#include "dev/intpin.hh"
 #include "mem/htm.hh"
 #include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"
@@ -156,30 +155,6 @@ class BaseCPU : public ClockedObject
 
         statistics::Formula hostInstRate;
         statistics::Formula hostOpRate;
-
-        Counter previousInsts = 0;
-        Counter previousOps = 0;
-
-        static Counter
-        numSimulatedInsts()
-        {
-            return totalNumSimulatedInsts() - (globalStats->previousInsts);
-        }
-
-        static Counter
-        numSimulatedOps()
-        {
-            return totalNumSimulatedOps() - (globalStats->previousOps);
-        }
-
-        void
-        resetStats() override
-        {
-            previousInsts = totalNumSimulatedInsts();
-            previousOps = totalNumSimulatedOps();
-
-            statistics::Group::resetStats();
-        }
     };
 
     /**
@@ -283,8 +258,6 @@ class BaseCPU : public ClockedObject
 
   protected:
     std::vector<ThreadContext *> threadContexts;
-
-    std::vector<std::unique_ptr<IntSourcePin<BaseCPU>>> cpuIdlePins;
 
     trace::InstTracer * tracer;
 
@@ -633,7 +606,7 @@ class BaseCPU : public ClockedObject
 
     static int numSimulatedCPUs() { return cpuList.size(); }
     static Counter
-    totalNumSimulatedInsts()
+    numSimulatedInsts()
     {
         Counter total = 0;
 
@@ -645,7 +618,7 @@ class BaseCPU : public ClockedObject
     }
 
     static Counter
-    totalNumSimulatedOps()
+    numSimulatedOps()
     {
         Counter total = 0;
 
@@ -825,11 +798,18 @@ class BaseCPU : public ClockedObject
         /* Number of int instructions */
         statistics::Scalar numIntInsts;
 
-        /* number of load instructions */
+        /* Stat for total number of load instructions */
         statistics::Scalar numLoadInsts;
-
+        /* Stat for total number of read-modify-write load instructions */
+        statistics::Scalar numRMWLoadInsts;
+        /* Stat for total number of atomic read-modify-write load instructions */
+        statistics::Scalar numRMWALoadInsts;
         /* Number of store instructions */
         statistics::Scalar numStoreInsts;
+        /* Number of read-modify-write store instructions */
+        statistics::Scalar numRMWStoreInsts;
+        /* Number of atomic read-modify-write store instructions */
+        statistics::Scalar numRMWAStoreInsts;
 
         /* Number of vector instructions */
         statistics::Scalar numVecInsts;

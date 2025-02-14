@@ -51,7 +51,6 @@
 #include <cassert>
 #include <iostream>
 
-#include "base/random.hh"
 #include "base/types.hh"
 #include "dev/net/etherlink.hh"
 #include "params/DistEtherLink.hh"
@@ -125,8 +124,6 @@ class DistEtherLink : public SimObject
          */
         void txDone();
         EventFunctionWrapper doneEvent;
-
-        Random::RandomPtr rng = Random::genRandom();
 
       public:
         TxLink(const std::string &name, DistEtherLink *p,

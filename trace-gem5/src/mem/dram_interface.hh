@@ -350,11 +350,7 @@ class DRAMInterface : public MemInterface
         Rank(const DRAMInterfaceParams &_p, int _rank,
              DRAMInterface& _dram);
 
-        const std::string
-        name() const
-        {
-            return csprintf("%s.rank%d", dram.name(), rank);
-        }
+        const std::string name() const { return csprintf("%d", rank); }
 
         /**
          * Kick off accounting for power and refresh states and

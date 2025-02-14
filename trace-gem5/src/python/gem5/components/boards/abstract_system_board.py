@@ -36,6 +36,7 @@ from .abstract_board import AbstractBoard
 
 
 class AbstractSystemBoard(System, AbstractBoard):
+
     """
     An abstract board for cases where boards should inherit from System.
     """
@@ -48,8 +49,17 @@ class AbstractSystemBoard(System, AbstractBoard):
         processor: "AbstractProcessor",
         memory: "AbstractMemorySystem",
         cache_hierarchy: "AbstractCacheHierarchy",
+
+        exit_on_dump_stats: bool = False,
+        exit_on_dump_reset_stats: bool = False,
+        exit_on_reset_stats: bool = False
     ):
-        System.__init__(self)
+        System.__init__(
+            self,
+            exit_on_dump_stats=exit_on_dump_stats,
+            exit_on_dump_reset_stats=exit_on_dump_reset_stats,
+            exit_on_reset_stats=exit_on_reset_stats
+        )
         AbstractBoard.__init__(
             self,
             clk_freq=clk_freq,

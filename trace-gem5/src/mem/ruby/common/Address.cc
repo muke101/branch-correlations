@@ -51,33 +51,37 @@ maskLowOrderBits(Addr addr, unsigned int number)
 }
 
 Addr
-getOffset(Addr addr, int cacheLineBits)
+getOffset(Addr addr)
 {
-    assert(cacheLineBits < 64);
-    return bitSelect(addr, 0, cacheLineBits - 1);
+    return bitSelect(addr, 0, RubySystem::getBlockSizeBits() - 1);
+}
+
+Addr
+makeLineAddress(Addr addr)
+{
+    return mbits<Addr>(addr, 63, RubySystem::getBlockSizeBits());
 }
 
 Addr
 makeLineAddress(Addr addr, int cacheLineBits)
 {
-    assert(cacheLineBits < 64);
     return maskLowOrderBits(addr, cacheLineBits);
 }
 
 // returns the next stride address based on line address
 Addr
-makeNextStrideAddress(Addr addr, int stride, int cacheLineBytes)
+makeNextStrideAddress(Addr addr, int stride)
 {
-    return makeLineAddress(addr, floorLog2(cacheLineBytes))
-           + cacheLineBytes * stride;
+    return makeLineAddress(addr) +
+        static_cast<int>(RubySystem::getBlockSizeBytes()) * stride;
 }
 
 std::string
-printAddress(Addr addr, int cacheLineBits)
+printAddress(Addr addr)
 {
     std::stringstream out;
     out << "[" << std::hex << "0x" << addr << "," << " line 0x"
-       << makeLineAddress(addr, cacheLineBits) << std::dec << "]";
+       << makeLineAddress(addr) << std::dec << "]";
     return out.str();
 }
 

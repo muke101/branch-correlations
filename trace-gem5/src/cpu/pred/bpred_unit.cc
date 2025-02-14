@@ -257,14 +257,14 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         ++stats.indirectLookups;
 
         const PCStateBase *itarget = iPred->lookup(tid, seqNum,
-                                            pc.instAddr(),
-                                    hist->indirectHistory);
+                                            pc, hist->indirectHistory);
 
         if (itarget) {
             // Indirect predictor hit
             ++stats.indirectHits;
             hist->targetProvider = TargetProvider::Indirect;
             set(hist->target, *itarget);
+            delete itarget;
 
             DPRINTF(Branch,
                     "[tid:%i, sn:%llu] Instruction %s predicted "

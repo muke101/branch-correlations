@@ -1402,6 +1402,9 @@ IEW::tick()
 
     sortInsts();
 
+    // Evaluate function units.
+    fuPool->evaluateUnits();
+
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 

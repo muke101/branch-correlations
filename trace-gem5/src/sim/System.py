@@ -154,3 +154,21 @@ class System(SimObject):
         "Base of the 64KiB PA range used for "
         "memory-mapped m5ops. Set to 0 to disable.",
     )
+
+    exit_on_dump_stats = Param.Bool(
+        False,
+        "Exit from the simulation loop when "
+        "doing a dump stats.",
+    )
+
+    exit_on_dump_reset_stats = Param.Bool(
+        False,
+        "Exit from the simulation loop when "
+        "doing a dump reset stats.",
+    )
+
+    exit_on_reset_stats = Param.Bool(
+        False,
+        "Exit from the simulation loop when "
+        "doing a reset stats.",
+    )

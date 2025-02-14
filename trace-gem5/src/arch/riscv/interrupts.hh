@@ -95,11 +95,6 @@ class Interrupts : public BaseInterrupts
 
     void clearAll() override;
 
-    bool isWakeUp() const override
-    {
-        return checkNonMaskableInterrupt() || (ip & ie).any();
-    }
-
     uint64_t readIP() const { return (uint64_t)ip.to_ulong(); }
     uint64_t readIE() const { return (uint64_t)ie.to_ulong(); }
     void setIP(const uint64_t& val) { ip = val; }

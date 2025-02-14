@@ -51,11 +51,12 @@ class SignalSinkPort : public Port
     SignalSourcePort<State> *_source = nullptr;
 
     State _state = {};
+    OnChangeFunc _onChange;
 
   protected:
     // if bypass_on_change is specified true, it will not call the _onChange
     // function. Only _state will be updated if needed.
-    virtual void
+    void
     set(const State &new_state, const bool bypass_on_change = false)
     {
         if (new_state == _state)
@@ -65,8 +66,6 @@ class SignalSinkPort : public Port
         if (!bypass_on_change && _onChange)
             _onChange(_state);
     }
-
-    OnChangeFunc _onChange;
 
   public:
     SignalSinkPort(const std::string &_name, PortID _id=InvalidPortID) :

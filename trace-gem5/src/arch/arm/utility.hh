@@ -217,7 +217,7 @@ int computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
 
 bool isSecureBelowEL3(ThreadContext *tc);
 
-SecurityState securityStateAtEL(ThreadContext *tc, ExceptionLevel el);
+bool isSecureAtEL(ThreadContext *tc, ExceptionLevel el);
 
 bool longDescFormatInUse(ThreadContext *tc);
 

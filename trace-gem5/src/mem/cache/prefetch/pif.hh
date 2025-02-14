@@ -40,10 +40,9 @@
 #include <deque>
 #include <vector>
 
-#include "base/cache/associative_cache.hh"
 #include "base/circular_queue.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5
 {
@@ -137,12 +136,6 @@ class PIF : public Queued
 
         struct IndexEntry : public TaggedEntry
         {
-            IndexEntry(TagExtractor ext)
-              : TaggedEntry()
-            {
-                registerTagExtractor(ext);
-            }
-
             HistoryBuffer::iterator historyIt;
         };
 
@@ -150,7 +143,7 @@ class PIF : public Queued
          * The index table is a small cache-like structure that facilitates
          * fast search of the history buffer.
          */
-        AssociativeCache<IndexEntry> index;
+        AssociativeSet<IndexEntry> index;
 
         /**
          * A Stream Address Buffer (SAB) tracks a window of consecutive

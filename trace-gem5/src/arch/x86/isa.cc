@@ -38,7 +38,6 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MatRegs.hh"
-#include "debug/X86.hh"
 #include "params/X86ISA.hh"
 #include "sim/serialize.hh"
 
@@ -124,10 +123,6 @@ ISA::clear()
     regVal[misc_reg::McgCap] = 0x104;
 
     regVal[misc_reg::Pat] = 0x0007040600070406ULL;
-
-    // Bit 11 is mttr enable (1), bit 10 is fixed range enable (1)
-    // bits 0-7 is default type (6, which means WB)
-    regVal[misc_reg::DefType] = 0xC06;
 
     regVal[misc_reg::Syscfg] = 0x20601;
 
@@ -233,9 +228,6 @@ ISA::readMiscRegNoEffect(RegIndex idx) const
 RegVal
 ISA::readMiscReg(RegIndex idx)
 {
-
-    DPRINTF(X86, "Reading misc reg %#x, value: %#llx\n", idx, regVal[idx]);
-
     if (idx == misc_reg::Tsc) {
         return regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle();
     }

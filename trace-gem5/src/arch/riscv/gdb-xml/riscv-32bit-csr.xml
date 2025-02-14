@@ -32,7 +32,6 @@
   <reg name="stval" bitsize="32"/>
   <reg name="sip" bitsize="32"/>
   <reg name="satp" bitsize="32"/>
-  <reg name="senvcfg" bitsize="32"/>
   <reg name="mvendorid" bitsize="32"/>
   <reg name="marchid" bitsize="32"/>
   <reg name="mimpid" bitsize="32"/>

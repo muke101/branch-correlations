@@ -68,7 +68,7 @@ class WideIO_200_1x128(DRAMInterface):
     # This is a BL4 device
     burst_length = 4
 
-    # Each device has a page (row buffer) size of 4KiB
+    # Each device has a page (row buffer) size of 4KB
     # (this depends on the memory density)
     device_rowbuffer_size = "4KiB"
 

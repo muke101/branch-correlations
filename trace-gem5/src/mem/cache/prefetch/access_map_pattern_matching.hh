@@ -38,9 +38,8 @@
 #ifndef __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 #define __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 
-#include "base/cache/associative_cache.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "sim/clocked_object.hh"
 
@@ -95,10 +94,9 @@ class AccessMapPatternMatching : public ClockedObject
         /** vector containing the state of the cachelines in this zone */
         std::vector<AccessMapState> states;
 
-        AccessMapEntry(size_t num_entries, TagExtractor ext)
+        AccessMapEntry(size_t num_entries)
           : TaggedEntry(), states(num_entries, AM_INIT)
         {
-            registerTagExtractor(ext);
         }
 
         void
@@ -111,7 +109,7 @@ class AccessMapPatternMatching : public ClockedObject
         }
     };
     /** Access map table */
-    AssociativeCache<AccessMapEntry> accessMapTable;
+    AssociativeSet<AccessMapEntry> accessMapTable;
 
     /**
      * Number of good prefetches

@@ -79,16 +79,19 @@ BaseTags::findBlockBySetAndWay(int set, int way) const
 }
 
 CacheBlk*
-BaseTags::findBlock(const CacheBlk::KeyType &key) const
+BaseTags::findBlock(Addr addr, bool is_secure) const
 {
+    // Extract block tag
+    Addr tag = extractTag(addr);
+
     // Find possible entries that may contain the given address
     const std::vector<ReplaceableEntry*> entries =
-        indexingPolicy->getPossibleEntries(key);
+        indexingPolicy->getPossibleEntries(addr);
 
     // Search for block
     for (const auto& location : entries) {
         CacheBlk* blk = static_cast<CacheBlk*>(location);
-        if (blk->match(key)) {
+        if (blk->matchTag(tag, is_secure)) {
             return blk;
         }
     }
@@ -113,7 +116,7 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // Insert block with tag, src requestor id, task id and PartitionId
     const auto partition_id = partitionManager ?
         partitionManager->readPacketPartitionID(pkt) : 0;
-    blk->insert({pkt->getAddr(), pkt->isSecure()}, requestor_id,
+    blk->insert(extractTag(pkt->getAddr()), pkt->isSecure(), requestor_id,
                 pkt->req->taskId(), partition_id);
 
     // Check if cache warm up is done

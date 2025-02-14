@@ -39,7 +39,6 @@
 #include "arch/arm/isa.hh"
 
 #include "arch/arm/tlbi_op.hh"
-#include "debug/MiscRegs.hh"
 
 namespace gem5
 {
@@ -127,6 +126,22 @@ Fault
 MiscRegOp64::generateTrap(ExceptionLevel el) const
 {
     return generateTrap(el, ExceptionClass::TRAPPED_MSR_MRS_64, iss());
+}
+
+Fault
+MiscRegOp64::generateTrap(ExceptionLevel el, ExceptionClass ec,
+        uint32_t iss) const
+{
+    switch (el) {
+      case EL1:
+        return std::make_shared<SupervisorTrap>(getEMI(), iss, ec);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(getEMI(), iss, ec);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(getEMI(), iss, ec);
+      default:
+        panic("Invalid EL: %d\n", el);
+    }
 }
 
 RegVal
@@ -232,10 +247,9 @@ RegNone::generateDisassembly(
 
 void
 TlbiOp64::tlbiAll(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable)
 {
-    TLBIALLEL tlbi_op(regime, ss, attrs);
+    TLBIALLEL tlbi_op(regime, secure);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -245,10 +259,9 @@ TlbiOp64::tlbiAll(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVmall(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool stage2, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool stage2)
 {
-    TLBIVMALL tlbi_op(regime, ss, stage2, attrs);
+    TLBIVMALL tlbi_op(regime, secure, stage2);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -258,8 +271,7 @@ TlbiOp64::tlbiVmall(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool last_level, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
     if (MMU::hasUnprivRegime(regime)) {
         // The asid will only be used when e2h == 1
@@ -267,17 +279,15 @@ TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
         auto asid = asid_16bits ? bits(value, 63, 48) :
                                   bits(value, 55, 48);
 
-        TLBIMVA tlbi_op(regime, ss, static_cast<Addr>(bits(value, 43, 0)) << 12,
-                        asid, last_level, attrs);
+        TLBIMVA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        asid, last_level);
         if (shareable) {
             tlbi_op.broadcast(tc);
         } else {
             tlbi_op(tc);
         }
     } else {
-        TLBIMVAA tlbi_op(regime, ss,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, last_level,
-            attrs);
+        TLBIMVAA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12, last_level);
         if (shareable) {
             tlbi_op.broadcast(tc);
         } else {
@@ -288,12 +298,9 @@ TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVaa(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool last_level, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
-    TLBIMVAA tlbi_op(regime, ss,
-        static_cast<Addr>(bits(value, 43, 0)) << 12, last_level,
-        attrs);
+    TLBIMVAA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12, last_level);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -303,14 +310,13 @@ TlbiOp64::tlbiVaa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiAsid(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable)
 {
     bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
     auto asid = asid_16bits ? bits(value, 63, 48) :
                               bits(value, 55, 48);
 
-    TLBIASID tlbi_op(regime, ss, asid, attrs);
+    TLBIASID tlbi_op(regime, secure, asid);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -320,12 +326,21 @@ TlbiOp64::tlbiAsid(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool last_level, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
     if (EL2Enabled(tc)) {
-        TLBIIPA tlbi_op(tc, TranslationRegime::EL10, ss, value,
-            last_level, attrs);
+        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        auto release = isa->getRelease();
+
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) &&
+            !scr.ns && !bits(value, 63);
+
+        const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
+            39 : 35;
+        TLBIIPA tlbi_op(TranslationRegime::EL10, secure,
+            static_cast<Addr>(bits(value, top_bit, 0)) << 12,
+            last_level);
 
         if (shareable) {
             tlbi_op.broadcast(tc);
@@ -337,10 +352,9 @@ TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiRvaa(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool last_level, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
-    TLBIRMVAA tlbi_op(regime, ss, value, last_level, attrs);
+    TLBIRMVAA tlbi_op(regime, secure, value, last_level);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -350,8 +364,7 @@ TlbiOp64::tlbiRvaa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiRva(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
     if (MMU::hasUnprivRegime(regime)) {
         // The asid will only be used when e2h == 1
@@ -359,25 +372,29 @@ TlbiOp64::tlbiRva(ThreadContext *tc, RegVal value,
         auto asid = asid_16bits ? bits(value, 63, 48) :
                                   bits(value, 55, 48);
 
-        TLBIRMVA tlbi_op(regime, ss, value, asid, last_level, attrs);
+        TLBIRMVA tlbi_op(regime, secure, value, asid, last_level);
         if (shareable) {
             tlbi_op.broadcast(tc);
         } else {
             tlbi_op(tc);
         }
     } else {
-        tlbiRvaa(tc, value, ss, regime, shareable, last_level, attrs);
+        tlbiRvaa(tc, value, secure, regime, shareable, last_level);
     }
 }
 
 void
 TlbiOp64::tlbiRipaS2(ThreadContext *tc, RegVal value,
-    SecurityState ss, TranslationRegime regime, bool shareable,
-    bool last_level, TlbiAttr attrs)
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
 {
     if (EL2Enabled(tc)) {
-        TLBIRIPA tlbi_op(tc, TranslationRegime::EL10, ss, value,
-            last_level, attrs);
+        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        auto release = isa->getRelease();
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) &&
+            !scr.ns && !bits(value, 63);
+
+        TLBIRIPA tlbi_op(TranslationRegime::EL10, secure, value, last_level);
 
         if (shareable) {
             tlbi_op.broadcast(tc);
@@ -387,74 +404,33 @@ TlbiOp64::tlbiRipaS2(ThreadContext *tc, RegVal value,
     }
 }
 
-bool
-TlbiOp64::fnxsAttrs(ThreadContext *tc)
-{
-    HCRX hcrx = tc->readMiscRegNoEffect(MISCREG_HCRX_EL2);
-    return currEL(tc) == EL1 &&
-        HaveExt(tc, ArmExtension::FEAT_XS) &&
-        HaveExt(tc, ArmExtension::FEAT_HCX) &&
-        isHcrxEL2Enabled(tc) && hcrx.fnxs;
-}
-
 std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 false); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE3NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3, // regime
-                false, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_ALLE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE3ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_ALLE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true); // shareable
         }
     },
-
-    { MISCREG_TLBI_ALLE3OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_ALLE2, [](ThreadContext *tc, RegVal value)
         {
@@ -462,22 +438,9 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 false); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE2NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                false, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -487,22 +450,9 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE2ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -512,121 +462,53 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE2OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_ALLE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_ALLE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true); // shareable
-        }
-    },
-
-    { MISCREG_TLBI_ALLE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_ALLE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true); // shareable
         }
     },
-
-    { MISCREG_TLBI_ALLE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiAll(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_VMALLE1, [](ThreadContext *tc, RegVal value)
         {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                shareable, // shareable
-                false, // stage2
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VMALLE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                false, // stage2
-                TlbiAttr::ExcludeXS); // attrs
+                shareable); // shareable
         }
     },
 
@@ -635,29 +517,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                true, // shareable
-                false, // stage2
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VMALLE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // stage2
-                TlbiAttr::ExcludeXS); // attrs
+                true); // shareable
         }
     },
 
@@ -666,223 +529,100 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                true, // shareable
-                false, // stage2
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VMALLE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // stage2
-                TlbiAttr::ExcludeXS); // attrs
+                true); // shareable
         }
     },
 
     { MISCREG_TLBI_VMALLS12E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // stage2
-        }
-    },
-
-    { MISCREG_TLBI_VMALLS12E1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                true, // stage2
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_VMALLS12E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // stage2
-        }
-    },
-
-    { MISCREG_TLBI_VMALLS12E1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // stage2
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_VMALLS12E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // stage2
         }
     },
 
-    { MISCREG_TLBI_VMALLS12E1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVmall(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // stage2
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
-
     { MISCREG_TLBI_VAE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false); // last level only
         }
     },
-
-    { MISCREG_TLBI_VAE3NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3, // regime
-                false, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_VAE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_VAE3ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_VAE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
         }
     },
 
-    { MISCREG_TLBI_VAE3OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3,            // regime
-                true,           // shareable
-                false,         // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
-
     { MISCREG_TLBI_VALE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 true); // last level only
         }
     },
 
-    { MISCREG_TLBI_VALE3NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3,            // regime
-                false,          // shareable
-                true,          // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
-
     { MISCREG_TLBI_VALE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
         }
     },
-
-    { MISCREG_TLBI_VALE3ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
-                TranslationRegime::EL3,            // regime
-                true,           // shareable
-                true,          // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_VALE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure, // secure
+                true, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_VALE3OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                SecurityState::Secure,           // secure
-                TranslationRegime::EL3,            // regime
-                true,           // shareable
-                true,          // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -892,70 +632,32 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 false); // last level only
         }
     },
 
-    { MISCREG_TLBI_VAE2NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime,               // regime
-                false,             // shareable
-                false,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
     { MISCREG_TLBI_VAE2IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 TranslationRegime::EL2, // regime
                 true, // shareable
                 false); // last level only
         }
     },
-
-    { MISCREG_TLBI_VAE2ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                TranslationRegime::EL2,               // regime
-                true,              // shareable
-                false,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_VAE2OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc,EL2), // secure
+                isSecureAtEL(tc,EL2), // secure
                 TranslationRegime::EL2, // regime
                 true, // shareable
                 false); // last level only
         }
     },
-
-    { MISCREG_TLBI_VAE2OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc,EL2), // secure
-                TranslationRegime::EL2,               // regime
-                true,              // shareable
-                false,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_VALE2, [](ThreadContext *tc, RegVal value)
         {
@@ -963,24 +665,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_VALE2NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime,               // regime
-                false,             // shareable
-                true,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -990,24 +678,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_VALE2ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime,               // regime
-                true,             // shareable
-                true,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -1017,24 +691,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_VALE2OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime,               // regime
-                true,             // shareable
-                true,            // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -1043,39 +703,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1084,29 +721,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1115,29 +734,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1146,34 +747,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 false, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VALE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1182,29 +760,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VALE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1213,29 +773,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VALE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1244,37 +786,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                shareable, // shareable
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_ASIDE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                TlbiAttr::ExcludeXS); // attrs
+                shareable); // shareable
         }
     },
 
@@ -1283,27 +803,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                true, // shareable
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_ASIDE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
+                true); // shareable
         }
     },
 
@@ -1312,27 +815,10 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                true, // shareable
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_ASIDE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiAsid(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                TlbiAttr::ExcludeXS); // attrs
+                true); // shareable
         }
     },
 
@@ -1341,39 +827,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAAE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level
         }
     },
 
@@ -1382,29 +845,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAAE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level
         }
     },
 
@@ -1413,29 +858,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAAE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level
         }
     },
 
@@ -1444,39 +871,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAALE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level
         }
     },
 
@@ -1485,29 +889,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAALE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level
         }
     },
 
@@ -1516,200 +902,89 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_VAALE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiVaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level
         }
     },
 
     { MISCREG_TLBI_IPAS2E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false); // last level
-        }
-    },
-
-    { MISCREG_TLBI_IPAS2E1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_IPAS2E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level
         }
     },
-
-    { MISCREG_TLBI_IPAS2E1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_IPAS2E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level
-        }
-    },
-
-    { MISCREG_TLBI_IPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false, // last level
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_IPAS2LE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // last level
         }
     },
-
-    { MISCREG_TLBI_IPAS2LE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_IPAS2LE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level
         }
     },
-
-    { MISCREG_TLBI_IPAS2LE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_IPAS2LE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level
         }
     },
-
-    { MISCREG_TLBI_IPAS2LE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiIpaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // last level
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_RVAE1, [](ThreadContext *tc, RegVal value)
         {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1718,29 +993,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1749,29 +1006,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1780,39 +1019,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAAE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1821,61 +1037,24 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
+                false); // last level only
         }
     },
-
-    { MISCREG_TLBI_RVAAE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_RVAAE1OS, [](ThreadContext *tc, RegVal value)
         {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                false, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAAE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                false); // last level only
         }
     },
 
@@ -1884,39 +1063,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVALE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1925,29 +1081,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVALE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1956,29 +1094,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVALE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -1987,39 +1107,16 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAALE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
-                hcr.fb && !hcr.tge;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                shareable, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -2028,29 +1125,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAALE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
@@ -2059,177 +1138,71 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
-            const TlbiAttr attrs = fnxsAttrs(tc) ?
-                TlbiAttr::ExcludeXS : TlbiAttr::None;
-
             TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
+                isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
-                true, // last level only
-                attrs); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RVAALE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
-                TranslationRegime::EL20 : TranslationRegime::EL10;
-
-            TlbiOp64::tlbiRvaa(tc, value,
-                securityStateAtEL(tc, translationEl(regime)), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
+                true); // last level only
         }
     },
 
     { MISCREG_TLBI_RIPAS2E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false); // last level only
         }
     },
-
-    { MISCREG_TLBI_RIPAS2E1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
 
     { MISCREG_TLBI_RIPAS2E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2E1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RIPAS2E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2E1OS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RIPAS2LE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2LE1NXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                false, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RIPAS2LE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2LE1ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RIPAS2LE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
+                isSecureAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RIPAS2LE1OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            tlbiRipaS2(tc, value,
-                securityStateAtEL(tc, EL1), // secure
-                TranslationRegime::EL10, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2238,25 +1211,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVAE2NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                false, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2265,25 +1224,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVAE2ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2292,25 +1237,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVAE2OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2319,25 +1250,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE2NXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                false, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2346,25 +1263,11 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE2ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
@@ -2373,151 +1276,71 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL2) ?
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE2OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
-                TranslationRegime::EL20 : TranslationRegime::EL2;
-
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL2), // secure
-                regime, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RVAE3, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVAE3NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                false, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RVAE3IS, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVAE3ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RVAE3OS, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
         }
     },
 
-    { MISCREG_TLBI_RVAE3OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                false, // last level only
-                TlbiAttr::ExcludeXS); // attrs
-        }
-    },
-
     { MISCREG_TLBI_RVALE3, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE3NXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                false, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RVALE3IS, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE3ISNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 
     { MISCREG_TLBI_RVALE3OS, [](ThreadContext *tc, RegVal value)
         {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
-        }
-    },
-
-    { MISCREG_TLBI_RVALE3OSNXS, [](ThreadContext *tc, RegVal value)
-        {
-            TlbiOp64::tlbiRva(tc, value,
-                securityStateAtEL(tc, EL3), // secure
-                TranslationRegime::EL3, // regime
-                true, // shareable
-                true, // last level only
-                TlbiAttr::ExcludeXS); // attrs
         }
     },
 };
@@ -2532,115 +1355,6 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
     } else {
         panic("Invalid TLBI\n");
     }
-}
-
-std::pair<Fault, uint64_t>
-AtOp64::performAt(ExecContext *xc, MiscRegIndex dest_idx, RegVal val) const
-{
-    ThreadContext* tc = xc->tcBase();
-
-    switch (dest_idx) {
-      case MISCREG_AT_S1E1R_Xt:
-        return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Read, 0, val);
-      case MISCREG_AT_S1E1W_Xt:
-        return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Write, 0, val);
-      case MISCREG_AT_S1E0R_Xt:
-        return addressTranslation64(tc, MMU::S1E0Tran, BaseMMU::Read,
-            MMU::UserMode, val);
-      case MISCREG_AT_S1E0W_Xt:
-        return addressTranslation64(tc, MMU::S1E0Tran, BaseMMU::Write,
-            MMU::UserMode, val);
-      case MISCREG_AT_S1E2R_Xt:
-        return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Read, 0, val);
-      case MISCREG_AT_S1E2W_Xt:
-        return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Write, 0, val);
-      case MISCREG_AT_S12E1R_Xt:
-        return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Read, 0, val);
-      case MISCREG_AT_S12E1W_Xt:
-        return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Write,
-            0, val);
-      case MISCREG_AT_S12E0R_Xt:
-        return addressTranslation64(tc, MMU::S12E0Tran, BaseMMU::Read,
-            MMU::UserMode, val);
-      case MISCREG_AT_S12E0W_Xt:
-        return addressTranslation64(tc, MMU::S12E0Tran, BaseMMU::Write,
-            MMU::UserMode, val);
-      case MISCREG_AT_S1E3R_Xt:
-        return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Read, 0, val);
-      case MISCREG_AT_S1E3W_Xt:
-        return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Write, 0, val);
-      default:
-        return std::make_pair(NoFault, 0);
-    }
-
-    return std::make_pair(NoFault, 0);
-}
-
-std::pair<Fault, uint64_t>
-AtOp64::addressTranslation64(ThreadContext* tc,
-    ArmISA::MMU::ArmTranslationType tran_type,
-    BaseMMU::Mode mode, Request::Flags flags, RegVal val) const
-{
-    // If we're in timing mode then doing the translation in
-    // functional mode then we're slightly distorting performance
-    // results obtained from simulations. The translation should be
-    // done in the same mode the core is running in. NOTE: This
-    // can't be an atomic translation because that causes problems
-    // with unexpected atomic snoop requests.
-    warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
-
-    auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcRequestorId,
-        tc->pcState().instAddr(), tc->contextId());
-
-    Fault fault = getMMUPtr(tc)->translateFunctional(
-        req, tc, mode, tran_type);
-
-    PAR par = 0;
-    bool raise_fault = false;
-    if (fault == NoFault) {
-        Addr paddr = req->getPaddr();
-        uint64_t attr = getMMUPtr(tc)->getAttr();
-        // clear LAPE bit from attribute.
-        attr &= ~ uint64_t(0x800);
-        uint64_t attr1 = attr >> 56;
-        if (!(attr1 >> 4) || attr1 == 0x44) {
-            attr |= 0x100;
-            attr &= ~ uint64_t(0x80);
-        }
-        par = (paddr & mask(47, 12)) | attr;
-        DPRINTF(MiscRegs, "AT: Translated addr %#x: PAR_EL1: %#x\n",
-                val, par);
-    } else {
-        ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
-        arm_fault->update(tc);
-        // Set fault bit and FSR
-        FSR fsr = arm_fault->getFsr(tc);
-
-        arm_fault->annotate(ArmFault::CM, 1);   // CM
-        arm_fault->annotate(ArmFault::WnR, 1);  // Force WnR as 1
-
-        par.f = 1; // F bit
-        par.fst = fsr.status; // FST
-        par.ptw = (arm_fault->iss() >> 7) & 0x1; // S1PTW
-        par.s = arm_fault->isStage2() ? 1 : 0; // S
-        // set RES1 bit [11].
-        par |= 0x800;
-
-        // Only raise fault for external abort and stage 2 fault,
-        // see R~NHWXL~ in Arm-ARM.
-        raise_fault = arm_fault->isExternalAbort() || par.ptw;
-
-        DPRINTF(MiscRegs, "AT: Translated addr %#x fault fsr %#x: PAR: %#x\n",
-                val, fsr, par);
-    }
-
-    // Fault filter.
-    if (fault != NoFault && !raise_fault) {
-        fault = NoFault;
-    }
-
-    return std::make_pair(fault, par);
 }
 
 } // namespace gem5

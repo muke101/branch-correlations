@@ -44,6 +44,7 @@ from .abstract_system_board import AbstractSystemBoard
 
 
 class TestBoard(AbstractSystemBoard):
+
     """This is a Testing Board used to run traffic generators on a simple
     architecture.
 

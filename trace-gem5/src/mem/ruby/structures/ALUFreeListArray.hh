@@ -32,7 +32,6 @@
 
 #include <deque>
 
-#include "base/intmath.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "sim/cur_tick.hh"
 
@@ -46,8 +45,7 @@ class ALUFreeListArray
 {
   private:
     unsigned int numALUs;
-    Cycles accessClocks;
-    Tick accessLatency = 0;
+    Tick accessLatency;
 
     class AccessRecord
     {
@@ -64,33 +62,14 @@ class ALUFreeListArray
     // Queue of accesses from past accessLatency cycles
     std::deque<AccessRecord> accessQueue;
 
-    int m_block_size_bits = 0;
-
   public:
-    ALUFreeListArray(unsigned int num_ALUs, Cycles access_clocks);
+    ALUFreeListArray(unsigned int num_ALUs, Tick access_latency);
 
     bool tryAccess(Addr addr);
 
     void reserve(Addr addr);
 
-    Tick
-    getLatency() const
-    {
-        assert(accessLatency > 0);
-        return accessLatency;
-    }
-
-    void
-    setClockPeriod(Tick clockPeriod)
-    {
-        accessLatency = accessClocks * clockPeriod;
-    }
-
-    void
-    setBlockSize(int block_size)
-    {
-        m_block_size_bits = floorLog2(block_size);
-    }
+    Tick getLatency() const { return accessLatency; }
 };
 
 } // namespace ruby

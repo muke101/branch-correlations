@@ -83,18 +83,18 @@ SectorSubBlk::setValid()
 }
 
 void
-SectorSubBlk::insert(const KeyType &tag)
+SectorSubBlk::insert(const Addr tag, const bool is_secure)
 {
     // Make sure it is not overwriting another sector
     panic_if(_sectorBlk && _sectorBlk->isValid() &&
-        !_sectorBlk->match(tag), "Overwriting valid sector!");
+        !_sectorBlk->matchTag(tag, is_secure), "Overwriting valid sector!");
 
     // If the sector is not valid, insert the new tag. The sector block
     // handles its own tag's invalidation, so do not attempt to insert MaxAddr.
-    if ((_sectorBlk && !_sectorBlk->isValid()) && (tag.address != MaxAddr)) {
-        _sectorBlk->insert(tag);
+    if ((_sectorBlk && !_sectorBlk->isValid()) && (tag != MaxAddr)) {
+        _sectorBlk->insert(tag, is_secure);
     }
-    CacheBlk::insert(tag);
+    CacheBlk::insert(tag, is_secure);
 }
 
 void

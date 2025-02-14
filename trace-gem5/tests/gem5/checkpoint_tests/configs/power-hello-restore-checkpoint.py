@@ -50,7 +50,7 @@ requires(isa_required=ISA.POWER)
 
 cache_hierarchy = NoCache()
 
-memory = SingleChannelDDR3_1600(size="32MiB")
+memory = SingleChannelDDR3_1600(size="32MB")
 processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING, isa=ISA.POWER, num_cores=2
 )

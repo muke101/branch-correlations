@@ -28,7 +28,6 @@ from abc import abstractmethod
 
 from m5.objects import Port
 
-from ....coherence_protocol import CoherenceProtocol
 from ....utils.override import overrides
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 
@@ -46,10 +45,6 @@ class AbstractClassicCacheHierarchy(AbstractCacheHierarchy):
     @overrides(AbstractCacheHierarchy)
     def is_ruby(self) -> bool:
         return False
-
-    @overrides(AbstractCacheHierarchy)
-    def get_coherence_protocol(self) -> CoherenceProtocol:
-        return CoherenceProtocol.NULL
 
     @abstractmethod
     def get_mem_side_port(self) -> Port:

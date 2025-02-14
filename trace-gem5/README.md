@@ -1,3 +1,15 @@
+# Main Changes
+
+> [!IMPORTANT]  
+> This fork of the gem5 repository is maintained by the CAPS-Group of the University of Murcia (Spain)
+> 
+> In the case of using the full simulator or parts of code that were not from the original gem5, additional citation to this repository is required (https://github.com/CAPS-UMU/gem5).
+
+- Fixed TAGE_SC_L_64K (based on https://github.com/useredsa/spec_tage_scl) now it is called TAGE_EMILIO
+- Added (and fixed) the AssociativeBTB (based on https://github.com/dhschall/gem5-fdp)
+- Ported ITTAGE indirect target predictor (from https://github.com/OpenXiangShan/GEM5)
+- Several correctness and preformance fixes
+
 # The gem5 Simulator
 
 This is the repository for the gem5 simulator. It contains the full source code
@@ -9,15 +21,6 @@ microarchitecture. It is primarily used to evaluate new hardware designs,
 system software changes, and compile-time and run-time system optimizations.
 
 The main website can be found at <http://www.gem5.org>.
-
-## Testing status
-
-**Note**: These regard tests run on the develop branch of gem5:
-<https://github.com/gem5/gem5/tree/develop>.
-
-[![Daily Tests](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml)
-[![Weekly Tests](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml)
-[![Compiler Tests](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml)
 
 ## Getting started
 
@@ -94,6 +97,6 @@ or start discussions. To join the mailing list please visit
 
 ## Contributing to gem5
 
-We hope you enjoy using gem5. When appropriate we advise sharing your
+We hope you enjoy using gem5. When appropriate we advise charing your
 contributions to the project. <https://www.gem5.org/contributing> can help you
 get started. Additional information can be found in the CONTRIBUTING.md file.

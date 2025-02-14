@@ -31,7 +31,6 @@
 
 #include <set>
 
-#include "base/random.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "params/GarnetSyntheticTraffic.hh"
@@ -135,8 +134,6 @@ class GarnetSyntheticTraffic : public ClockedObject
     const Cycles responseLimit;
 
     RequestorID requestorId;
-
-    Random::RandomPtr rng = Random::genRandom();
 
     void completeRequest(PacketPtr pkt);
 

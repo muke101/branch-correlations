@@ -113,7 +113,7 @@ class SectorSubBlk : public CacheBlk
      */
     void setValid() override;
 
-    void insert(const KeyType &tag) override;
+    void insert(const Addr tag, const bool is_secure) override;
 
     /**
      * Invalidate the block and inform sector block.

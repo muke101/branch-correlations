@@ -28,7 +28,7 @@ import math
 from abc import abstractmethod
 
 from m5.objects import (
-    CHI_Cache_Controller,
+    Cache_Controller,
     MessageBuffer,
     RubyNetwork,
 )
@@ -53,7 +53,7 @@ class OrderedTriggerMessageBuffer(TriggerMessageBuffer):
     ordered = True
 
 
-class AbstractNode(CHI_Cache_Controller):
+class AbstractNode(Cache_Controller):
     """A node is the abstract unit for caches in the CHI protocol.
 
     You can extend the AbstractNode to create caches (private or shared) and

@@ -56,7 +56,6 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/packet.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
@@ -65,6 +64,7 @@ namespace gem5
 {
 
 class System;
+class IndexingPolicy;
 class ReplaceableEntry;
 
 /**
@@ -86,7 +86,7 @@ class BaseTags : public ClockedObject
     System *system;
 
     /** Indexing policy */
-    TaggedIndexingPolicy *indexingPolicy;
+    BaseIndexingPolicy *indexingPolicy;
 
     /** Partitioning manager */
     partitioning_policy::PartitionManager *partitionManager;
@@ -161,7 +161,7 @@ class BaseTags : public ClockedObject
     } stats;
 
   public:
-    PARAMS(BaseTags);
+    typedef BaseTagsParams Params;
     BaseTags(const Params &p);
 
     /**
@@ -199,7 +199,7 @@ class BaseTags : public ClockedObject
      * @param is_secure True if the target memory space is secure.
      * @return Pointer to the cache block.
      */
-    virtual CacheBlk *findBlock(const CacheBlk::KeyType &key) const;
+    virtual CacheBlk *findBlock(Addr addr, bool is_secure) const;
 
     /**
      * Find a block given set and way.
@@ -282,7 +282,7 @@ class BaseTags : public ClockedObject
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    virtual CacheBlk* findVictim(const CacheBlk::KeyType &key,
+    virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
                                  const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks,
                                  const uint64_t partition_id=0) = 0;

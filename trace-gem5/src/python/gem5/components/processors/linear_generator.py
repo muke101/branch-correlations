@@ -39,7 +39,7 @@ class LinearGenerator(AbstractGenerator):
         self,
         num_cores: int = 1,
         duration: str = "1ms",
-        rate: str = "100GiB/s",
+        rate: str = "100GB/s",
         block_size: int = 64,
         min_addr: int = 0,
         max_addr: int = 32768,
@@ -64,9 +64,8 @@ class LinearGenerator(AbstractGenerator):
         generator cores that could replace the processing cores in a board.
 
         :param num_cores: The number of linear generator cores to create.
-        :param duration: The duration of time for which the generator generates
-                         traffic. Must be a string containing a positive number
-                         and some unit. For example, "1ms".
+        :param duration: The number of ticks for the generator to generate
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
                            request.
@@ -78,8 +77,7 @@ class LinearGenerator(AbstractGenerator):
                         requests. The write percentage would be equal to
                         ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-                           generator before stopping generation. If set to 0,
-                           there will be no data limit.
+                           generator before stopping generation.
         """
 
     def _create_cores(

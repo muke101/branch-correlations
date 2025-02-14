@@ -41,6 +41,8 @@ def macroop INC_R
 
 def macroop INC_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
     st t1, seg, sib, disp
@@ -48,6 +50,8 @@ def macroop INC_M
 
 def macroop INC_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
@@ -56,6 +60,9 @@ def macroop INC_P
 
 def macroop INC_LOCKED_M
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
@@ -65,6 +72,9 @@ def macroop INC_LOCKED_M
 
 def macroop INC_LOCKED_P
 {
+    .rmw
+    .rmwa
+
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp
@@ -80,6 +90,8 @@ def macroop DEC_R
 
 def macroop DEC_M
 {
+    .rmw
+    
     ldst t1, seg, sib, disp
     subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
     st t1, seg, sib, disp
@@ -87,6 +99,8 @@ def macroop DEC_M
 
 def macroop DEC_P
 {
+    .rmw
+    
     rdip t7
     ldst t1, seg, riprel, disp
     subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
@@ -95,6 +109,9 @@ def macroop DEC_P
 
 def macroop DEC_LOCKED_M
 {
+    .rmw
+    .rmwa
+    
     mfence
     ldstl t1, seg, sib, disp
     subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
@@ -104,6 +121,9 @@ def macroop DEC_LOCKED_M
 
 def macroop DEC_LOCKED_P
 {
+    .rmw
+    .rmwa
+
     rdip t7
     mfence
     ldstl t1, seg, riprel, disp

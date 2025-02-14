@@ -646,7 +646,7 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
         return std::make_shared<PrefetchAbort>(readPC(xc),
                                                ArmFault::DebugEvent,
                                                false,
-                                               TranMethod::UnknownTran,
+                                               ArmFault::UnknownTran,
                                                ArmFault::BRKPOINT);
     }
 }
@@ -654,8 +654,22 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
 Fault
 ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
 {
-    return generateTrap(el, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+    switch (el) {
+      case EL1:
+        return std::make_shared<SupervisorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
+
+      default:
+        panic("Illegal EL in advSIMDFPAccessTrap64\n");
+    }
 }
+
 
 Fault
 ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
@@ -857,20 +871,37 @@ ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
 
 Fault
 ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
-                                 ExceptionLevel target_el,
-                                 bool is_wfe) const
+                                 ExceptionLevel targetEL,
+                                 bool isWfe) const
 {
     // Check if target exception level is implemented.
-    assert(ArmSystem::haveEL(tc, target_el));
+    assert(ArmSystem::haveEL(tc, targetEL));
 
     // Check if processor needs to trap at selected exception level
-    if (isWFxTrapping(tc, target_el, is_wfe)) {
-        uint32_t iss = is_wfe? 0x1E00001 : /* WFE Instruction syndrome */
-                               0x1E00000;  /* WFI Instruction syndrome */
-        return generateTrap(target_el, ExceptionClass::TRAPPED_WFI_WFE, iss);
-    } else {
-        return NoFault;
+    bool trap = isWFxTrapping(tc, targetEL, isWfe);
+
+    if (trap) {
+        uint32_t iss = isWfe? 0x1E00001 : /* WFE Instruction syndrome */
+                              0x1E00000;  /* WFI Instruction syndrome */
+        switch (targetEL) {
+          case EL1:
+            return std::make_shared<SupervisorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
+          case EL2:
+            return std::make_shared<HypervisorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
+          case EL3:
+            return std::make_shared<SecureMonitorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
+          default:
+            panic("Unrecognized Exception Level: %d\n", targetEL);
+        }
     }
+
+    return NoFault;
 }
 
 Fault
@@ -976,7 +1007,20 @@ ArmStaticInst::undefinedFault64(ThreadContext *tc,
 Fault
 ArmStaticInst::sveAccessTrap(ExceptionLevel el) const
 {
-    return generateTrap(el, ExceptionClass::TRAPPED_SVE, 0);
+    switch (el) {
+      case EL1:
+        return std::make_shared<SupervisorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
+
+      default:
+        panic("Illegal EL in sveAccessTrap\n");
+    }
 }
 
 Fault
@@ -1039,7 +1083,20 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 Fault
 ArmStaticInst::smeAccessTrap(ExceptionLevel el, uint32_t iss) const
 {
-    return generateTrap(el, ExceptionClass::TRAPPED_SME, iss);
+    switch (el) {
+      case EL1:
+        return std::make_shared<SupervisorTrap>(
+            machInst, iss, ExceptionClass::TRAPPED_SME);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(
+            machInst, iss, ExceptionClass::TRAPPED_SME);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, iss, ExceptionClass::TRAPPED_SME);
+
+      default:
+        panic("Illegal EL in smeAccessTrap\n");
+    }
 }
 
 Fault
@@ -1310,21 +1367,6 @@ ArmStaticInst::getCurSmeVecLenInBits(ThreadContext *tc)
     return isa->getCurSmeVecLenInBits();
 }
 
-Fault
-ArmStaticInst::generateTrap(ExceptionLevel el, ExceptionClass ec,
-        uint32_t iss) const
-{
-    switch (el) {
-      case EL1:
-        return std::make_shared<SupervisorTrap>(getEMI(), iss, ec);
-      case EL2:
-        return std::make_shared<HypervisorTrap>(getEMI(), iss, ec);
-      case EL3:
-        return std::make_shared<SecureMonitorTrap>(getEMI(), iss, ec);
-      default:
-        panic("Invalid EL: %d\n", el);
-    }
-}
 
 } // namespace ArmISA
 } // namespace gem5

@@ -35,6 +35,7 @@
 #include <ctime>
 #include <fstream>
 
+#include "base/random.hh"
 #include "cpu/testers/gpu_ruby_test/cpu_thread.hh"
 #include "cpu/testers/gpu_ruby_test/dma_thread.hh"
 #include "cpu/testers/gpu_ruby_test/gpu_wavefront.hh"
@@ -144,7 +145,7 @@ ProtocolTester::ProtocolTester(const Params &p)
     // Note: random_m5 will use a fixed key if random_seed is not set.
     // This ensures a reproducable.
     if (p.random_seed != 0) {
-        rng->init(p.random_seed);
+        random_mt.init(p.random_seed);
     } else {
         warn(
             "If `random_seed == 0` (or `random_seed` is unset) "

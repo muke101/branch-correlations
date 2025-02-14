@@ -41,7 +41,6 @@ from m5.objects.BaseCPU import BaseCPU
 
 # from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
-from m5.objects.ArmDynBranchTracer import *
 from m5.objects.FUPool import *
 from m5.params import *
 from m5.proxy import *
@@ -192,5 +191,3 @@ class BaseO3CPU(BaseCPU):
         TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
-
-    branchTracer = Param.DynBranchTracer(ArmDynBranchTracer(), "Tracer for Dynamic Branch Instructions")

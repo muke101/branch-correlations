@@ -41,8 +41,6 @@ namespace gem5
 namespace ruby
 {
 
-class RubySystem;
-
 // NetDest specifies the network destination of a Message
 class NetDest
 {
@@ -50,7 +48,6 @@ class NetDest
     // Constructors
     // creates and empty set
     NetDest();
-    NetDest(RubySystem *ruby_system);
     explicit NetDest(int bit_size);
 
     NetDest& operator=(const Set& obj);
@@ -101,8 +98,6 @@ class NetDest
 
     void print(std::ostream& out) const;
 
-    void setRubySystem(RubySystem *rs) { m_ruby_system = rs; resize(); }
-
   private:
     // returns a value >= MachineType_base_level("this machine")
     // and < MachineType_base_level("next highest machine")
@@ -117,12 +112,6 @@ class NetDest
     NodeID bitIndex(NodeID index) const { return index; }
 
     std::vector<Set> m_bits;  // a vector of bit vectors - i.e. Sets
-
-    // Needed to call MacheinType_base_count/level
-    RubySystem *m_ruby_system = nullptr;
-
-    int MachineType_base_count(const MachineType& obj);
-    int MachineType_base_number(const MachineType& obj);
 };
 
 inline std::ostream&

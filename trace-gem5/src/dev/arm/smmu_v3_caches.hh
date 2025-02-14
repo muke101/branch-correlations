@@ -66,7 +66,7 @@ class SMMUv3BaseCache
   protected:
     int replacementPolicy;
     size_t nextToReplace;
-    Random::RandomPtr random;
+    Random random;
     uint32_t useStamp;
 
     struct SMMUv3BaseCacheStats : public statistics::Group

@@ -70,7 +70,7 @@ WayPartitioningPolicy::WayPartitioningPolicy
                 "associativity is %d", alloc_id, way, cache_assoc);
 
             if (this->partitionIdWays[alloc_id].count(way) == 0) {
-                addWayToPartition(alloc_id, way);
+                this->partitionIdWays[alloc_id].emplace(way);
             } else {
                 // do not add duplicate allocation to policy and warn
                 warn("Duplicate Way Partitioning Policy allocation for "
@@ -84,18 +84,6 @@ WayPartitioningPolicy::WayPartitioningPolicy
             "for PartitionID: %d \n", allocation->getWays().size(),
             alloc_id);
     }
-}
-
-void
-WayPartitioningPolicy::addWayToPartition(uint64_t partition_id, unsigned way)
-{
-    partitionIdWays[partition_id].emplace(way);
-}
-
-void
-WayPartitioningPolicy::removeWayToPartition(uint64_t partition_id, unsigned way)
-{
-    partitionIdWays[partition_id].erase(way);
 }
 
 void

@@ -37,7 +37,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/random.hh"
 #include "base/types.hh"
 #include "sim/eventq.hh"
 
@@ -236,8 +235,6 @@ class AddressManager
         typedef std::unordered_set<Value> ExpectedValueSet;
         ExpectedValueSet expectedValues;
 
-        Random::RandomPtr rng = Random::genRandom();
-
         // swap two locations in locArray
         void swap(LocProperty& prop_1, LocProperty& prop_2);
 
@@ -273,8 +270,6 @@ class AddressManager
     // internal log table
     typedef std::vector<LastWriter*> LogTable;
     LogTable logTable;
-
-    Random::RandomPtr rng = Random::genRandom();
 };
 
 } // namespace gem5

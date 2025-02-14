@@ -121,19 +121,19 @@ SimpleIndirectPredictor::updateDirectionInfo(ThreadID tid, bool taken,
 // Interface methods ------------------------------
 const PCStateBase *
 SimpleIndirectPredictor::lookup(ThreadID tid, InstSeqNum sn,
-                                Addr pc, void * &i_history)
+                                PCStateBase& pc, void * &i_history)
 {
     assert(i_history==nullptr);
 
     genIndirectInfo(tid, i_history);
     IndirectHistory *history = static_cast<IndirectHistory*>(i_history);
 
-    history->pcAddr = pc;
+    history->pcAddr = pc.instAddr();
     history->was_indirect = true;
 
     /** Do the prediction for indirect branches (no returns) */
     PCStateBase* target = nullptr;
-    history->hit = lookup(tid, pc, target, history);
+    history->hit = lookup(tid, pc.instAddr(), target, history);
     return target;
 }
 

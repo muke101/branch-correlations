@@ -44,7 +44,7 @@ namespace gem5
 
 AMDGPUMemoryManager::AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p)
     : ClockedObject(p), _gpuMemPort(csprintf("%s-port", name()), *this),
-      cacheLineSize(p.cache_line_size),
+      cacheLineSize(p.system->cacheLineSize()),
       _requestorId(p.system->getRequestorId(this))
 {
 }

@@ -80,8 +80,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-
         if (isDPPInst()) {
             VecOperandU32 src_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
             src_dpp.read();
@@ -150,9 +148,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         if (exec_mask) {
             src_lane = findLsbSet(exec_mask);
         }
@@ -186,9 +181,6 @@ namespace VegaISA
         VecOperandI32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -234,9 +226,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF64)src[lane];
@@ -269,9 +258,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF32)src[lane];
@@ -303,9 +289,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -340,9 +323,6 @@ namespace VegaISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -391,9 +371,6 @@ namespace VegaISA
         VecOperandI32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -462,9 +439,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 float tmp = src[lane];
@@ -501,9 +475,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 AMDGPU::mxfloat16 tmp(src[lane]);
@@ -538,9 +509,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemI32)std::floor(src[lane] + 0.5);
@@ -573,9 +541,6 @@ namespace VegaISA
         VecOperandI32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -630,9 +595,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF32)src[lane];
@@ -664,9 +626,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -700,9 +659,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF32)(bits(src[lane], 7, 0));
@@ -734,9 +690,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -770,9 +723,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF32)(bits(src[lane], 23, 16));
@@ -804,9 +754,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -841,9 +788,6 @@ namespace VegaISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -891,9 +835,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = (VecElemF64)src[lane];
@@ -925,9 +866,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -962,9 +900,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::ceil(src[lane]);
@@ -996,9 +931,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1033,9 +965,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::floor(src[lane]);
@@ -1067,9 +996,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1104,9 +1030,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::trunc(src[lane]);
@@ -1140,9 +1063,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::ceil(src[lane]);
@@ -1174,9 +1094,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1211,9 +1128,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::floor(src[lane]);
@@ -1245,9 +1159,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1281,9 +1192,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::log2(src[lane]);
@@ -1315,9 +1223,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1353,9 +1258,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = 1.0 / src[lane];
@@ -1388,9 +1290,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = 1.0 / std::sqrt(src[lane]);
@@ -1422,9 +1321,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1470,9 +1366,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (std::fpclassify(src[lane]) == FP_ZERO) {
@@ -1516,9 +1409,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::sqrt(src[lane]);
@@ -1550,9 +1440,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1589,9 +1476,6 @@ namespace VegaISA
 
         src.readSrc();
         pi.read();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1633,9 +1517,6 @@ namespace VegaISA
         src.readSrc();
         pi.read();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (src[lane] < -256.0 || src[lane] > 256.0) {
@@ -1672,9 +1553,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = ~src[lane];
@@ -1706,9 +1584,6 @@ namespace VegaISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1742,9 +1617,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = findFirstOneMsb(src[lane]);
@@ -1776,9 +1648,6 @@ namespace VegaISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1812,9 +1681,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = firstOppositeSignBit(src[lane]);
@@ -1847,9 +1713,6 @@ namespace VegaISA
         VecOperandI32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1889,9 +1752,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (std::isinf(src[lane]) || std::isnan(src[lane])) {
@@ -1928,9 +1788,6 @@ namespace VegaISA
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1969,9 +1826,6 @@ namespace VegaISA
         VecOperandI32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2015,9 +1869,6 @@ namespace VegaISA
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2075,8 +1926,8 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP unimplemented for v_mov_b64");
+        panic_if(isSDWAInst(), "SDWA unimplemented for v_mov_b64");
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2508,9 +2359,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::pow(2.0, src[lane]);
@@ -2543,9 +2391,6 @@ namespace VegaISA
 
         src.readSrc();
 
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = std::log2(src[lane]);
@@ -2577,9 +2422,6 @@ namespace VegaISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST+accum_offset);
 
         src.readSrc();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {

@@ -40,10 +40,9 @@
 #ifndef __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
 #define __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
 
-#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
+#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 
 namespace gem5
@@ -80,14 +79,11 @@ class SignaturePath : public Queued
         signature_t signature;
         /** Last accessed block within a page */
         stride_t lastBlock;
-        SignatureEntry(TagExtractor ext)
-          : TaggedEntry(), signature(0), lastBlock(0)
-        {
-            registerTagExtractor(ext);
-        }
+        SignatureEntry() : signature(0), lastBlock(0)
+        {}
     };
     /** Signature table */
-    AssociativeCache<SignatureEntry> signatureTable;
+    AssociativeSet<SignatureEntry> signatureTable;
 
     /** A stride entry with its counter */
     struct PatternStrideEntry
@@ -106,12 +102,10 @@ class SignaturePath : public Queued
         std::vector<PatternStrideEntry> strideEntries;
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
-        PatternEntry(size_t num_strides, unsigned counter_bits,
-                     TagExtractor ext)
+        PatternEntry(size_t num_strides, unsigned counter_bits)
           : TaggedEntry(), strideEntries(num_strides, counter_bits),
             counter(counter_bits)
         {
-            registerTagExtractor(ext);
         }
 
         /** Reset the entries to their initial values */
@@ -154,7 +148,7 @@ class SignaturePath : public Queued
     };
 
     /** Pattern table */
-    AssociativeCache<PatternEntry> patternTable;
+    AssociativeSet<PatternEntry> patternTable;
 
     /**
      * Generates a new signature from an existing one and a new stride

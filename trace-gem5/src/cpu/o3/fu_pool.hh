@@ -80,6 +80,13 @@ class FUPool : public SimObject
     /** Whether op is pipelined or not. */
     std::array<bool, Num_OpClasses> pipelined;
 
+    /** Maximum op execution throughputs, per op class. */
+    /** It's called reciprocal throughput or issue latency
+        For example, a reciprocal throughput of 2 for FMUL means
+        that a new FMUL instruction can start executing 2 clock
+        cycles after a previous FMUL. **/
+    std::array<Cycles, Num_OpClasses> issueLatencies;
+
     /** Bitvector listing capabilities of this FU pool. */
     std::bitset<Num_OpClasses> capabilityList;
 
@@ -88,6 +95,14 @@ class FUPool : public SimObject
 
     /** List of units to be freed at the end of this cycle. */
     std::vector<int> unitsToBeFreed;
+
+    /** List of units to be freed at the end of x cycles, for pipelined vector ALUs. */
+    struct unit_cycles {
+      int idx;
+      int cycles;
+    };
+
+    std::list<unit_cycles> unitsToBeFreedFuture;
 
     /**
      * Class that implements a circular queue to hold FU indices. The hope is
@@ -139,31 +154,8 @@ class FUPool : public SimObject
     FUPool(const Params &p);
     ~FUPool();
 
-    /**
-     * Named constants to differentiate cases where an
-     * instruction asked the FUPool for a free FU
-     * but did not get one
-     */
-
-    /**
-     * Instruction asked for a FU but does not actually
-     * need any (e.g., NOP)
-     */
-    static constexpr auto NoNeedFU = -3;
-
-    /**
-     * Instruction asked for a FU but this FUPool does
-     * not have a FU for this instruction op type
-     */
     static constexpr auto NoCapableFU = -2;
-
-    /**
-     * Instruction asked for a FU but all FU for
-     * this op type have already been allocated to
-     * other instructions this cycle
-     */
     static constexpr auto NoFreeFU = -1;
-
     /**
      * Gets a FU providing the requested capability. Will mark the
      * unit as busy, but leaves the freeing of the unit up to the IEW
@@ -179,8 +171,14 @@ class FUPool : public SimObject
     /** Frees a FU at the end of this cycle. */
     void freeUnitNextCycle(int fu_idx);
 
+    /** Frees a FU at the end of x cycles. */
+    void freeUnitXCycles(int fu_idx, int cycles);
+
     /** Frees all FUs on the list. */
     void processFreeUnits();
+
+    /** Evaluates vector FUs on the list. */
+    void evaluateUnits();
 
     /** Returns the total number of FUs. */
     int size() { return numFU; }
@@ -196,6 +194,11 @@ class FUPool : public SimObject
     /** Returns the issue latency of the given capability. */
     bool isPipelined(OpClass capability) {
         return pipelined[capability];
+    }
+
+    /** Returns the operation execution throughput of the given capability. */
+    Cycles getOpIssueLatency(OpClass capability) {
+      return issueLatencies[capability];
     }
 
     /** Have all the FUs drained? */

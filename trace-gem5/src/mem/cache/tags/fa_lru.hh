@@ -198,7 +198,7 @@ class FALRU : public BaseTags
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    CacheBlk* findBlock(const CacheBlk::KeyType &lookup) const override;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find a block given set and way.
@@ -220,7 +220,7 @@ class FALRU : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(const CacheBlk::KeyType& key,
+    CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks,
                          const uint64_t partition_id=0) override;

@@ -156,7 +156,7 @@ def main():
         "--mem-size",
         action="store",
         type=str,
-        default="2GiB",
+        default="2GB",
         help="Specify the physical memory size",
     )
 

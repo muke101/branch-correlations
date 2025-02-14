@@ -62,9 +62,6 @@ class RubyPrefetcher(SimObject):
     page_shift = Param.UInt32(
         12, "Number of bits to mask to get a page number"
     )
-    block_size = Param.UInt32(
-        "Size of block to prefetch, usually cache line size"
-    )
 
 
 class Prefetcher(RubyPrefetcher):

@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2018 Metempsy Technology Consulting
- * Copyright (c) 2024 Samsung Electronics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +36,7 @@ namespace gem5
 
 namespace prefetch
 {
+
 BOP::BOP(const BOPPrefetcherParams &p)
     : Queued(p),
       scoreMax(p.score_max), roundMax(p.round_max),
@@ -47,7 +47,7 @@ BOP::BOP(const BOPPrefetcherParams &p)
       delayTicks(cyclesToTicks(p.delay_queue_cycles)),
       delayQueueEvent([this]{ delayQueueEventWrapper(); }, name()),
       issuePrefetchRequests(false), bestOffset(1), phaseBestOffset(0),
-      bestScore(0), round(0), degree(p.degree)
+      bestScore(0), round(0)
 {
     if (!isPowerOf2(rrEntries)) {
         fatal("%s: number of RR entries is not power of 2\n", name());
@@ -55,22 +55,16 @@ BOP::BOP(const BOPPrefetcherParams &p)
     if (!isPowerOf2(blkSize)) {
         fatal("%s: cache line size is not power of 2\n", name());
     }
-    if (p.negative_offsets_enable && (p.offset_list_size % 2 != 0)) {
+    if (!(p.negative_offsets_enable && (p.offset_list_size % 2 == 0))) {
         fatal("%s: negative offsets enabled with odd offset list size\n",
-              name());
-    }
-    if (p.degree <= 0) {
-        fatal("%s: prefetch degree must be strictly greater than zero\n",
               name());
     }
 
     rrLeft.resize(rrEntries);
     rrRight.resize(rrEntries);
 
-    /*
-     * Following the paper implementation, a list with the specified number
-     * of offsets which are of the form 2^i * 3^j * 5^k with i,j,k >= 0
-     */
+    // Following the paper implementation, a list with the specified number
+    // of offsets which are of the form 2^i * 3^j * 5^k with i,j,k >= 0
     const int factors[] = { 2, 3, 5 };
     unsigned int i = 0;
     int64_t offset_i = 1;
@@ -88,10 +82,8 @@ BOP::BOP(const BOPPrefetcherParams &p)
         if (offset == 1) {
             offsetsList.push_back(OffsetListEntry(offset_i, 0));
             i++;
-            /*
-             * If we want to use negative offsets, add also the negative value
-             * of the offset just calculated
-             */
+            // If we want to use negative offsets, add also the negative value
+            // of the offset just calculated
             if (p.negative_offsets_enable)  {
                 offsetsList.push_back(OffsetListEntry(-offset_i, 0));
                 i++;
@@ -111,8 +103,7 @@ BOP::delayQueueEventWrapper()
             delayQueue.front().processTick <= curTick())
     {
         Addr addr_x = delayQueue.front().baseAddr;
-        Addr addr_tag = tag(addr_x);
-        insertIntoRR(addr_x, addr_tag, RRWay::Left);
+        insertIntoRR(addr_x, RRWay::Left);
         delayQueue.pop_front();
     }
 
@@ -123,49 +114,22 @@ BOP::delayQueueEventWrapper()
 }
 
 unsigned int
-BOP::index(Addr addr, unsigned int way) const
+BOP::hash(Addr addr, unsigned int way) const
 {
-    /*
-     * The second parameter, way, is set to 0 for indexing the left side of the
-     * RR Table and, it is set to 1 for indexing the right side of the RR
-     * Table. This is because we always pass the enum RRWay as the way argument
-     * while calling index. This enum is defined in the bop.hh file.
-     *
-     * The indexing function in the author's ChampSim code, which can be found
-     * here: https://comparch-conf.gatech.edu/dpc2/final_program.html, computes
-     * the hash as follows:
-     *
-     *  1. For indexing the left side of the RR Table (way = 0), the cache line
-     *     address is XORed with itself after right shifting it by the log base
-     *     2 of the number of entries in the RR Table.
-     *  2. For indexing the right side of the RR Table (way = 1), the cache
-     *     line address is XORed with itself after right shifting it by the log
-     *     base 2 of the number of entries in the RR Table, multiplied by two.
-     *
-     * Therefore, we if just left shift the log base 2 of the number of RR
-     * entries (log_rr_entries) with the parameter way, then if we are indexing
-     * the left side, we'll leave log_rr_entries as it is, but if we are
-     * indexing the right side, we'll multiply it with 2. Now once we have the
-     * result of this operation, we can right shift the cache line address
-     * (line_addr) by this value to get the first operand of the final XOR
-     * operation. The second operand of the XOR operation is line_addr itself
-     */
-    Addr log_rr_entries = floorLog2(rrEntries);
-    Addr line_addr = addr >> lBlkSize;
-    Addr hash = line_addr ^ (line_addr >> (log_rr_entries << way));
-    hash &= ((1ULL << log_rr_entries) - 1);
-    return hash % rrEntries;
+    Addr hash1 = addr >> way;
+    Addr hash2 = hash1 >> floorLog2(rrEntries);
+    return (hash1 ^ hash2) & (Addr)(rrEntries - 1);
 }
 
 void
-BOP::insertIntoRR(Addr addr, Addr tag, unsigned int way)
+BOP::insertIntoRR(Addr addr, unsigned int way)
 {
     switch (way) {
         case RRWay::Left:
-            rrLeft[index(addr, RRWay::Left)] = tag;
+            rrLeft[hash(addr, RRWay::Left)] = addr;
             break;
         case RRWay::Right:
-            rrRight[index(addr, RRWay::Right)] = tag;
+            rrRight[hash(addr, RRWay::Right)] = addr;
             break;
     }
 }
@@ -177,10 +141,8 @@ BOP::insertIntoDelayQueue(Addr x)
         return;
     }
 
-    /*
-     * Add the address to the delay queue and schedule an event to process
-     * it after the specified delay cycles
-     */
+    // Add the address to the delay queue and schedule an event to process
+    // it after the specified delay cycles
     Tick process_tick = curTick() + delayTicks;
 
     delayQueue.push_back(DelayQueueEntry(x, process_tick));
@@ -201,7 +163,7 @@ BOP::resetScores()
 inline Addr
 BOP::tag(Addr addr) const
 {
-    return (addr >> lBlkSize) & tagMask;
+    return (addr >> blkSize) & tagMask;
 }
 
 bool
@@ -223,23 +185,14 @@ BOP::testRR(Addr addr) const
 }
 
 void
-BOP::bestOffsetLearning(Addr addr_tag)
+BOP::bestOffsetLearning(Addr x)
 {
-    Addr offset_tag = (*offsetsListIterator).first;
-
-    /*
-     * Compute the lookup tag for the RR table. Since addr_tag is a tag value,
-     * and not an address, subtracting the offset from addr_tag may result in
-     * integer underflow. Therefore, we first convert the tag back to address
-     * by right shifting it, and then subtract the offset. This gives us a
-     * new lookup address which we use to compute the lookup tag
-     */
-    Addr lookup_tag = tag((addr_tag << lBlkSize) - (offset_tag << lBlkSize));
+    Addr offset_addr = (*offsetsListIterator).first;
+    Addr lookup_addr = x - offset_addr;
 
     // There was a hit in the RR table, increment the score for this offset
-    if (testRR(lookup_tag)) {
-        DPRINTF(HWPrefetch, "Address %#lx found in the RR table\n",
-                lookup_tag);
+    if (testRR(lookup_addr)) {
+        DPRINTF(HWPrefetch, "Address %#lx found in the RR table\n", x);
         (*offsetsListIterator).second++;
         if ((*offsetsListIterator).second > bestScore) {
             bestScore = (*offsetsListIterator).second;
@@ -248,37 +201,27 @@ BOP::bestOffsetLearning(Addr addr_tag)
         }
     }
 
-    // Move the offset iterator forward to prepare for the next time
     offsetsListIterator++;
 
-    /*
-     * All the offsets in the list were visited meaning that a learning
-     * phase finished. Check if
-     */
+    // All the offsets in the list were visited meaning that a learning
+    // phase finished. Check if
     if (offsetsListIterator == offsetsList.end()) {
         offsetsListIterator = offsetsList.begin();
         round++;
-    }
 
-    // Check if its time to re-calculate the best offset
-    if ((bestScore >= scoreMax) || (round >= roundMax)) {
-        round = 0;
-
-        /*
-         * If the current best score (bestScore) has exceed the threshold to
-         * enable prefetching (badScore), reset the learning structures and
-         * enable prefetch generation
-         */
-        if (bestScore > badScore) {
+        // Check if the best offset must be updated if:
+        // (1) One of the scores equals SCORE_MAX
+        // (2) The number of rounds equals ROUND_MAX
+        if ((bestScore >= scoreMax) || (round == roundMax)) {
             bestOffset = phaseBestOffset;
             round = 0;
+            bestScore = 0;
+            phaseBestOffset = 0;
+            resetScores();
             issuePrefetchRequests = true;
-        } else {
+        } else if (bestScore <= badScore) {
             issuePrefetchRequests = false;
         }
-        resetScores();
-        bestScore = 0;
-        phaseBestOffset = 0;
     }
 }
 
@@ -291,23 +234,21 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
     Addr tag_x = tag(addr);
 
     if (delayQueueEnabled) {
-        insertIntoDelayQueue(addr);
+        insertIntoDelayQueue(tag_x);
     } else {
-        insertIntoRR(addr, tag_x, RRWay::Left);
+        insertIntoRR(tag_x, RRWay::Left);
     }
 
-    /*
-     * Go through the nth offset and update the score, the best score and the
-     * current best offset if a better one is found
-     */
-    bestOffsetLearning(addr);
+    // Go through the nth offset and update the score, the best score and the
+    // current best offset if a better one is found
+    bestOffsetLearning(tag_x);
 
+    // This prefetcher is a degree 1 prefetch, so it will only generate one
+    // prefetch at most per access
     if (issuePrefetchRequests) {
-        for (int i = 1; i <= degree; i++) {
-            Addr prefetch_addr = addr + ((i * bestOffset) << lBlkSize);
-            addresses.push_back(AddrPriority(prefetch_addr, 0));
-            DPRINTF(HWPrefetch, "Generated prefetch %#lx\n", prefetch_addr);
-        }
+        Addr prefetch_addr = addr + (bestOffset << lBlkSize);
+        addresses.push_back(AddrPriority(prefetch_addr, 0));
+        DPRINTF(HWPrefetch, "Generated prefetch %#lx\n", prefetch_addr);
     }
 }
 
@@ -316,14 +257,13 @@ BOP::notifyFill(const CacheAccessProbeArg &arg)
 {
     const PacketPtr& pkt = arg.pkt;
 
-    // Only insert into the RR right way if it's the pkt is a hardware prefetch
+    // Only insert into the RR right way if it's the pkt is a HWP
     if (!pkt->cmd.isHWPrefetch()) return;
 
-    Addr addr = pkt->getAddr();
-    Addr tag_y = tag(addr);
+    Addr tag_y = tag(pkt->getAddr());
 
     if (issuePrefetchRequests) {
-        insertIntoRR(addr, tag_y - bestOffset, RRWay::Right);
+        insertIntoRR(tag_y - bestOffset, RRWay::Right);
     }
 }
 

@@ -56,15 +56,13 @@ namespace ruby
 
 RubyPrefetcher::RubyPrefetcher(const Params &p)
     : SimObject(p), m_num_streams(p.num_streams),
-    m_array(p.num_streams, p.block_size), m_train_misses(p.train_misses),
+    m_array(p.num_streams), m_train_misses(p.train_misses),
     m_num_startup_pfs(p.num_startup_pfs),
     unitFilter(p.unit_filter),
     negativeFilter(p.unit_filter),
     nonUnitFilter(p.nonunit_filter),
     m_prefetch_cross_pages(p.cross_page),
     pageShift(p.page_shift),
-    m_block_size_bits(floorLog2(p.block_size)),
-    m_block_size_bytes(p.block_size),
     rubyPrefetcherStats(this)
 {
     assert(m_num_streams > 0);
@@ -92,7 +90,7 @@ void
 RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
 {
     DPRINTF(RubyPrefetcher, "Observed miss for %#x\n", address);
-    Addr line_addr = makeLineAddress(address, m_block_size_bits);
+    Addr line_addr = makeLineAddress(address);
     rubyPrefetcherStats.numMissObserved++;
 
     // check to see if we have already issued a prefetch for this block
@@ -216,7 +214,7 @@ RubyPrefetcher::initializeStream(Addr address, int stride,
 
     // initialize the stream prefetcher
     PrefetchEntry *mystream = &(m_array[index]);
-    mystream->m_address = makeLineAddress(address, m_block_size_bits);
+    mystream->m_address = makeLineAddress(address);
     mystream->m_stride = stride;
     mystream->m_use_time = m_controller->curCycle();
     mystream->m_is_valid = true;
@@ -224,7 +222,7 @@ RubyPrefetcher::initializeStream(Addr address, int stride,
 
     // create a number of initial prefetches for this stream
     Addr page_addr = pageAddress(mystream->m_address);
-    Addr line_addr = makeLineAddress(mystream->m_address, m_block_size_bits);
+    Addr line_addr = makeLineAddress(mystream->m_address);
 
     // insert a number of prefetches into the prefetch table
     for (int k = 0; k < m_num_startup_pfs; k++) {
@@ -314,7 +312,8 @@ RubyPrefetcher::accessNonunitFilter(Addr line_addr,
                         // This stride HAS to be the multiplicative constant of
                         // dataBlockBytes (bc makeNextStrideAddress is
                         // calculated based on this multiplicative constant!)
-                        const int stride = entry.stride / m_block_size_bytes;
+                        const int stride = entry.stride /
+                            RubySystem::getBlockSizeBytes();
 
                         // clear this filter entry
                         entry.clear();

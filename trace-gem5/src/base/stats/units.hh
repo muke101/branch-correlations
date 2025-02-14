@@ -350,9 +350,9 @@ class Rate : public Base
         "otherwise, it would be a Ratio");
 
   private:
-    Rate() {}
+    Rate<T1,T2>() {}
   public:
-    Rate(Rate const&) = delete;
+    Rate<T1,T2>(Rate<T1,T2> const&) = delete;
     void operator=(Rate<T1,T2> const&) = delete;
     static Rate<T1,T2>*
     get()

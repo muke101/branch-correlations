@@ -406,7 +406,6 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpRespData_UD,                desc="";
     SnpRespData_SC_Fwded_SC,       desc="";
     SnpRespData_SC_Fwded_SD_PD,    desc="";
-    SnpRespData_SD_Fwded_SC,       desc="";
     SnpRespData_SC_PD_Fwded_SC,    desc="";
     SnpRespData_I_Fwded_SD_PD,     desc="";
     SnpRespData_I_PD_Fwded_SC,     desc="";
@@ -575,7 +574,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   ////////////////////////////////////////////////////////////////////////////
 
   // Cache block size
-  int blockSize, default="m_ruby_system->getBlockSizeBytes()";
+  int blockSize, default="RubySystem::getBlockSizeBytes()";
 
   // CacheEntry
   structure(CacheEntry, interface="AbstractCacheEntry") {

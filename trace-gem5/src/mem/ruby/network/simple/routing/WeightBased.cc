@@ -42,6 +42,7 @@
 
 #include <algorithm>
 
+#include "base/random.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 
 namespace gem5
@@ -94,7 +95,7 @@ WeightBased::route(const Message &msg,
                 // improve load distribution by randomizing order of links
                 // with the same queue length
                 link->m_order =
-                    (out_queue_length << 8) | rng->random(0, 0xff);
+                    (out_queue_length << 8) | random_mt.random(0, 0xff);
             }
         }
         sortLinks();

@@ -111,15 +111,6 @@ class O3_ARM_v7a_FUP(FUPool):
 class O3_ARM_v7a_BTB(SimpleBTB):
     numEntries = 2048
     tagBits = 18
-    associativity = 1
-    instShiftAmt = 2
-    btbReplPolicy = LRURP()
-    btbIndexingPolicy = BTBSetAssociative(
-        num_entries=Parent.numEntries,
-        set_shift=Parent.instShiftAmt,
-        assoc=Parent.associativity,
-        tag_bits=Parent.tagBits,
-    )
 
 
 # Bi-Mode Branch Predictor
@@ -185,7 +176,7 @@ class O3_ARM_v7a_ICache(Cache):
     response_latency = 1
     mshrs = 2
     tgts_per_mshr = 8
-    size = "32KiB"
+    size = "32kB"
     assoc = 2
     is_read_only = True
     # Writeback clean lines as well
@@ -199,7 +190,7 @@ class O3_ARM_v7a_DCache(Cache):
     response_latency = 2
     mshrs = 6
     tgts_per_mshr = 8
-    size = "32KiB"
+    size = "32kB"
     assoc = 2
     write_buffers = 16
     # Consider the L2 a victim cache also for clean lines
@@ -213,7 +204,7 @@ class O3_ARM_v7aL2(Cache):
     response_latency = 12
     mshrs = 16
     tgts_per_mshr = 8
-    size = "1MiB"
+    size = "1MB"
     assoc = 16
     write_buffers = 8
     clusivity = "mostly_excl"

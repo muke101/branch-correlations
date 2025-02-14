@@ -1,16 +1,4 @@
 /*
- * Copyright (c) 2024 Arm Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
  * Copyright (c) 2024 Pranith Kumar
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved
@@ -60,14 +48,12 @@ namespace gem5
 template <typename Entry>
 class AssociativeCache : public Named
 {
-  protected:
-
-    static_assert(std::is_base_of_v<ReplaceableEntry, Entry>,
-                  "Entry should be derived from ReplaceableEntry");
+    static_assert(std::is_base_of_v<CacheEntry, Entry>,
+                  "Entry should be derived from CacheEntry");
 
     typedef replacement_policy::Base BaseReplacementPolicy;
-    typedef typename Entry::IndexingPolicy IndexingPolicy;
-    typedef typename Entry::KeyType KeyType;
+
+  protected:
 
     /** Associativity of the cache. */
     size_t associativity;
@@ -76,12 +62,10 @@ class AssociativeCache : public Named
     BaseReplacementPolicy *replPolicy;
 
     /** Indexing policy of the cache */
-    IndexingPolicy *indexingPolicy;
+    BaseIndexingPolicy *indexingPolicy;
 
     /** The entries */
     std::vector<Entry> entries;
-
-    const ::gem5::debug::SimpleFlag* debugFlag = nullptr;
 
   private:
 
@@ -116,14 +100,13 @@ class AssociativeCache : public Named
     AssociativeCache(const char *name, const size_t num_entries,
                      const size_t associativity_,
                      BaseReplacementPolicy *repl_policy,
-                     IndexingPolicy *indexing_policy,
+                     BaseIndexingPolicy *indexing_policy,
                      Entry const &init_val = Entry())
         : Named(std::string(name)),
           associativity(associativity_),
           replPolicy(repl_policy),
           indexingPolicy(indexing_policy),
-          entries(num_entries, init_val),
-          debugFlag(nullptr)
+          entries(num_entries, init_val)
     {
         initParams(num_entries, associativity);
     }
@@ -154,7 +137,7 @@ class AssociativeCache : public Named
     init(const size_t num_entries,
          const size_t associativity_,
          BaseReplacementPolicy *_repl_policy,
-         IndexingPolicy *_indexing_policy,
+         BaseIndexingPolicy *_indexing_policy,
          Entry const &init_val = Entry())
     {
         associativity = associativity_;
@@ -165,22 +148,27 @@ class AssociativeCache : public Named
         initParams(num_entries, associativity);
     }
 
-    void
-    setDebugFlag(const ::gem5::debug::SimpleFlag& flag)
+    /**
+     * Get the tag for the addr
+     * @param addr Addr to get the tag for
+     * @return Tag for the address
+     */
+    virtual Addr
+    getTag(const Addr addr) const
     {
-        debugFlag = &flag;
+        return indexingPolicy->extractTag(addr);
     }
 
     /**
      * Do an access to the entry if it exists.
      * This is required to update the replacement information data.
-     * @param key key to the entry
+     * @param addr key to the entry
      * @return The entry if it exists
      */
     virtual Entry*
-    accessEntry(const KeyType &key)
+    accessEntryByAddr(const Addr addr)
     {
-        auto entry = findEntry(key);
+        auto entry = findEntry(addr);
 
         if (entry) {
             accessEntry(entry);
@@ -201,18 +189,20 @@ class AssociativeCache : public Named
 
     /**
      * Find an entry within the set
-     * @param key key element
+     * @param addr key element
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
     virtual Entry*
-    findEntry(const KeyType &key) const
+    findEntry(const Addr addr) const
     {
-        auto candidates = indexingPolicy->getPossibleEntries(key);
+        auto tag = getTag(addr);
+
+        auto candidates = indexingPolicy->getPossibleEntries(addr);
 
         for (auto candidate : candidates) {
             Entry *entry = static_cast<Entry*>(candidate);
-            if (entry->match(key)) {
+            if (entry->matchTag(tag)) {
                 return entry;
             }
         }
@@ -222,21 +212,15 @@ class AssociativeCache : public Named
 
     /**
      * Find a victim to be replaced
-     * @param key key to select the possible victim
+     * @param addr key to select the possible victim
      * @result entry to be victimized
      */
     virtual Entry*
-    findVictim(const KeyType &key)
+    findVictim(const Addr addr)
     {
-        auto candidates = indexingPolicy->getPossibleEntries(key);
+        auto candidates = indexingPolicy->getPossibleEntries(addr);
 
         auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
-
-        if (debugFlag && debugFlag->tracing() && victim->isValid()) {
-            ::gem5::trace::getDebugLogger()->dprintf_flag(
-                curTick(), name(), debugFlag->name(),
-                "Replacing entry: %s\n", victim->print());
-        }
 
         invalidate(victim);
 
@@ -257,19 +241,13 @@ class AssociativeCache : public Named
 
     /**
      * Indicate that an entry has just been inserted
-     * @param key key of the container
+     * @param addr key of the container
      * @param entry pointer to the container entry to be inserted
      */
     virtual void
-    insertEntry(const KeyType &key, Entry *entry)
+    insertEntry(const Addr addr, Entry *entry)
     {
-        if (debugFlag && debugFlag->tracing()) {
-            ::gem5::trace::getDebugLogger()->dprintf_flag(
-                curTick(), name(), debugFlag->name(),
-                "Inserting entry: %s\n", entry->print());
-        }
-
-        entry->insert(key);
+        entry->insert(indexingPolicy->extractTag(addr));
         replPolicy->reset(entry->replacementData);
     }
 
@@ -280,10 +258,10 @@ class AssociativeCache : public Named
      * @result vector of candidates matching with the provided key
      */
     std::vector<Entry *>
-    getPossibleEntries(const KeyType &key) const
+    getPossibleEntries(const Addr addr) const
     {
         std::vector<ReplaceableEntry *> selected_entries =
-            indexingPolicy->getPossibleEntries(key);
+            indexingPolicy->getPossibleEntries(addr);
 
         std::vector<Entry *> entries;
 

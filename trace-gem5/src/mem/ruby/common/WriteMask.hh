@@ -78,18 +78,6 @@ class WriteMask
     ~WriteMask()
     {}
 
-    int getBlockSize() const { return mSize; }
-    void
-    setBlockSize(int size)
-    {
-        // This should only be used once if the default ctor was used. Probably
-        // by src/mem/ruby/protocol/RubySlicc_MemControl.sm.
-        assert(mSize == 0);
-        assert(size > 0);
-        mSize = size;
-        clear();
-    }
-
     void
     clear()
     {
@@ -99,7 +87,6 @@ class WriteMask
     bool
     test(int offset) const
     {
-        assert(mSize > 0);
         assert(offset < mSize);
         return mMask[offset];
     }
@@ -107,7 +94,6 @@ class WriteMask
     void
     setMask(int offset, int len, bool val = true)
     {
-        assert(mSize > 0);
         assert(mSize >= (offset + len));
         for (int i = 0; i < len; i++) {
             mMask[offset + i] = val;
@@ -116,7 +102,6 @@ class WriteMask
     void
     fillMask()
     {
-        assert(mSize > 0);
         for (int i = 0; i < mSize; i++) {
             mMask[i] = true;
         }
@@ -126,7 +111,6 @@ class WriteMask
     getMask(int offset, int len) const
     {
         bool tmp = true;
-        assert(mSize > 0);
         assert(mSize >= (offset + len));
         for (int i = 0; i < len; i++) {
             tmp = tmp & mMask.at(offset + i);
@@ -138,7 +122,6 @@ class WriteMask
     isOverlap(const WriteMask &readMask) const
     {
         bool tmp = false;
-        assert(mSize > 0);
         assert(mSize == readMask.mSize);
         for (int i = 0; i < mSize; i++) {
             if (readMask.mMask.at(i)) {
@@ -152,7 +135,6 @@ class WriteMask
     containsMask(const WriteMask &readMask) const
     {
         bool tmp = true;
-        assert(mSize > 0);
         assert(mSize == readMask.mSize);
         for (int i = 0; i < mSize; i++) {
             if (readMask.mMask.at(i)) {
@@ -164,7 +146,6 @@ class WriteMask
 
     bool isEmpty() const
     {
-        assert(mSize > 0);
         for (int i = 0; i < mSize; i++) {
             if (mMask.at(i)) {
                 return false;
@@ -176,7 +157,6 @@ class WriteMask
     bool
     isFull() const
     {
-        assert(mSize > 0);
         for (int i = 0; i < mSize; i++) {
             if (!mMask.at(i)) {
                 return false;
@@ -188,7 +168,6 @@ class WriteMask
     void
     andMask(const WriteMask & writeMask)
     {
-        assert(mSize > 0);
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
             mMask[i] = (mMask.at(i)) && (writeMask.mMask.at(i));
@@ -203,7 +182,6 @@ class WriteMask
     void
     orMask(const WriteMask & writeMask)
     {
-        assert(mSize > 0);
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
             mMask[i] = (mMask.at(i)) || (writeMask.mMask.at(i));
@@ -218,7 +196,6 @@ class WriteMask
     void
     setInvertedMask(const WriteMask & writeMask)
     {
-        assert(mSize > 0);
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
             mMask[i] = !writeMask.mMask.at(i);
@@ -228,7 +205,6 @@ class WriteMask
     int
     firstBitSet(bool val, int offset = 0) const
     {
-        assert(mSize > 0);
         for (int i = offset; i < mSize; ++i)
             if (mMask[i] == val)
                 return i;
@@ -238,7 +214,6 @@ class WriteMask
     int
     count(int offset = 0) const
     {
-        assert(mSize > 0);
         int count = 0;
         for (int i = offset; i < mSize; ++i)
             count += mMask[i];

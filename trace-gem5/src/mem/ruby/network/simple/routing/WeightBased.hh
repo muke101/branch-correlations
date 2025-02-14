@@ -41,7 +41,6 @@
 #ifndef __MEM_RUBY_NETWORK_SIMPLE_WEIGHTBASEDROUTINGUNIT_HH__
 #define __MEM_RUBY_NETWORK_SIMPLE_WEIGHTBASEDROUTINGUNIT_HH__
 
-#include "base/random.hh"
 #include "mem/ruby/network/simple/routing/BaseRoutingUnit.hh"
 #include "params/WeightBased.hh"
 
@@ -80,8 +79,6 @@ class WeightBased : public BaseRoutingUnit
     };
 
     std::vector<std::unique_ptr<LinkInfo>> m_links;
-
-    Random::RandomPtr rng = Random::genRandom();
 
     void findRoute(const Message &msg,
                    std::vector<RouteInfo> &out_links) const;
