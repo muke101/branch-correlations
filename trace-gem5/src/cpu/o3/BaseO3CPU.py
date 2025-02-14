@@ -78,18 +78,18 @@ class BaseO3CPU(BaseCPU):
     activity = Param.Unsigned(0, "Initial count")
 
     cacheStorePorts = Param.Unsigned(
-        200, "Cache Ports. Constrains stores only."
+        700, "Cache Ports. Constrains stores only."
     )
-    cacheLoadPorts = Param.Unsigned(200, "Cache Ports. Constrains loads only.")
+    cacheLoadPorts = Param.Unsigned(700, "Cache Ports. Constrains loads only.")
 
     decodeToFetchDelay = Param.Cycles(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Cycles(1, "Rename to fetch delay")
     iewToFetchDelay = Param.Cycles(1, "Issue/Execute/Writeback to fetch delay")
     commitToFetchDelay = Param.Cycles(1, "Commit to fetch delay")
-    fetchWidth = Param.Unsigned(8, "Fetch width")
+    fetchWidth = Param.Unsigned(10, "Fetch width")
     fetchBufferSize = Param.Unsigned(64, "Fetch buffer size in bytes")
     fetchQueueSize = Param.Unsigned(
-        32, "Fetch queue size in micro-ops per-thread"
+        128, "Fetch queue size in micro-ops per-thread"
     )
 
     renameToDecodeDelay = Param.Cycles(1, "Rename to decode delay")
@@ -98,14 +98,14 @@ class BaseO3CPU(BaseCPU):
     )
     commitToDecodeDelay = Param.Cycles(1, "Commit to decode delay")
     fetchToDecodeDelay = Param.Cycles(1, "Fetch to decode delay")
-    decodeWidth = Param.Unsigned(8, "Decode width")
+    decodeWidth = Param.Unsigned(10, "Decode width")
 
     iewToRenameDelay = Param.Cycles(
         1, "Issue/Execute/Writeback to rename delay"
     )
     commitToRenameDelay = Param.Cycles(1, "Commit to rename delay")
     decodeToRenameDelay = Param.Cycles(1, "Decode to rename delay")
-    renameWidth = Param.Unsigned(8, "Rename width")
+    renameWidth = Param.Unsigned(10, "Rename width")
 
     commitToIEWDelay = Param.Cycles(
         1, "Commit to Issue/Execute/Writeback delay"
@@ -116,17 +116,17 @@ class BaseO3CPU(BaseCPU):
     issueToExecuteDelay = Param.Cycles(
         1, "Issue to execute delay (internal to the IEW stage)"
     )
-    dispatchWidth = Param.Unsigned(8, "Dispatch width")
-    issueWidth = Param.Unsigned(8, "Issue width")
-    wbWidth = Param.Unsigned(8, "Writeback width")
+    dispatchWidth = Param.Unsigned(10, "Dispatch width")
+    issueWidth = Param.Unsigned(19, "Issue width")
+    wbWidth = Param.Unsigned(19, "Writeback width")
     fuPool = Param.FUPool(DefaultFUPool(), "Functional Unit pool")
 
     iewToCommitDelay = Param.Cycles(
         1, "Issue/Execute/Writeback to commit delay"
     )
     renameToROBDelay = Param.Cycles(1, "Rename to reorder buffer delay")
-    commitWidth = Param.Unsigned(8, "Commit width")
-    squashWidth = Param.Unsigned(8, "Squash width")
+    commitWidth = Param.Unsigned(10, "Commit width")
+    squashWidth = Param.Unsigned(10, "Squash width")
     trapLatency = Param.Cycles(13, "Trap latency")
     fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 
@@ -137,8 +137,8 @@ class BaseO3CPU(BaseCPU):
         5, "Time buffer size for forward communication"
     )
 
-    LQEntries = Param.Unsigned(32, "Number of load queue entries")
-    SQEntries = Param.Unsigned(32, "Number of store queue entries")
+    LQEntries = Param.Unsigned(132, "Number of load queue entries")
+    SQEntries = Param.Unsigned(72, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(
         4, "Number of places to shift addr before check"
     )
@@ -148,30 +148,35 @@ class BaseO3CPU(BaseCPU):
         "loads & stores or just stores",
     )
     store_set_clear_period = Param.Unsigned(
-        250000,
+        128*244,
         "Number of load/store insts before the dep predictor "
         "should be invalidated",
     )
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
 
+    phast_num_rows = Param.Unsigned(128, "Number of rows per table")
+    phast_associativity = Param.Unsigned(4, "Number of entries per row")
+    phast_tag_bits = Param.Unsigned(16, "Size of entry tags")
+    phast_max_counter = Param.Unsigned(4, "Max confidence counter value")
+
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers")
 
     numPhysIntRegs = Param.Unsigned(
-        256, "Number of physical integer registers"
+        918, "Number of physical integer registers"
     )
     numPhysFloatRegs = Param.Unsigned(
-        256, "Number of physical floating point registers"
+        918, "Number of physical floating point registers"
     )
-    numPhysVecRegs = Param.Unsigned(256, "Number of physical vector registers")
+    numPhysVecRegs = Param.Unsigned(918, "Number of physical vector registers")
     numPhysVecPredRegs = Param.Unsigned(
-        32, "Number of physical predicate registers"
+        128, "Number of physical predicate registers"
     )
-    numPhysMatRegs = Param.Unsigned(2, "Number of physical matrix registers")
+    numPhysMatRegs = Param.Unsigned(8, "Number of physical matrix registers")
     # most ISAs don't use condition-code regs, so default is 0
     numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
-    numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
-    numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
+    numIQEntries = Param.Unsigned(559, "Number of instruction queue entries")
+    numROBEntries = Param.Unsigned(918, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
     smtFetchPolicy = Param.SMTFetchPolicy("RoundRobin", "SMT Fetch policy")
@@ -187,7 +192,12 @@ class BaseO3CPU(BaseCPU):
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.CommitPolicy("RoundRobin", "SMT Commit Policy")
 
+    #branchPred = Param.BranchPredictor(
+    #    TAGE(numThreads=Parent.numThreads, tage=LTAGE_TAGE(), indirectBranchPred=ITTAGE()), "Branch Predictor"
+    #)
+
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        TAGE_EMILIO(numThreads=Parent.numThreads, indirectBranchPred=ITTAGE(), BTB=AssociativeBTB()), "Branch Predictor"
     )
+
     needsTSO = Param.Bool(False, "Enable TSO Memory model")

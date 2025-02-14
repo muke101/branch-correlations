@@ -140,6 +140,9 @@ class DynInst : public ExecContext, public RefCounted
     /** InstRecord that tracks this instructions. */
     trace::InstRecord *traceData = nullptr;
 
+    /** Track whether the instruction squashed specifically due to a memory order violation */
+    bool squashedDueToMemOrder = false;
+
   protected:
     enum Status
     {
@@ -354,6 +357,24 @@ class DynInst : public ExecContext, public RefCounted
     ssize_t sqIdx = -1;
     typename LSQUnit::SQIterator sqIt;
 
+    /** Info needed for each load for PHAST */
+    struct MemDepInfo {
+        /** Store this load received its data from, if any */
+        InstSeqNum forwardedFrom = 0;
+        /** Youngest store this load violated with */
+        InstSeqNum violatingStoreSeqNum = 0;
+        Addr violatingStorePC = 0;
+        /** Relative offset into the SQ for dependent store*/
+        std::ptrdiff_t storeQueueDistance;
+        /** Memory location of store this load was predicted dependent on */
+        Addr predStoreAddr;
+        int predStoreSize;
+        /** Predicted information validated at commit */
+        unsigned predBranchHistLength = 0;
+        uint64_t predictorHash = 0;
+        /** Was this load predicted to be dependent by the depPred? */
+        bool predicted = false;
+    } memDepInfo;
 
     /////////////////////// TLB Miss //////////////////////
     /**

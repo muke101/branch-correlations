@@ -34,14 +34,27 @@
 #include <utility>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/limits.hh"
+#include "params/BaseO3CPU.hh"
+#include <cstdint>
+#include <deque>
+#include <bitset>
 
 namespace gem5
 {
 
+struct BaseO3CPUParams;
+
 namespace o3
 {
+
+struct PredictionResult;
+
+class MemDepUnit;
 
 struct ltseqnum
 {
@@ -52,7 +65,8 @@ struct ltseqnum
     }
 };
 
-/**
+/*#include "mem_dep_unit.hh"
+*
  * Implements a store set predictor for determining if memory
  * instructions are dependent upon each other.  See paper "Memory
  * Dependence Prediction using Store Sets" by Chrysos and Emer.  SSID
@@ -69,17 +83,17 @@ class StoreSet
     StoreSet() { };
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
+    StoreSet(const BaseO3CPUParams &params, MemDepUnit *_memDep);
 
     /** Default destructor. */
     ~StoreSet();
 
     /** Initializes the store set predictor with the given table sizes. */
-    void init(uint64_t clear_period, int SSIT_size, int LFST_size);
+    void init(const BaseO3CPUParams &params, MemDepUnit *_memDep);
 
     /** Records a memory ordering violation between the younger load
      * and the older store. */
-    void violation(Addr store_PC, Addr load_PC);
+    void violation(Addr load_pc, InstSeqNum load_seq_num, InstSeqNum store_seq_num, Addr store_pc, std::ptrdiff_t storeQueueDistance, bool predicted, unsigned predictedPathInex, uint64_t predictedHash, BranchHistory branchHistory);
 
     /** Clears the store set predictor every so often so that all the
      * entries aren't used and stores are constantly predicted as
@@ -100,7 +114,9 @@ class StoreSet
      * any store.  @return Returns the sequence number of the store
      * instruction this PC is dependent upon.  Returns 0 if none.
      */
-    InstSeqNum checkInst(Addr PC);
+    PredictionResult checkInst(Addr PC, InstSeqNum load_seq_num, BranchHistory branchHistory);
+
+    void commit(Addr load_pc, Addr load_addr, unsigned load_size, Addr store_addr, unsigned store_size, unsigned path_index, uint64_t predictor_hash) { return; };
 
     /** Records this PC/sequence number as issued. */
     void issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store);
@@ -135,6 +151,8 @@ class StoreSet
     /** Bit vector to tell if the LFST has a valid entry. */
     std::vector<bool> validLFST;
 
+    std::map<SSID, Addr> intended_index;
+
     /** Map of stores that have been inserted into the store set, but
      * not yet issued or squashed.
      */
@@ -161,6 +179,8 @@ class StoreSet
 
     /** Number of memory operations predicted since last clear of predictor */
     int memOpsPred;
+
+    MemDepUnit *memDep;
 };
 
 } // namespace o3

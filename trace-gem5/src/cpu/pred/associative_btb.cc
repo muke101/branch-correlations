@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2024 Eduardo José Gómez Hernández (University of Murcia)
- * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall

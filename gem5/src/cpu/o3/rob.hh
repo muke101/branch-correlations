@@ -98,6 +98,8 @@ class ROB
 
     std::string name() const;
 
+    void checkViolations(ThreadID tid, const DynInstPtr& store);
+
     /** Sets pointer to the list of active threads.
      *  @param at_ptr Pointer to the list of active threads.
      */
@@ -199,12 +201,12 @@ class ROB
     { return threadEntries[tid] == 0; }
 
     /** Executes the squash, marking squashed instructions. */
-    void doSquash(ThreadID tid);
+    void doSquash(ThreadID tid, bool squashedDueToMemOrder);
 
     /** Squashes all instructions younger than the given sequence number for
      *  the specific thread.
      */
-    void squash(InstSeqNum squash_num, ThreadID tid);
+    void squash(InstSeqNum squash_num, ThreadID tid, bool squashedDueToMemOrder);
 
     /** Updates the head instruction with the new oldest instruction. */
     void updateHead();
@@ -272,6 +274,8 @@ class ROB
 
     /** Pointer to the CPU. */
     CPU *cpu;
+
+    unsigned depCheckShift;
 
     /** Active Threads in CPU */
     std::list<ThreadID> *activeThreads;

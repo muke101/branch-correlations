@@ -42,6 +42,7 @@
 #define __CPU_O3_COMMIT_HH__
 
 #include <queue>
+#include <sys/types.h>
 
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
@@ -66,6 +67,8 @@ namespace o3
 
 class ThreadState;
 
+class InstructionQueue;
+
 /**
  * Commit handles single threaded and SMT commit. Its width is
  * specified by the parameters; each cycle it tries to commit that
@@ -88,6 +91,7 @@ class ThreadState;
  * supports multiple cycle squashing, to model a ROB that can only
  * remove a certain number of instructions per cycle.
  */
+
 class Commit
 {
   public:
@@ -106,6 +110,7 @@ class Commit
         Running,
         Idle,
         ROBSquashing,
+        ROBSquashingDueToMemOrder,
         TrapPending,
         FetchTrapPending,
         SquashAfterPending, //< Committing instructions before a squash.
@@ -126,6 +131,8 @@ class Commit
     ProbePointArg<DynInstPtr> *ppCommitStall;
     /** To probe when an instruction is squashed */
     ProbePointArg<DynInstPtr> *ppSquash;
+
+    BranchHistory committedBranchHistory;
 
     /** Mark the thread as processing a trap. */
     void processTrapEvent(ThreadID tid);
@@ -304,7 +311,7 @@ class Commit
     /** Returns the thread ID to use based on an oldest instruction policy. */
     ThreadID oldestReady();
 
-    void trace_branch(DynInstPtr *inst);
+    void trace_branch(const DynInstPtr &inst);
 
   public:
     /** Reads the PC of a specific thread. */

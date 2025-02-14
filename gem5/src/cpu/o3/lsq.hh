@@ -75,6 +75,7 @@ class LSQUnit;
 class LSQ
 {
   public:
+
     class LSQRequest;
 
     /**

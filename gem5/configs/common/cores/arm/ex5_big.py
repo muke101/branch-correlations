@@ -125,8 +125,10 @@ class ex5_big(ArmO3CPU):
     LQEntries = 16
     SQEntries = 16
     LSQDepCheckShift = 0
-    LFSTSize = 1024
-    SSITSize = 1024
+    phast_num_rows = 128
+    phast_associativity = 4
+    phast_tag_bits = 16
+    phast_max_counter = 4
     decodeToFetchDelay = 1
     renameToFetchDelay = 1
     iewToFetchDelay = 1

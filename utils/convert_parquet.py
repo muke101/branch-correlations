@@ -5,7 +5,7 @@ import re
 import io
 import itertools
 
-header = "tick,inst_addr,pred_addr,jump_addr,taken\n"
+header = "tick,inst_addr,pred_addr,jump_addr,taken,mispredicted\n"
 header_io = io.StringIO(header)
 
 csv_inp = csv.DictReader(itertools.chain(header_io, sys.stdin))

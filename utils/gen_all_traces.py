@@ -28,8 +28,8 @@ processes = []
 for bench in benches:
     os.chdir(chkpt_dir+bench)
     while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-    p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_trace_automation.py", shell=True)
-    processes.append(p)
+    p = subprocess.run("python3 /work/muke/Branch-Correlations/utils/spec_trace_automation.py", shell=True, check=True)
+    #processes.append(p)
 
 for p in processes:
     code = p.wait()

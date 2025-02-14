@@ -173,7 +173,7 @@ const Addr MaxAddr = (Addr)-1;
 using RegVal = uint64_t;
 
 // Logical register index type.
-using RegIndex = uint16_t;
+using RegIndex = uint32_t;
 
 static inline uint32_t
 floatToBits32(float val)

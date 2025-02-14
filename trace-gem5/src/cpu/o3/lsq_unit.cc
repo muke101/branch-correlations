@@ -563,11 +563,21 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
                 // squash and refetch.
                 if (memDepViolator && ld_inst->seqNum > memDepViolator->seqNum)
                     break;
+                // Check this load hasn't already forwarded from a younger store
+                if (inst->seqNum < ld_inst->memDepInfo.forwardedFrom ||
+                    inst->seqNum < ld_inst->memDepInfo.violatingStoreSeqNum){
+                    ++loadIt;
+                    continue;
+                }
 
                 DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and "
                         "[sn:%lli] at address %#x\n",
                         inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
+
                 memDepViolator = ld_inst;
+                ld_inst->memDepInfo.violatingStoreSeqNum = inst->seqNum;
+                ld_inst->memDepInfo.violatingStorePC = inst->pcState().instAddr();
+                ld_inst->memDepInfo.storeQueueDistance = ld_inst->sqIt - inst->sqIt;
 
                 ++stats.memOrderViolation;
 
@@ -1284,20 +1294,20 @@ LSQUnit::dumpInsts() const
 {
     cprintf("Load store queue: Dumping instructions.\n");
     cprintf("Load queue size: %i\n", loadQueue.size());
-    cprintf("Load queue: ");
+    cprintf("Load queue:\n");
 
     for (const auto& e: loadQueue) {
         const DynInstPtr &inst(e.instruction());
-        cprintf("%s.[sn:%llu] ", inst->pcState(), inst->seqNum);
+        cprintf("%s.[sn:%llu]\n", inst->pcState(), inst->seqNum);
     }
     cprintf("\n");
 
     cprintf("Store queue size: %i\n", storeQueue.size());
-    cprintf("Store queue: ");
+    cprintf("Store queue:\n");
 
     for (const auto& e: storeQueue) {
         const DynInstPtr &inst(e.instruction());
-        cprintf("%s.[sn:%llu] ", inst->pcState(), inst->seqNum);
+        cprintf("%s.[sn:%llu]\n", inst->pcState(), inst->seqNum);
     }
 
     cprintf("\n");
@@ -1470,6 +1480,8 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                         "addr %#x\n", store_it._idx,
                         request->mainReq()->getVaddr());
 
+                load_inst->memDepInfo.forwardedFrom = store_it->instruction()->seqNum;
+
                 PacketPtr data_pkt = new Packet(request->mainReq(),
                         MemCmd::ReadReq);
                 data_pkt->dataStatic(load_inst->memData);
@@ -1558,6 +1570,8 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                 DPRINTF(LSQUnit, "Load-store forwarding mis-match. "
                         "Store idx %i to load addr %#x\n",
                         store_it._idx, request->mainReq()->getVaddr());
+
+                load_inst->memDepInfo.forwardedFrom = store_it->instruction()->seqNum;
 
                 // Must discard the request.
                 request->discard();

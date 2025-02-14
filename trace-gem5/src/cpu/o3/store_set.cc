@@ -32,6 +32,8 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/StoreSet.hh"
+#include "cpu/o3/inst_queue.hh"
+
 
 namespace gem5
 {
@@ -39,8 +41,8 @@ namespace gem5
 namespace o3
 {
 
-StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
-    : clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
+StoreSet::StoreSet(const BaseO3CPUParams &params, MemDepUnit *_memDep)
+    : clearPeriod(params.store_set_clear_period), SSITSize(params.SSITSize), LFSTSize(params.LFSTSize), memDep(_memDep)
 {
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
@@ -82,11 +84,12 @@ StoreSet::~StoreSet()
 }
 
 void
-StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
+StoreSet::init(const BaseO3CPUParams &params, MemDepUnit *_memDep)
 {
-    SSITSize = _SSIT_size;
-    LFSTSize = _LFST_size;
-    clearPeriod = clear_period;
+    SSITSize = params.SSITSize;
+    LFSTSize = params.LFSTSize;
+    clearPeriod = params.store_set_clear_period;
+    memDep = _memDep;
 
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
@@ -113,11 +116,11 @@ StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
     offsetBits = 2;
 
     memOpsPred = 0;
+
 }
 
 
-void
-StoreSet::violation(Addr store_PC, Addr load_PC)
+void StoreSet::violation(Addr load_PC, InstSeqNum load_seq_num, InstSeqNum store_seq_num, Addr store_PC, std::ptrdiff_t storeQueueDistance, bool predicted, unsigned predictedPathInex, uint64_t predictedHash, BranchHistory branchHistory) 
 {
     int load_index = calcIndex(load_PC);
     int store_index = calcIndex(store_PC);
@@ -131,6 +134,7 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         // Calculate a new SSID here.
         SSID new_set = calcSSID(load_PC);
 
+
         validSSIT[load_index] = true;
 
         SSIT[load_index] = new_set;
@@ -140,6 +144,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         SSIT[store_index] = new_set;
 
         assert(new_set < LFSTSize);
+
+        intended_index[load_index] = load_PC;
+        intended_index[store_index] = store_PC;
 
         DPRINTF(StoreSet, "StoreSet: Neither load nor store had a valid "
                 "storeset, creating a new one: %i for load %#x, store %#x\n",
@@ -153,6 +160,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         assert(load_SSID < LFSTSize);
 
+        intended_index[store_index] = store_PC;
+
         DPRINTF(StoreSet, "StoreSet: Load had a valid store set.  Adding "
                 "store to that set: %i for load %#x, store %#x\n",
                 load_SSID, load_PC, store_PC);
@@ -162,6 +171,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         validSSIT[load_index] = true;
 
         SSIT[load_index] = store_SSID;
+
+        intended_index[load_index] = load_PC;
 
         DPRINTF(StoreSet, "StoreSet: Store had a valid store set: %i for "
                 "load %#x, store %#x\n",
@@ -175,12 +186,14 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         // The store set with the lower number wins
         if (store_SSID > load_SSID) {
             SSIT[store_index] = load_SSID;
+            intended_index[store_index] = store_PC;
 
             DPRINTF(StoreSet, "StoreSet: Load had smaller store set: %i; "
                     "for load %#x, store %#x\n",
                     load_SSID, load_PC, store_PC);
         } else {
             SSIT[load_index] = store_SSID;
+            intended_index[load_index] = load_PC;
 
             DPRINTF(StoreSet, "StoreSet: Store had smaller store set: %i; "
                     "for load %#x, store %#x\n",
@@ -232,6 +245,8 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 
         validLFST[store_SSID] = 1;
 
+        ++(memDep->stats).LFSTWrites;
+
         storeList[store_seq_num] = store_SSID;
 
         DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n",
@@ -239,9 +254,11 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
     }
 }
 
-InstSeqNum
-StoreSet::checkInst(Addr PC)
+PredictionResult StoreSet::checkInst(Addr PC, InstSeqNum load_seq_num, BranchHistory branchHistory)
 {
+
+    struct PredictionResult prediction = {0,0,0,0};
+
     int index = calcIndex(PC);
 
     int inst_SSID;
@@ -253,23 +270,27 @@ StoreSet::checkInst(Addr PC)
                 PC, index);
 
         // Return 0 if there's no valid entry.
-        return 0;
+        return prediction;
     } else {
+
         inst_SSID = SSIT[index];
 
         assert(inst_SSID < LFSTSize);
+
+        ++(memDep->stats).LFSTReads;
 
         if (!validLFST[inst_SSID]) {
 
             DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had no "
                     "dependency\n", PC, index, inst_SSID);
 
-            return 0;
+            return prediction;
         } else {
             DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had LFST "
                     "inum of %i\n", PC, index, inst_SSID, LFST[inst_SSID]);
 
-            return LFST[inst_SSID];
+            prediction.seqNum = LFST[inst_SSID];
+            return prediction;
         }
     }
 }
@@ -308,6 +329,8 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
     if (validLFST[store_SSID] && LFST[store_SSID] == issued_seq_num) {
         DPRINTF(StoreSet, "StoreSet: store invalidated itself in LFST.\n");
         validLFST[store_SSID] = false;
+        ++(memDep->stats).LFSTReads;
+        ++(memDep->stats).LFSTWrites;
     }
 }
 
@@ -353,6 +376,9 @@ StoreSet::clear()
     }
 
     storeList.clear();
+
+    intended_index.clear();
+
 }
 
 void

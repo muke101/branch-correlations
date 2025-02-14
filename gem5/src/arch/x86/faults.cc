@@ -128,6 +128,9 @@ InvalidOpcode::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         X86Fault::invoke(tc, inst);
     } else {
         auto *xsi = static_cast<X86StaticInst *>(inst.get());
+        std::cout << "Instruction name: " << inst->getName() << "\n";
+        inst->printFlags(std::cout, " ");
+        std::cout << "\n";
         panic("Unrecognized/invalid instruction executed:\n %s",
                 xsi->machInst);
     }

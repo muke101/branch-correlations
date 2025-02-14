@@ -1,0 +1,8 @@
+-I
+src/base
+-I
+src/mem
+-I
+src/cpu
+-I
+src/cpu/o3

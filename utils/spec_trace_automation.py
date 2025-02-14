@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-from subprocess import Popen
 import psutil
 import random
 import time
@@ -74,22 +73,9 @@ for out_dir in os.listdir(base_dir):
             outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
             if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
             outdir += str(cpt_number)+".out"
-            run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=NonCachingSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
+            run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+".trace)"
+            run += " --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-            p = Popen(run, shell=True, executable='/bin/bash')
+            p = subprocess.run(run, shell=True, executable='/bin/bash', check=True)
             os.chdir(base_dir)
-            procs.append(p)
-            while waited < 60*2 and finished == False:
-                time.sleep(10)
-                waited += 10
-                if Popen.poll(p) != None:
-                    finished = True
-                    if Popen.wait(p) != 0: print(p.args); exit(1)
-            time.sleep(random.uniform(0,1)*60)
-            if psutil.virtual_memory().percent < 60 and psutil.cpu_percent() < 90: continue
-            if Popen.wait(p) != 0: print(p.args); exit(1)
-
-for p in procs:
-    code = Popen.wait(p)
-    if code is not None and code != 0: print(p.args); exit(1)

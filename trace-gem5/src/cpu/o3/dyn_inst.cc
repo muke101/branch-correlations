@@ -73,6 +73,7 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
 #ifndef NDEBUG
     ++cpu->instcount;
 
+	/*
     if (cpu->instcount > 1500) {
 #ifdef GEM5_DEBUG
         cpu->dumpInsts();
@@ -80,6 +81,7 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
 #endif
         assert(cpu->instcount <= 1500);
     }
+	*/
 
     DPRINTF(DynInst,
         "DynInst: [sn:%lli] Instruction created. Instcount for %s = %i\n",
@@ -90,6 +92,25 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
     cpu->snList.insert(seqNum);
 #endif
 
+}
+
+std::ostream& operator<<(std::ostream& os, const branchInfo& b) {
+    os  << "Indirect: " << b.indirect << ", "
+        << "Taken: " << b.taken << ", "
+        << "Target: " << b.target << ", "
+        << "seqNum: " << b.seqNum << ", "
+        << "PC: " << b.pc;
+    return os;
+}
+
+bool operator==(const BranchHistory a, const BranchHistory b) {
+    unsigned len = std::min((long unsigned)32, std::min(a.size(), b.size()));
+    for (int i=0; i < len; i++) {
+        if (a[i].pc != b[i].pc) return false;
+        if (a[i].taken != b[i].taken) return false;
+        if (a[i].target != b[i].target) return false;
+    }
+    return true;
 }
 
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,

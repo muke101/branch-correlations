@@ -551,6 +551,7 @@ for variant_path in variant_paths:
         # As gcc and clang share many flags, do the common parts here
         env.Append(CCFLAGS=['-pipe'])
         env.Append(CCFLAGS=['-fno-strict-aliasing'])
+        env.Append(CCFLAGS=['-march=native'])
 
         # We always compile using C++17
         env.Append(CXXFLAGS=['-std=c++17'])

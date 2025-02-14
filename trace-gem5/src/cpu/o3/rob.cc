@@ -40,6 +40,7 @@
 
 #include "cpu/o3/rob.hh"
 
+#include <cstddef>
 #include <list>
 
 #include "base/logging.hh"
@@ -96,6 +97,8 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
     for (ThreadID tid = numThreads; tid < MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
+
+    depCheckShift = params.LSQDepCheckShift;
 
     resetState();
 }
@@ -306,7 +309,7 @@ ROB::numFreeEntries(ThreadID tid)
 }
 
 void
-ROB::doSquash(ThreadID tid)
+ROB::doSquash(ThreadID tid, bool squashedDueToMemOrder)
 {
     stats.writes++;
     DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n",
@@ -360,6 +363,9 @@ ROB::doSquash(ThreadID tid)
             }
             if ((*squashIt[tid])->isRMWA()) {
                 stats.squashedRMWALoads++;
+            }
+            if (squashedDueToMemOrder) {
+                (*squashIt[tid])->squashedDueToMemOrder = true;
             }
         }
         
@@ -490,7 +496,7 @@ ROB::updateTail()
 
 
 void
-ROB::squash(InstSeqNum squash_num, ThreadID tid)
+ROB::squash(InstSeqNum squash_num, ThreadID tid, bool squashedDueToMemOrder)
 {
     if (isEmpty(tid)) {
         DPRINTF(ROB, "Does not need to squash due to being empty "
@@ -514,7 +520,7 @@ ROB::squash(InstSeqNum squash_num, ThreadID tid)
 
         squashIt[tid] = tail_thread;
 
-        doSquash(tid);
+        doSquash(tid, squashedDueToMemOrder);
     }
 }
 
@@ -561,6 +567,26 @@ ROB::ROBStats::ROBStats(statistics::Group *parent)
         "The number of atomic read-modify-write store instructions squashed")
     
 {
+}
+
+void ROB::checkViolations(ThreadID tid, const DynInstPtr& store) {
+
+    Addr store_eff_addr1 = store->effAddr >> depCheckShift;
+    Addr store_eff_addr2 = (store->effAddr + store->effSize - 1) >> depCheckShift;
+
+    for (InstIt it = instList[tid].begin(); it != instList[tid].end(); it++) {
+        if ((*it)->isLoad() && (*it)->memDepInfo.violatingStoreSeqNum)  {
+            DynInstPtr load = *it;
+            Addr load_eff_addr1 = load->effAddr >> depCheckShift;
+            Addr load_eff_addr2 = (load->effAddr + load->effSize - 1) >> depCheckShift;
+            if (store_eff_addr2 >= load_eff_addr1 && store_eff_addr1 <= load_eff_addr2
+                && store->seqNum > load->memDepInfo.violatingStoreSeqNum) {
+                load->memDepInfo.violatingStoreSeqNum = store->seqNum;
+                load->memDepInfo.violatingStorePC = store->pcState().instAddr();
+                load->memDepInfo.storeQueueDistance = load->sqIt - store->sqIt;
+            }
+        }
+    }
 }
 
 DynInstPtr

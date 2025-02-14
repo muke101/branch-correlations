@@ -400,6 +400,10 @@ class CPU : public BaseCPU
      */
     bool removeInstsThisCycle;
 
+    Decode *getDecode() { return &decode; }
+
+    IEW *getIEW() { return &iew; }
+
   protected:
     /** The fetch stage. */
     Fetch fetch;

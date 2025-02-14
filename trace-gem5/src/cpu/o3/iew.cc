@@ -409,6 +409,12 @@ IEW::squash(ThreadID tid)
     }
 
     emptyRenameInsts(tid);
+
+    //revert branch history
+    BranchHistory &decodedBranchHistory = cpu->getDecode()->getBranchHistory();
+    while (!decodedBranchHistory.empty() && decodedBranchHistory.front().seqNum > fromCommit->commitInfo[tid].doneSeqNum) {
+        decodedBranchHistory.pop_front();
+    }
 }
 
 void
@@ -431,6 +437,12 @@ IEW::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
         toCommit->includeSquashInst[tid] = false;
 
         wroteToTimeBuffer = true;
+    }
+
+    //revert branch history
+    BranchHistory decodedBranchHistory = cpu->getDecode()->getBranchHistory();
+    while (!decodedBranchHistory.empty() && decodedBranchHistory.front().seqNum >= inst->seqNum) {
+        decodedBranchHistory.pop_front();
     }
 
 }
@@ -458,6 +470,12 @@ IEW::squashDueToMemOrder(const DynInstPtr& inst, ThreadID tid)
         toCommit->includeSquashInst[tid] = true;
 
         wroteToTimeBuffer = true;
+    }
+
+    //revert branch history
+    BranchHistory decodedBranchHistory = cpu->getDecode()->getBranchHistory();
+    while (!decodedBranchHistory.empty() && decodedBranchHistory.front().seqNum >= inst->seqNum) {
+        decodedBranchHistory.pop_front();
     }
 }
 
@@ -1286,15 +1304,15 @@ IEW::executeInsts()
                 DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
 
+                /*
                 DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
                         "[sn:%lli], inst PC: %s [sn:%lli]. Addr is: %#x.\n",
                         violator->pcState(), violator->seqNum,
                         inst->pcState(), inst->seqNum, inst->physEffAddr);
-
+                */
+                DPRINTF(IEW, "Violation: %s [%lli], %s [%lli]\n", violator->pcState().instAddr(),  violator->seqNum, inst->pcState().instAddr(), inst->seqNum);
+                
                 fetchRedirect[tid] = true;
-
-                // Tell the instruction queue that a violation has occured.
-                instQueue.violation(inst, violator);
 
                 // Squash.
                 squashDueToMemOrder(violator, tid);
@@ -1315,8 +1333,6 @@ IEW::executeInsts()
                         inst->physEffAddr);
                 DPRINTF(IEW, "Violation will not be handled because "
                         "already squashing\n");
-
-                ++iewStats.memOrderViolationEvents;
             }
         }
     }
