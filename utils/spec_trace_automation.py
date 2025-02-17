@@ -46,7 +46,7 @@ def get_bench_flags(run_name):
         os.chdir(run_dir)
         stripped_name = benchmark.split('.')[1].split('_')[0]
         subprocess.run("cp -r "+workloads+stripped_name+"/"+run_name+"/input/* .", shell=True)
-        if benchmark == "602.gcc_s": binary = run_dir+"sgcc_peak.mytest-64"
+        if benchmark == "602.gcc_s": binary = "sgcc_peak.mytest-64"
         else: binary = benchmark.split('.')[1]+"_peak.mytest-64"
         control = open("control", "r")
         flags = control.readlines()[0].strip()
@@ -73,8 +73,14 @@ for out_dir in os.listdir(base_dir):
             outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
             if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
             outdir += str(cpt_number)+".out"
-            run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+results_dir+benchmark+"."+run_name+"."+str(cpt_number)+".trace)"
+            trace_file = results_dir+benchmark+"."+run_name+"."+str(cpt_number)+".trace"
+            if os.path.exists(trace_file): continue #already ran this checkpoint
+            run = gem5+"build/ARM/gem5.fast "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 2> >(grep 'TRACE:' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-            p = subprocess.run(run, shell=True, executable='/bin/bash', check=True)
+            try:
+                p = subprocess.run(run, shell=True, executable='/bin/bash', check=True)
+            except CalledProcessError:
+                subprocess.run("rm -f "+trace_file, shell=True)
+                exit(1)
             os.chdir(base_dir)
