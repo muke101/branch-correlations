@@ -1,0 +1,7 @@
+->>consider if we need to get most mispredicting branches per benchmark, or can just go by trace. verify what branchnet does and look into input partitions
+modify create_ml_datasets to create workitems out of our traces, then generate h5 files
+probably going to be easier to use branchnet's weird path infrastructure
+figure out how inference is run
+
+get misprediction rate from trace
+when looking at most mispredicted from gcc, look at execute rates too
