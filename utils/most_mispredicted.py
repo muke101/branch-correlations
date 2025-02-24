@@ -14,7 +14,7 @@ n = 100
 
 def get_most_mispredicted(trace_path, n):
 
-    df = pl.read_parquet(trace_path)
+    df = pl.read_parquet(get_traces.trace_dir+trace_path)
     pc_col = df.columns[1]
     mispred_col = df.columns[-1]
     df = df.with_columns(pl.col(mispred_col).cast(pl.Boolean))

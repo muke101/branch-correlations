@@ -33,9 +33,7 @@ def get_hdf5_set(benchmark, set_type):
         else:
             print("Invalid set type!")
             exit(1)
-        checkpoint = trace.split('.')[-2]
-        weight = get_simpoint_weight(benchmark, workload, checkpoint)
-        datasets.append((trace, weight))
+        datasets.append(trace)
 
     return datasets
 
