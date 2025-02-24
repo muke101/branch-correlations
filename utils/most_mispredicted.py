@@ -1,29 +1,59 @@
 import polars as pl
+import get_traces
+from collections import defaultdict
 import sys
 
-# Load the parquet file
-file_path = sys.argv[1]  # Pass the Parquet file path as a command-line argument
-n = int(sys.argv[2])
-df = pl.read_parquet(file_path)
+benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+           "625.x264_s", "631.deepsjeng_s",
+           "641.leela_s", "657.xz_s", "602.gcc_s",
+           "620.omnetpp_s", "648.exchange2_s"]
 
-# Assuming the second field is the instruction PC and the last field is the misprediction bool
-pc_col = df.columns[1]  # Second column
-mispred_col = df.columns[-1]  # Last column
+hard_branches_dir = "/mnt/data/results/branch-project/h2ps/"
 
-df = df.with_columns(pl.col(mispred_col).cast(pl.Boolean))
+n = 100
 
-# Aggregate misprediction counts by PC
-mispred_counts = (
-    df.filter(pl.col(mispred_col))
-    .group_by(pc_col)
-    .agg(pl.len().alias("mispred_count"))
-    .sort("mispred_count", descending=True)
-    .head(n)
-)
+def get_most_mispredicted(trace_path, n):
 
-# Get the branch PC with the most mispredictions
-#most_mispredicted = mispred_counts.select(pc_col)
+    df = pl.read_parquet(trace_path)
+    pc_col = df.columns[1]
+    mispred_col = df.columns[-1]
+    df = df.with_columns(pl.col(mispred_col).cast(pl.Boolean))
 
-for row in mispred_counts.iter_rows():
-    #print(f"PC: {hex(row[0])}, Mispredictions: {row[1]}")
-    print(f"{hex(row[0])}")
+    mispred_counts = (
+        df.filter(pl.col(mispred_col))
+        .group_by(pc_col)
+        .agg(pl.len().alias("mispred_count"))
+        .sort("mispred_count", descending=True)
+        .head(n)
+    )
+    count_df = df["inst_addr"].value_counts()
+
+    mispreds = []
+    for row in mispred_counts.iter_rows():
+        num_executions = count_df.filter(count_df["inst_addr"] == row[0])['count'][0]
+        mispreds.append((row[0], num_executions, row[1]))
+    return mispreds
+
+def main():
+    for bench in benches:
+        traces = get_traces.get_trace_set(bench, 'validate')
+        executions_map = defaultdict(int)
+        mispredicted_map = defaultdict(int)
+        misprediction_rates = {}
+
+        for trace, weight in traces:
+            most_mispredicted = get_most_mispredicted(trace, n)
+            for pc, total, incorrect in most_mispredicted:
+                executions_map[pc] += total*weight
+                mispredicted_map[pc] += incorrect*weight
+            for pc in executions_map:
+                misprediction_rates[pc] = mispredicted_map[pc]/executions_map[pc]
+        hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
+
+        hard_branches_file = open(hard_branches_dir+bench, "w")
+        for branch in hard_branches:
+            hard_branches_file.write(hex(branch)+"\n")
+        hard_branches_file.close()
+
+if __name__ == "__main__":
+    main()

@@ -113,8 +113,8 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    trace_path = "/mnt/data/results/branch-project/traces/625.x264_s.notld-2.3.trace"
-    f = open("test_pcs")
-    hard_brs = [int(x,16) for x in f.read().splitlines()]
-    gen_dataset(trace_path, "test.h5", hard_brs)
+    main()
+    # trace_path = "/mnt/data/results/branch-project/traces/625.x264_s.notld-2.3.trace"
+    # f = open("test_pcs")
+    # hard_brs = [int(x,16) for x in f.read().splitlines()]
+    # gen_dataset(trace_path, "test.h5", hard_brs)
