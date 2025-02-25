@@ -18,7 +18,7 @@ def get_simpoint_weight(benchmark, workload, checkpoint):
 
 def get_hdf5_set(benchmark, set_type):
     datasets = []
-    test_pattern = r"\d"
+    test_pattern = r"^\d$"
 
     for trace in os.listdir(hdf5_dir):
         if not trace.endswith('.hdf5') or not trace.startswith(benchmark): continue
@@ -30,7 +30,7 @@ def get_hdf5_set(benchmark, set_type):
                 workload = 'train.'+trace.split('.')[3]
             else: continue
         elif set_type == 'train':
-            if re.search(test_pattern, workload) or re.search(validate_pattern, workload): continue
+            if re.search(test_pattern, workload) or workload == 'train': continue
         else:
             print("Invalid set type!")
             exit(1)
@@ -40,7 +40,7 @@ def get_hdf5_set(benchmark, set_type):
 
 def get_trace_set(benchmark, set_type):
     traces = []
-    test_pattern = r"\d"
+    test_pattern = r"^\d$"
 
     for trace in os.listdir(trace_dir):
         if not trace.endswith('.trace') or not trace.startswith(benchmark): continue
@@ -52,7 +52,7 @@ def get_trace_set(benchmark, set_type):
                 workload = 'train.'+trace.split('.')[3]
             else: continue
         elif set_type == 'train':
-            if re.search(test_pattern, workload) or re.search(validate_pattern, workload): continue
+            if re.search(test_pattern, workload) or workload == 'train': continue
         else:
             print("Invalid set type!")
             exit(1)

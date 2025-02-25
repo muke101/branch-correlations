@@ -35,25 +35,29 @@ def get_most_mispredicted(trace_path, n):
     return mispreds
 
 def main():
-    for bench in benches:
-        traces = get_traces.get_trace_set(bench, 'validate')
-        executions_map = defaultdict(int)
-        mispredicted_map = defaultdict(int)
-        misprediction_rates = {}
+    set_types = ['validate', 'test']
+    for set_type in set_types:
+        print("Processing set: ", set_type)
+        for bench in benches:
+            print("Processing bench: ", bench)
+            traces = get_traces.get_trace_set(bench, set_type)
+            executions_map = defaultdict(int)
+            mispredicted_map = defaultdict(int)
+            misprediction_rates = {}
 
-        for trace, weight in traces:
-            most_mispredicted = get_most_mispredicted(trace, n)
-            for pc, total, incorrect in most_mispredicted:
-                executions_map[pc] += total*weight
-                mispredicted_map[pc] += incorrect*weight
-            for pc in executions_map:
-                misprediction_rates[pc] = mispredicted_map[pc]/executions_map[pc]
-        hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
+            for trace, weight in traces:
+                most_mispredicted = get_most_mispredicted(trace, n)
+                for pc, total, incorrect in most_mispredicted:
+                    executions_map[pc] += total*weight
+                    mispredicted_map[pc] += incorrect*weight
+                for pc in executions_map:
+                    misprediction_rates[pc] = mispredicted_map[pc]/executions_map[pc]
+            hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
 
-        hard_branches_file = open(hard_branches_dir+bench, "w")
-        for branch in hard_branches:
-            hard_branches_file.write(hex(branch)+"\n")
-        hard_branches_file.close()
+            hard_branches_file = open(hard_branches_dir+set_type+"/"+bench, "w")
+            for branch in hard_branches:
+                hard_branches_file.write(hex(branch)+"\n")
+            hard_branches_file.close()
 
 if __name__ == "__main__":
     main()

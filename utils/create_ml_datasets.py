@@ -13,6 +13,7 @@ import numpy as np
 import os
 import struct
 import polars as pl
+import get_traces
 
 PC_BITS = 30
 
@@ -21,7 +22,7 @@ benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
            "641.leela_s", "657.xz_s", "602.gcc_s",
            "620.omnetpp_s", "648.exchange2_s"]
 
-hard_branches_dir = "/mnt/data/results/branch-project/h2ps/"
+hard_branches_dir = "/mnt/data/results/branch-project/h2ps/validate/"
 
 def read_branch_trace(trace_path):
     df = pl.read_parquet(trace_path)
@@ -82,7 +83,7 @@ def gen_dataset(trace_path, dataset_path, hard_brs):
     fptr = create_new_dataset(dataset_path, pcs, directions)
 
     for br_pc in hard_brs:
-        print('processing branch {}'.format(hex(br_pc)))
+        #print('processing branch {}'.format(hex(br_pc)))
         #find indicies of hard branches
         trace_br_indices = np.argwhere(pcs == br_pc).squeeze(axis=1)
         fptr.create_dataset(
@@ -101,7 +102,7 @@ def gen_dataset(trace_path, dataset_path, hard_brs):
 
 def main():
     work_items = get_work_items()
-    with multiprocessing.Pool(16) as pool:
+    with multiprocessing.Pool(28) as pool:
         pool.starmap(gen_dataset, work_items)
 
 if __name__ == '__main__':
