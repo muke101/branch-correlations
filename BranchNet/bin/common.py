@@ -34,10 +34,6 @@ __ml_input_partitions__ = __env_dir__ + '/ml_input_partitions.yaml'
 #  ML_INPUT_PARTIONS = yaml.safe_load(f)
 
 
-def run_cmd_using_shell(cmd):
-  print('Running cmd:', cmd)
-  subprocess.call(cmd, shell=True)
-
 
 def run_parallel_commands_local(cmds, num_threads=None):
   with multiprocessing.Pool(num_threads) as pool:
