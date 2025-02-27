@@ -42,7 +42,7 @@ def run_train():
         for c, command in enumerate(commands):
             command = command.split('>')[0]
             bench_name = bench+".train."+str(c)
-            p = subprocess.Popen(gem5+"build/ARM/gem5.fast --outdir="+checkpoint_path+"/checkpoints."+str(c)+" "+gem5+"configs/deprecated/example/se.py --cpu-type=NonCachingSimpleCPU --take-simpoint-checkpoint=/work/muke/simpoints-expanded/"+bench_name+".simpts,/work/muke/simpoints-expanded/"+bench_name+".weights,100000000,10000000 -c "+command.split()[0]+" --options=\""+' '.join(command.split()[1:])+"\" --mem-size=50GB 2>&1 > "+bench_name+".out 2>&1", shell=True)
+            p = subprocess.Popen(gem5+"build/ARM/gem5.fast --outdir="+checkpoint_path+"/checkpoints.train."+str(c)+" "+gem5+"configs/deprecated/example/se.py --cpu-type=NonCachingSimpleCPU --take-simpoint-checkpoint=/work/muke/simpoints-expanded/"+bench_name+".simpts,/work/muke/simpoints-expanded/"+bench_name+".weights,100000000,10000000 -c "+command.split()[0]+" --options=\""+' '.join(command.split()[1:])+"\" --mem-size=50GB 2>&1 > "+bench_name+".out 2>&1", shell=True)
             procs.append(p)
             load_balance()
 
