@@ -16,6 +16,7 @@ benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
 run_type = sys.argv[1]
 results_dir = "/mnt/data/results/branch-project/branchnet-results/"+run_type
 branchnet_dir = "/work/muke/Branch-Correlations/BranchNet/src/branchnet/"
+dataset_path = "/mnt/data/results/branch-project/datasets/"
 
 batch_size = 2048
 training_steps = [100, 100, 100]
@@ -30,12 +31,12 @@ create_workdirs = True
 workdirs_override_ok = True
 
 def create_run_command(workdir, training_datasets, evaluation_datasets,
-                       validation_datasets, br_pc, training_mode):
-    return ('cd {workdir}; python run.py '
+                       validation_datasets, br_pc, training_mode, c):
+    return ('cd {workdir}; python3 run.py '
             '-trtr {tr} -evtr {ev} -vvtr {vv} --br_pc {pc} --batch_size {batch} '
             '-bsteps {bsteps} -fsteps {fsteps} --log_progress {log_validation} '
             '-lr {lr} -gcoeff {gcoeff} -rcoeff {rcoeff} -mode {mode} '
-            '-c config.yaml --cuda_device {cuda} &> run_logs/{pc}.out'.format(
+            '-c config.yaml --cuda_device {cuda} > run_logs/{pc}.out'.format(
                 workdir=workdir,
                 tr=' '.join(training_datasets),
                 ev=' '.join(evaluation_datasets),
@@ -49,7 +50,7 @@ def create_run_command(workdir, training_datasets, evaluation_datasets,
                 gcoeff=lasso_coefficient,
                 rcoeff=regularization_coefficient,
                 mode=training_mode,
-                cuda=cuda_device,
+                cuda=c % 2,
             ))
 
 def create_workdirs():
@@ -69,30 +70,38 @@ def create_job_commands():
         hard_brs_file = open("/mnt/data/results/branch-project/h2ps/validate/"+bench, 'r')
         hard_brs = [int(pc,16) for pc in hard_brs_file.readlines()]
         hard_brs_file.close()
-        training_datasets = get_traces.get_hdf5_set(bench, 'train')
-        evaluation_datasets = get_traces.get_hdf5_set(bench, 'test')
-        validation_datasets = get_traces.get_hdf5_set(bench, 'validate')
+        training_datasets = [dataset_path+trace for trace in get_traces.get_hdf5_set(bench, 'train')]
+        evaluation_datasets = [dataset_path+trace for trace in get_traces.get_hdf5_set(bench, 'test')]
+        validation_datasets = [dataset_path+trace for trace in get_traces.get_hdf5_set(bench, 'validate')]
 
-        for br in hard_brs:
+        for c, br in enumerate(hard_brs):
             cmd = create_run_command(workdir, training_datasets, evaluation_datasets,
-                                     validation_datasets, br, 'float')
+                                     validation_datasets, br, 'float', c)
             cmds.append(cmd)
 
     return cmds
 
 def run_cmd_using_shell(cmd):
   print('Running cmd:', cmd)
-  subprocess.call(cmd, shell=True)
+  subprocess.run(cmd, shell=True, check=True)
 
 def main():
     if create_workdirs:
         create_workdirs()
 
     cmds = create_job_commands()
-    print(cmds)
-    exit(0)
-    with multiprocessing.Pool(28) as pool:
-        pool.map(run_cmd_using_shell, cmds)
+    processes = []
+    for cmd in cmds:
+        p = multiprocessing.Process(target=run_cmd_using_shell, args=(cmd,))
+        p.start()
+        processes.append(p)
+        
+        if len(processes) >= 2:
+            for p in processes:
+                p.join()
+            processes = []
+    for p in processes:
+        p.join()
 
 
 if __name__ == '__main__':

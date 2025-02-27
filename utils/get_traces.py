@@ -26,11 +26,21 @@ def get_hdf5_set(benchmark, set_type):
         if set_type == 'test':
             if not re.fullmatch(test_pattern, workload): continue
         elif set_type == 'validate':
-            if workload == 'train' and trace.split('.')[3].isdigit(): 
+            if workload == "600.perlbench_s":
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num < 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif workload == 'train' and trace.split('.')[3].isdigit(): 
                 workload = 'train.'+trace.split('.')[3]
             else: continue
         elif set_type == 'train':
-            if re.search(test_pattern, workload) or workload == 'train': continue
+            if benchmark == "600.perlbench_s": 
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num >= 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif re.search(test_pattern, workload) or workload == 'train': continue
         else:
             print("Invalid set type!")
             exit(1)
@@ -48,11 +58,21 @@ def get_trace_set(benchmark, set_type):
         if set_type == 'test':
             if not re.fullmatch(test_pattern, workload): continue
         elif set_type == 'validate':
-            if workload == 'train' and trace.split('.')[3].isdigit(): 
+            if workload == "600.perlbench_s":
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num < 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif workload == 'train' and trace.split('.')[3].isdigit(): 
                 workload = 'train.'+trace.split('.')[3]
             else: continue
         elif set_type == 'train':
-            if re.search(test_pattern, workload) or workload == 'train': continue
+            if benchmark == "600.perlbench_s": 
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num >= 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif re.search(test_pattern, workload) or workload == 'train': continue
         else:
             print("Invalid set type!")
             exit(1)

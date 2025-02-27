@@ -5,7 +5,7 @@ import os
 import argparse
 
 spec_path = "/work/muke/spec2017-expanded/"
-gem5 = "/work/muke/PND-Loads/gem5-gen/"
+gem5 = "/work/muke/Branch-Correlations/gem5-gen/"
 
 parser = argparse.ArgumentParser(prog='gen_expanded_checkpoints', description='')
 
