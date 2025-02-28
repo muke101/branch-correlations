@@ -36,6 +36,7 @@ def get_most_mispredicted(trace_path, n):
 
 def main():
     set_types = ['validate', 'test']
+    benches = ["605.mcf_s"]
     for set_type in set_types:
         print("Processing set: ", set_type)
         for bench in benches:
@@ -50,8 +51,8 @@ def main():
                 for pc, total, incorrect in most_mispredicted:
                     executions_map[pc] += total*weight
                     mispredicted_map[pc] += incorrect*weight
-                for pc in executions_map:
-                    misprediction_rates[pc] = mispredicted_map[pc]/executions_map[pc]
+            for pc in executions_map:
+                misprediction_rates[pc] = mispredicted_map[pc]/executions_map[pc]
             hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
 
             hard_branches_file = open(hard_branches_dir+set_type+"/"+bench, "w")
