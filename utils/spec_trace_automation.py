@@ -58,6 +58,7 @@ def get_bench_flags(run_name):
 #iterate over all checkpoint.n dirs
 for out_dir in os.listdir(base_dir):
     run_name = out_dir.split("checkpoints.")[1]
+    if len(run_name.split('train.')) <= 1 or run_name.split('train.')[1] != '1': continue
     run_dir, command = get_bench_flags(run_name)
     cpt_number = 0
     out_dir = os.path.join(base_dir,out_dir)

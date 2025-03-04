@@ -9,9 +9,13 @@ import shutil
 import sys
 import get_traces
 
-benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+#benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+#           "625.x264_s", "631.deepsjeng_s",
+#           "641.leela_s", "657.xz_s", "602.gcc_s",
+#           "620.omnetpp_s", "648.exchange2_s"]
+benches = ["600.perlbench_s", "605.mcf_s", 
            "625.x264_s", "631.deepsjeng_s",
-           "641.leela_s", "657.xz_s", "602.gcc_s",
+           "641.leela_s", "657.xz_s", 
            "620.omnetpp_s", "648.exchange2_s"]
 run_type = sys.argv[1]
 results_dir = "/mnt/data/results/branch-project/branchnet-results/"+run_type
@@ -99,6 +103,7 @@ def main():
         if len(processes) >= 2:
             for p in processes:
                 p.join()
+                if p.exitcode != 0: exit(1)
             processes = []
     for p in processes:
         p.join()
