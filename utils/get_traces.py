@@ -26,7 +26,7 @@ def get_hdf5_set(benchmark, set_type):
         if set_type == 'test':
             if not re.fullmatch(test_pattern, workload): continue
         elif set_type == 'validate':
-            if workload == "600.perlbench_s":
+            if benchmark == "600.perlbench_s":
                 num = int(trace.split('.')[3])
                 if workload == 'train' and num < 3:
                     workload = 'train.'+str(num)
@@ -58,7 +58,7 @@ def get_trace_set(benchmark, set_type):
         if set_type == 'test':
             if not re.fullmatch(test_pattern, workload): continue
         elif set_type == 'validate':
-            if workload == "600.perlbench_s":
+            if benchmark == "600.perlbench_s":
                 num = int(trace.split('.')[3])
                 if workload == 'train' and num < 3:
                     workload = 'train.'+str(num)
