@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from collections import defaultdict
 trace_dir = "/mnt/data/results/branch-project/traces/"
 hdf5_dir = "/mnt/data/results/branch-project/datasets/"
 simpoint_dir = "/work/muke/simpoints-expanded/"
@@ -15,6 +16,20 @@ def get_simpoint_weight(benchmark, workload, checkpoint):
     simpt_file.close()
     weight_file.close()
     return float(weights[simpoint_indx])
+
+def get_by_workload(benchmark):
+    workload_dict = defaultdict(list)
+
+    for trace in os.listdir(trace_dir):
+        if not trace.endswith('.trace') or not trace.startswith(benchmark): continue
+        workload = trace.split('.')[2]
+        if workload != 'train':
+            workload_dict[workload].append(trace)
+        else:
+            workload = 'train.'+trace.split('.')[3]
+            workload_dict[workload].append(trace)
+
+    return workload_dict
 
 def get_hdf5_set(benchmark, set_type):
     datasets = []
@@ -84,3 +99,4 @@ def get_trace_set(benchmark, set_type):
 
 if __name__ == "__main__":
     print(get_trace_set(sys.argv[1], sys.argv[2]))
+    print(get_by_workload(sys.argv[1]))
