@@ -17,17 +17,36 @@ def get_simpoint_weight(benchmark, workload, checkpoint):
     weight_file.close()
     return float(weights[simpoint_indx])
 
-def get_by_workload(benchmark):
+def get_by_workload(benchmark, set_type):
     workload_dict = defaultdict(list)
+    test_pattern = r"^\d$"
 
     for trace in os.listdir(trace_dir):
         if not trace.endswith('.trace') or not trace.startswith(benchmark): continue
         workload = trace.split('.')[2]
-        if workload != 'train':
-            workload_dict[workload].append(trace)
+        if set_type == 'test':
+            if not re.fullmatch(test_pattern, workload): continue
+        elif set_type == 'validate':
+            if benchmark == "600.perlbench_s":
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num < 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif workload == 'train' and trace.split('.')[3].isdigit(): 
+                workload = 'train.'+trace.split('.')[3]
+            else: continue
+        elif set_type == 'train':
+            if benchmark == "600.perlbench_s": 
+                num = int(trace.split('.')[3])
+                if workload == 'train' and num >= 3:
+                    workload = 'train.'+str(num)
+                else: continue
+            elif re.search(test_pattern, workload) or workload == 'train': continue
         else:
-            workload = 'train.'+trace.split('.')[3]
-            workload_dict[workload].append(trace)
+            print("Invalid set type!")
+            exit(1)
+
+        workload_dict[workload].append(trace)
 
     return workload_dict
 
@@ -99,4 +118,4 @@ def get_trace_set(benchmark, set_type):
 
 if __name__ == "__main__":
     print(get_trace_set(sys.argv[1], sys.argv[2]))
-    print(get_by_workload(sys.argv[1]))
+    print(get_by_workload(sys.argv[1], sys.argv[2]))
