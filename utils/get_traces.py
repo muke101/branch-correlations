@@ -5,7 +5,7 @@ from collections import defaultdict
 trace_dir = "/mnt/data/results/branch-project/traces/"
 hdf5_dir = "/mnt/data/results/branch-project/datasets/"
 simpoint_dir = "/work/muke/simpoints-expanded/"
-
+\
 def get_simpoint_weight(benchmark, workload, checkpoint):
     simpt_file = open(simpoint_dir+benchmark+"."+workload+".simpts", "r")
     simpoints = [(int(s.strip().split()[0]), int(s.strip().split()[1])) for s in simpt_file.readlines()]
@@ -46,7 +46,7 @@ def get_by_workload(benchmark, set_type):
             print("Invalid set type!")
             exit(1)
 
-        workload_dict[workload].append(trace)
+        workload_dict[workload].append((trace, get_simpoint_weight(benchmark, workload, trace.split('.')[-2])))
 
     return workload_dict
 
