@@ -12,20 +12,31 @@ import multiprocessing
 import numpy as np
 import os
 import struct
-import polars as pl
 
+import common
+from common import PATHS, BENCHMARKS_INFO
+
+
+TARGET_BENCHMARKS = ['leela']
+HARD_BRS_FILE = 'top100'
+NUM_THREADS = 32
 PC_BITS = 30
 
-benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
-           "625.x264_s", "631.deepsjeng_s",
-           "641.leela_s", "657.xz_s", "602.gcc_s",
-           "620.omnetpp_s", "648.exchange2_s"]
-
-hard_branches_dir = "/mnt/data/results/branch-project/h2ps/"
 
 def read_branch_trace(trace_path):
-    df = pl.read_parquet(trace_path)
-    return df['inst_addr'].to_numpy(), df['taken'].to_numpy() 
+    struct_type = [
+        ('br_pc', np.uint64),
+        ('target', np.uint64),
+        ('dir', np.uint8),
+        ('type', np.uint8)]
+    record_dtype = np.dtype(struct_type, align=False)
+
+    with bz2.open(trace_path, 'rb') as f:
+        buffer = f.read()
+    x = np.frombuffer(buffer, dtype=record_dtype)
+
+    return x['br_pc'].copy(), x['dir'].copy()
+
 
 def create_new_dataset(dataset_path, pcs, directions):
     '''
@@ -60,17 +71,22 @@ def create_new_dataset(dataset_path, pcs, directions):
 
 def get_work_items():
     work_items = []    
-    for bench in benches:
-        traces = [t[0] for t in get_traces.get_trace_set(bench, "test")]
-        traces += [t[0] for t in get_traces.get_trace_set(bench, "train")]
-        traces += [t[0] for t in get_traces.get_trace_set(bench, "validate")]
-        hard_brs_file = open(hard_branches_dir+bench, "r")
-        hard_brs = [int(pc,16) for pc in hard_brs_file.readlines()]
-        hard_brs_file.close()
-        for trace in traces:
-            trace_path = get_traces.trace_dir+trace
-            dataset_path = get_traces.hdf5_dir+trace.split(".trace")[0]+'.hdf5'
-            work_items.append((trace_path, dataset_path, hard_brs))
+    for benchmark in TARGET_BENCHMARKS:
+        hard_brs = common.read_hard_brs(benchmark, HARD_BRS_FILE)
+        traces_dir = '{}/{}'.format(PATHS['branch_traces_dir'], benchmark)
+        datasets_dir = '{}/{}'.format(PATHS['ml_datasets_dir'], benchmark)
+        os.makedirs(datasets_dir, exist_ok=True)
+        for inp_info in BENCHMARKS_INFO[benchmark]['inputs']:
+            for simpoint_info in inp_info['simpoints']:
+                file_basename = '{}_{}_simpoint{}'.format(
+                    benchmark, inp_info['name'], simpoint_info['id'])
+                trace_path = '{}/{}_brtrace.bz2'.format(
+                    traces_dir, file_basename)
+                dataset_path = '{}/{}_dataset.hdf5'.format(
+                    datasets_dir, file_basename)
+                
+                if os.path.exists(dataset_path): continue
+                work_items.append((trace_path, dataset_path, hard_brs))
     return work_items
 
 
@@ -101,12 +117,10 @@ def gen_dataset(trace_path, dataset_path, hard_brs):
 
 def main():
     work_items = get_work_items()
-    with multiprocessing.Pool(16) as pool:
+    with multiprocessing.Pool(NUM_THREADS) as pool:
         pool.starmap(gen_dataset, work_items)
+
 
 if __name__ == '__main__':
     main()
-    # trace_path = "/mnt/data/results/branch-project/traces/625.x264_s.notld-2.3.trace"
-    # f = open("test_pcs")
-    # hard_brs = [int(x,16) for x in f.read().splitlines()]
-    # gen_dataset(trace_path, "test.h5", hard_brs)
+

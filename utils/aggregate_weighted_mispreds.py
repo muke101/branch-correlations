@@ -1,5 +1,8 @@
-from dotenv import load_dotenv
-load_dotenv()
+import os
+import sys
+
+cwd = os.getcwd()
+sys.path.insert(0, cwd)
 
 import polars as pl
 import pickle
