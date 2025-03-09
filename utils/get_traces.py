@@ -5,7 +5,12 @@ from collections import defaultdict
 trace_dir = "/mnt/data/results/branch-project/traces/"
 hdf5_dir = "/mnt/data/results/branch-project/datasets/"
 simpoint_dir = "/work/muke/simpoints-expanded/"
-\
+benchmarks = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+        "625.x264_s", "631.deepsjeng_s",
+        "641.leela_s", "657.xz_s", "602.gcc_s",
+        "620.omnetpp_s", "648.exchange2_s"]
+
+
 def get_simpoint_weight(benchmark, workload, checkpoint):
     simpt_file = open(simpoint_dir+benchmark+"."+workload+".simpts", "r")
     simpoints = [(int(s.strip().split()[0]), int(s.strip().split()[1])) for s in simpt_file.readlines()]
