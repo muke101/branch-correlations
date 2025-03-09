@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import polars as pl
 import pickle
 from typing import List, Tuple, Optional
