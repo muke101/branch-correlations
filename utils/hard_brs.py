@@ -29,18 +29,16 @@ def greedy_select_top_brs(list_inputs, mpki_dicts, sorted_brs, num_brs):
                 try:
                     total_mpki += mpki_dicts[inppp][br]
                 except KeyError:
-                    print("KeyError: [{}] br: {} not in workload: {}".format(i, br, inppp))
                     exceptions.append({'br': br, 'i': i, 'workload': inppp, 'selected': False})
             next_br_total_mpki[j] = total_mpki
             next_br_pc[j] = br
         max_j = next_br_total_mpki.index(max(next_br_total_mpki))
         selected_brs.append(next_br_pc[max_j])
 
-    ii = 0 
     for exception in exceptions:
-        if exception['i'] == ii and exception['br'] == selected_brs[ii]:
+        ii = exception['i']
+        if exception['br'] == selected_brs[ii]:
             exception['selected'] = True
-            ii += 1
 
     return selected_brs, exceptions
 
@@ -52,7 +50,6 @@ for benchmark in benchmarks:
         sorted_brs = pickle.load(f)
     workloads = list(mispred_dicts.keys())
     brs, exceptions = greedy_select_top_brs(workloads, mispred_dicts, sorted_brs, NUM_BRS_TO_PRINT)
-    
 
     with open(hard_branches_dir+benchmark, 'w') as f:
         for br in brs:
