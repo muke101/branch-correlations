@@ -56,7 +56,7 @@ for benchmark in benchmarks:
 
     with open(hard_branches_dir+benchmark, 'w') as f:
         for br in brs:
-            f.write(br+'\n')
+            f.write('{}\n'.format(br))
 
     pl.DataFrame(exceptions).write_csv(hard_branches_dir+'exceptions/'+benchmark+".csv")
     
