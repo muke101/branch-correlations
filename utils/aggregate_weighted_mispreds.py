@@ -22,6 +22,8 @@ def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):
             #correct = total - incorrect
             mispred_dict[inst_addr] += incorrect * weight
             denom_dict[inst_addr] += weight
+    for k in mispred_dict.keys():
+        mispred_dict[k] /= denom_dict[k]
     sorted_br = sorted(mispred_dict, key=mispred_dict.get, reverse=True)
     return mispred_dict, sorted_br
 
