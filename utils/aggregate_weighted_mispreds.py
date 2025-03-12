@@ -6,11 +6,13 @@ sys.path.insert(0, cwd)
 
 import polars as pl
 import pickle
+from collections import defaultdict
 from typing import List, Tuple, Optional
 from utils.get_traces import get_by_workload, trace_dir, benchmarks
 
 def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):    
-    mispred_dict = {}
+    mispred_dict = defaultdict(int)
+    denom_dict = defaultdict(int)
     for file, weight in files_weights:
         df = pl.read_parquet(trace_dir+file)
         for inst_addr in df['inst_addr'].unique():
@@ -18,7 +20,8 @@ def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):
             #total = filtered.shape[0]
             incorrect = filtered['mispredicted'].sum()
             #correct = total - incorrect
-            mispred_dict[inst_addr] = incorrect * weight
+            mispred_dict[inst_addr] += incorrect * weight
+            denom_dict[inst_addr] += weight
     sorted_br = sorted(mispred_dict, key=mispred_dict.get, reverse=True)
     return mispred_dict, sorted_br
 
