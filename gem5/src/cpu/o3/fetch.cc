@@ -482,6 +482,22 @@ Fetch::deactivateThread(ThreadID tid)
     }
 }
 
+#include <Python.h>
+
+bool Fetch::predictBranchNet(Addr pc, InstSeqNum seq_num) {
+
+    Py_Initialize();
+    PyRun_SimpleString("print('Hello from Python!')");
+    Py_Finalize();
+
+    BranchHistory &banchHistory = cpu->getDecode()->getBranchHistory();
+    unsigned begin = 0;
+    while (begin < branchHistory.size() && branchHistory[begin].seqNum > seq_num) {
+        begin++;
+    }
+
+}
+
 bool
 Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
 {

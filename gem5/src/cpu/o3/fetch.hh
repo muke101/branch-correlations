@@ -274,6 +274,8 @@ class Fetch
      */
     void switchToInactive();
 
+    bool predictBranchNet(Addr pc, InstSeqNum seq_num);
+
     /**
      * Looks up in the branch predictor to see if the next PC should be
      * either next PC+=MachInst or a branch target.
