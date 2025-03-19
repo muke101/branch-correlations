@@ -43,18 +43,19 @@ def greedy_select_top_brs(list_inputs, mpki_dicts, sorted_brs, num_brs):
     return selected_brs, exceptions
 
 
-for benchmark in benchmarks:
-    with open("{}mispred_dicts_{}.pkl".format(stats_dir, benchmark), 'rb') as f:
-        mispred_dicts = pickle.load(f)
-    with open("{}sorted_brs_{}.pkl".format(stats_dir, benchmark), 'rb') as f:
-        sorted_brs = pickle.load(f)
-    workloads = list(mispred_dicts.keys())
-    brs, exceptions = greedy_select_top_brs(workloads, mispred_dicts, sorted_brs, NUM_BRS_TO_PRINT)
-
-    with open(hard_branches_dir+benchmark, 'w') as f:
-        for br in brs:
-            f.write('{}\n'.format(br))
-
-    pl.DataFrame(exceptions).write_csv(hard_branches_dir+'exceptions/'+benchmark+".csv")
+if __name__ == "__main__":
+    for benchmark in benchmarks:
+        with open("{}mispred_dicts_{}.pkl".format(stats_dir, benchmark), 'rb') as f:
+            mispred_dicts = pickle.load(f)
+        with open("{}sorted_brs_{}.pkl".format(stats_dir, benchmark), 'rb') as f:
+            sorted_brs = pickle.load(f)
+        workloads = list(mispred_dicts.keys())
+        brs, exceptions = greedy_select_top_brs(workloads, mispred_dicts, sorted_brs, NUM_BRS_TO_PRINT)
     
-    print("finished writing hard branches for {}".format(benchmark))
+        with open(hard_branches_dir+benchmark, 'w') as f:
+            for br in brs:
+                f.write('{}\n'.format(br))
+    
+        pl.DataFrame(exceptions).write_csv(hard_branches_dir+'exceptions/'+benchmark+".csv")
+        
+        print("finished writing hard branches for {}".format(benchmark))
