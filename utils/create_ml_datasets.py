@@ -47,7 +47,7 @@ def create_new_dataset(dataset_path, pcs, directions):
         assert False, 'History elements of larger than 64 bits are not supported'
 
     pc_mask = (1 << PC_BITS) - 1
-    fptr = h5py.File(dataset_path, 'w-')
+    fptr = h5py.File(dataset_path, 'w')
     processed_history = ((pcs & pc_mask) << 1) | directions
     processed_history = processed_history.astype(stew_dtype)
     fptr.attrs['pc_bits'] = PC_BITS
@@ -66,7 +66,7 @@ def get_work_items():
         traces += [t[0] for t in get_traces.get_trace_set(bench, "train")]
         traces += [t[0] for t in get_traces.get_trace_set(bench, "validate")]
         hard_brs_file = open(hard_branches_dir+bench, "r")
-        hard_brs = [int(pc,16) for pc in hard_brs_file.readlines()]
+        hard_brs = [int(pc) for pc in hard_brs_file.readlines()]
         hard_brs_file.close()
         for trace in traces:
             trace_path = get_traces.trace_dir+trace
