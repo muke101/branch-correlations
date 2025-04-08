@@ -14,25 +14,29 @@ __benchmarks_file__ = __env_dir__ + '/benchmarks.yaml'
 __ml_input_partitions__ = __env_dir__ + '/ml_input_partitions.yaml'
 
 
-#assert os.path.exists(__paths_file__), (
-#  ('Expecting a paths.yaml file at {}. You have to create one following '
-#   'the format of paths_example.yaml in the same directory').format(__paths_file__))
-#assert os.path.exists(__benchmarks_file__), (
-#  ('Expecting a benchmarks.yaml file at {}. You have to create one following '
-#   'the format of benchmarks_example.yaml in the same directory').format(__benchmarks_file__))
-#assert os.path.exists(__ml_input_partitions__), (
-#  ('Expecting an ml_input_partitions.yaml file at {}. You have to create one following '
-#   'the format of ml_input_partitions_example.yaml in the same directory').format(__ml_input_partitions__))
+assert os.path.exists(__paths_file__), (
+  ('Expecting a paths.yaml file at {}. You have to create one following '
+   'the format of paths_example.yaml in the same directory').format(__paths_file__))
+assert os.path.exists(__benchmarks_file__), (
+  ('Expecting a benchmarks.yaml file at {}. You have to create one following '
+   'the format of benchmarks_example.yaml in the same directory').format(__benchmarks_file__))
+assert os.path.exists(__ml_input_partitions__), (
+  ('Expecting an ml_input_partitions.yaml file at {}. You have to create one following '
+   'the format of ml_input_partitions_example.yaml in the same directory').format(__ml_input_partitions__))
 
-#with open(__paths_file__) as f:
-#  PATHS = yaml.safe_load(f)
-#
-#with open(__benchmarks_file__) as f:
-#  BENCHMARKS_INFO = yaml.safe_load(f)
-#
-#with open(__ml_input_partitions__) as f:
-#  ML_INPUT_PARTIONS = yaml.safe_load(f)
+with open(__paths_file__) as f:
+  PATHS = yaml.safe_load(f)
 
+with open(__benchmarks_file__) as f:
+  BENCHMARKS_INFO = yaml.safe_load(f)
+
+with open(__ml_input_partitions__) as f:
+  ML_INPUT_PARTIONS = yaml.safe_load(f)
+
+
+def run_cmd_using_shell(cmd):
+  print('Running cmd:', cmd)
+  subprocess.call(cmd, shell=True)
 
 
 def run_parallel_commands_local(cmds, num_threads=None):
