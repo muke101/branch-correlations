@@ -1,0 +1,5 @@
+branch_traces_dir: /mnt/data/results/branch-project/branchnet-reproduction/traces
+experiments_dir: /mnt/data/results/branch-project/branchnet-reproduction/experiments
+hard_brs_dir: /mnt/data/results/branch-project/branchnet-reproduction/
+ml_datasets_dir: /mnt/data/results/branch-project/branchnet-reproduction/datasets
+tage_stats_dir: /mnt/data/results/branch-project/branchnet-reproduction/stats
