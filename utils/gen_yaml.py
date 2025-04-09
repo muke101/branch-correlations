@@ -1,7 +1,7 @@
-import pyyaml as yaml
+import yaml
 import get_traces
 
-yaml_dir = "/work/muke/Branch-Correlations/BranchNet/enviroment_setup/"
+yaml_dir = "/work/muke/Branch-Correlations/BranchNet/environment_setup/"
 trace_dir = "/mnt/data/results/branch-project/traces/"
 
 benchmark_dict = {}
@@ -30,11 +30,16 @@ def write_partitions(benchmark):
     for inp_set in sets:
         workloads = get_traces.get_by_workload(benchmark, inp_set)
         for workload in workloads:
-            partition_dict[benchmark][inp_set+"_set"].append(workload)
+            if inp_set == "validate":
+                partition_dict[benchmark]["validation_set"].append(workload)
+            else:
+                partition_dict[benchmark][inp_set+"_set"].append(workload)
 
 
 
 for bench in get_traces.benchmarks:
+    if bench == "648.exchange2_s":
+        print("Warning: the alberta workloads for exchange2 still don't get serialised safely in yaml automatically')
     write_benchmarks(bench)
     write_partitions(bench)
 
