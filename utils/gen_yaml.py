@@ -17,7 +17,7 @@ def write_benchmarks(benchmark):
             input_dict = {"name": workload, "simpoints": []}
             for trace, weight in workloads[workload]:
                 simpoint_number = trace.split('.')[-2]
-                input_dict["simpoints"].append({"id": simpoint_number, "path": trace_dir+trace, "type": "pinball", "weight": weight})
+                input_dict["simpoints"].append({"id": int(simpoint_number)-1, "path": trace_dir+trace, "type": "pinball", "weight": weight})
             inputs.append(input_dict)
 
     benchmark_dict[benchmark] = {"inputs": inputs}
@@ -39,7 +39,7 @@ def write_partitions(benchmark):
 
 for bench in get_traces.benchmarks:
     if bench == "648.exchange2_s":
-        print("Warning: the alberta workloads for exchange2 still don't get serialised safely in yaml automatically')
+        print("Warning: the alberta workloads for exchange2 still don't get serialised safely in yaml automatically")
     write_benchmarks(bench)
     write_partitions(bench)
 

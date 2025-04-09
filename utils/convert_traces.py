@@ -4,10 +4,12 @@ import csv
 import polars as pl
 
 stats_dir = "/mnt/data/results/branch-project/stats/"
+trace_dir = "/mnt/data/results/branch-project/traces/"
 
-def write_stats(benchmark, trace):
-    out_file = trace.split('.trace')[0]+".csv"
-    df = pl.read_parquet(trace)
+def write_stats(trace):
+    out_file = stats_dir+trace.split('.trace')[0]+".csv"
+    #if os.path.exists(out_file): return
+    df = pl.read_parquet(trace_dir+trace)
     records = []
     aggregate_dir_t_pred_t = 0;
     aggregate_dir_t_pred_nt = 0;
@@ -47,16 +49,19 @@ def write_stats(benchmark, trace):
     aggregate_total = aggregate_correct + aggregate_incorrect
     aggregate_accuracy = str(100.0 * aggregate_correct / aggregate_total) + "%"
     records = sorted(records, key=lambda x: x[2], reverse=True)
-    records.insert(0, ("0", aggregate_accuracy, aggregate_incorrect, aggregate_correct, aggregate_total, aggregate_dir_t_pred_t, aggregate_dir_t_pred_nt, aggregate_nt_pred_t, aggregate_nt_pred_nt)) 
+    records.insert(0, ("aggregate", aggregate_accuracy, aggregate_incorrect, aggregate_correct, aggregate_total, aggregate_dir_t_pred_t, aggregate_dir_t_pred_nt, aggregate_dir_nt_pred_t, aggregate_dir_nt_pred_nt)) 
     header = "Branch PC,Accuracy,Mispredictions,Correct Predictions,Total,dir_t_pred_t,dir_t_pred_nt,dir_nt_pred_t,dir_nt_pred_nt\n"
     f = open(out_file, "w")
     f.write(header)
     for record in records:
         for r in record[:-1]:
-            f.write(r+",")
-        f.write(record[-1]+"\n")
+            f.write(str(r)+",")
+        f.write(str(record[-1])+"\n")
     f.close()
 
 if __name__ == "__main__":
     for bench in get_traces.benchmarks:
-        traces = [t  for t,_ in get_traces.get_trace_set(bench, 'validate')]
+        traces = get_traces.get_trace_set(bench, 'validate')
+        for trace, _ in traces:
+            print("Processing ", trace)
+            write_stats(trace)
