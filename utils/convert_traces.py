@@ -3,11 +3,12 @@ import os
 import csv
 import polars as pl
 
-stats_dir = "/mnt/data/results/branch-project/stats/"
+stats_dir = "/mnt/data/results/branch-project/stats/tagescl64/"
 trace_dir = "/mnt/data/results/branch-project/traces/"
 
 def write_stats(trace):
-    out_file = stats_dir+trace.split('.trace')[0]+".csv"
+    benchmark = '.'.join(trace.split('.')[0:2])
+    out_file = stats_dir+benchmark+"/"+trace.split('.trace')[0]+".csv"
     #if os.path.exists(out_file): return
     df = pl.read_parquet(trace_dir+trace)
     records = []
