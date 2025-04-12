@@ -5,7 +5,11 @@ import os
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
-TARGET_BENCHMARKS = ['leela']
+#TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+#        "625.x264_s", "631.deepsjeng_s",
+#        "641.leela_s", "657.xz_s", "602.gcc_s",
+#        "620.omnetpp_s", "648.exchange2_s"]
+TARGET_BENCHMARKS = ["648.exchange2_s"]
 TAGE_CONFIG_NAME = 'tagescl64'
 NUM_BRS_TO_PRINT = 100
 PRODUCE_HARD_BR_FILES = True

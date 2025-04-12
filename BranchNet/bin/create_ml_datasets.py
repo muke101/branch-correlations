@@ -12,30 +12,21 @@ import multiprocessing
 import numpy as np
 import os
 import struct
+import polars as pl
 
 import common
 from common import PATHS, BENCHMARKS_INFO
 
 
-TARGET_BENCHMARKS = ['leela']
+TARGET_BENCHMARKS = ['648.exchange2_s']
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30
 
 
 def read_branch_trace(trace_path):
-    struct_type = [
-        ('br_pc', np.uint64),
-        ('target', np.uint64),
-        ('dir', np.uint8),
-        ('type', np.uint8)]
-    record_dtype = np.dtype(struct_type, align=False)
-
-    with bz2.open(trace_path, 'rb') as f:
-        buffer = f.read()
-    x = np.frombuffer(buffer, dtype=record_dtype)
-
-    return x['br_pc'].copy(), x['dir'].copy()
+    df = pl.read_parquet(trace_path)
+    return df['inst_addr'].to_numpy(), df['taken'].to_numpy() 
 
 
 def create_new_dataset(dataset_path, pcs, directions):
@@ -57,7 +48,7 @@ def create_new_dataset(dataset_path, pcs, directions):
         assert False, 'History elements of larger than 64 bits are not supported'
 
     pc_mask = (1 << PC_BITS) - 1
-    fptr = h5py.File(dataset_path, 'w-')
+    fptr = h5py.File(dataset_path, 'w')
     processed_history = ((pcs & pc_mask) << 1) | directions
     processed_history = processed_history.astype(stew_dtype)
     fptr.attrs['pc_bits'] = PC_BITS
@@ -73,19 +64,20 @@ def get_work_items():
     work_items = []    
     for benchmark in TARGET_BENCHMARKS:
         hard_brs = common.read_hard_brs(benchmark, HARD_BRS_FILE)
-        traces_dir = '{}/{}'.format(PATHS['branch_traces_dir'], benchmark)
+        #traces_dir = '{}/{}'.format(PATHS['branch_traces_dir'], benchmark)
+        traces_dir = PATHS['branch_traces_dir']
         datasets_dir = '{}/{}'.format(PATHS['ml_datasets_dir'], benchmark)
         os.makedirs(datasets_dir, exist_ok=True)
         for inp_info in BENCHMARKS_INFO[benchmark]['inputs']:
             for simpoint_info in inp_info['simpoints']:
-                file_basename = '{}_{}_simpoint{}'.format(
-                    benchmark, inp_info['name'], simpoint_info['id'])
-                trace_path = '{}/{}_brtrace.bz2'.format(
+                file_basename = '{}.{}.{}'.format(
+                    benchmark, inp_info['name'], simpoint_info['id']+1)
+                trace_path = '{}/{}.trace'.format(
                     traces_dir, file_basename)
-                dataset_path = '{}/{}_dataset.hdf5'.format(
+                dataset_path = '{}/{}.hdf5'.format(
                     datasets_dir, file_basename)
                 
-                if os.path.exists(dataset_path): continue
+                #if os.path.exists(dataset_path): continue
                 work_items.append((trace_path, dataset_path, hard_brs))
     return work_items
 

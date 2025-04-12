@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
+import subprocess
 import glob
 import os
 import shutil
+import time
 
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
 JOBS = [
-    Job('leela', 'top3', 'testrun2', 'mini_250', 'mini')
+    Job('648.exchange2_s', 'top100', 'test', 'big', 'float')
 ]
 
 BATCH_SIZE = 2048
@@ -27,7 +29,7 @@ WORKDIRS_OVERRIDE_OK = True
 
 def create_run_command(workdir, training_datasets, evaluation_datasets,
                        validation_datasets, br_pc, training_mode):
-    return ('cd {workdir}; python run.py '
+    return ('cd {workdir}; python3 run.py '
             '-trtr {tr} -evtr {ev} -vvtr {vv} --br_pc {pc} --batch_size {batch} '
             '-bsteps {bsteps} -fsteps {fsteps} --log_progress {log_validation} '
             '-lr {lr} -gcoeff {gcoeff} -rcoeff {rcoeff} -mode {mode} '
@@ -75,14 +77,14 @@ def create_job_commands():
         hard_brs = common.read_hard_brs(job.benchmark, job.hard_brs_file)
         datasets_dir = '{}/{}'.format(PATHS['ml_datasets_dir'], job.benchmark)
         training_datasets = [dataset
-                             for inp in ML_INPUT_PARTIONS[job.benchmark]['training_set']
-                             for dataset in glob.glob('{}/{}_{}_*.hdf5'.format(datasets_dir, job.benchmark, inp))]
+                             for inp in ML_INPUT_PARTIONS[job.benchmark]['train_set']
+                             for dataset in glob.glob('{}/{}.{}.*.hdf5'.format(datasets_dir, job.benchmark, inp))]
         evaluation_datasets = [dataset
                                for inp in ML_INPUT_PARTIONS[job.benchmark]['test_set']
-                               for dataset in glob.glob('{}/{}_{}_*.hdf5'.format(datasets_dir, job.benchmark, inp))]
+                               for dataset in glob.glob('{}/{}.{}.*.hdf5'.format(datasets_dir, job.benchmark, inp))]
         validation_datasets = [dataset
                                for inp in ML_INPUT_PARTIONS[job.benchmark]['validation_set']
-                               for dataset in glob.glob('{}/{}_{}_*.hdf5'.format(datasets_dir, job.benchmark, inp))]
+                               for dataset in glob.glob('{}/{}.{}.*.hdf5'.format(datasets_dir, job.benchmark, inp))]
 
         for br in hard_brs:
             cmd = create_run_command(workdir, training_datasets, evaluation_datasets,
@@ -96,7 +98,10 @@ def main():
         create_workdirs()
 
     cmds = create_job_commands()
-    common.run_parallel_commands_local(cmds, 1)
+    for cmd in cmds:
+        subprocess.run(cmd, check=True, shell=True)
+        time.sleep(60)
+    #common.run_parallel_commands_local(cmds, 1)
 
 
 if __name__ == '__main__':

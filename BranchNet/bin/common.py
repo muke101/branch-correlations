@@ -161,8 +161,8 @@ def read_tage_stats(tage_config_name, ml_benchmark, inp, hard_brs_tag=None):
 
     tage_stats = {}
     for simpoint in get_simpoint_info(spec_benchmark, inp):
-        stats_file = ('{}/{}_{}_simpoint{}_stats.csv').format(
-            stats_dir, spec_benchmark, inp, simpoint['id'])
+        stats_file = ('{}/{}.{}.{}.csv').format(
+            stats_dir, spec_benchmark, inp, int(simpoint['id'])+1)
         update_tage_stats(tage_stats, stats_file, num_simpoints, simpoint['id'])
 
     for stats in tage_stats.values():
@@ -185,12 +185,16 @@ def update_cnn_stats(cnn_stats, tage_stats, results_file, num_simpoints, target_
     with open (results_file, 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            m = re.search('_(.*)_simpoint([0-9]+)_dataset', row[0])
-            assert m is not None
-            inp = m.group(1)
-            simpoint_region = int(m.group(2))
+            '.'.join(row[0].split('.')[:2])
             accuracy = float(row[1])
-
+            if row[0].split('.')[2] == 'train':
+                inp = 'train.'+row[0].split('.')[3]
+                simpoint_region = int(row[0].split('.')[4])-1
+            else:
+                inp = row[0].split('.')[2]
+                simpoint_region = int(row[0].split('.')[3])-1
+            
+            
             if inp != target_inp: continue
 
             if br not in cnn_stats:

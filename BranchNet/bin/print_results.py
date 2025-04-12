@@ -9,16 +9,16 @@ import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-  ('leela', 'refrate_inp0', 1.0, 'top3'),
+  ('648.exchange2_s', '0', 1.0, 'top100'),
 ]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
-  ('testrun3', 1),
+  ('test', 1),
 ]
 
 TAGE_CONFIG_NAME = 'tagescl64'
 
-CSV = True
+CSV = False
 DUMP_PER_BR_STATS = True
 PRODUCE_HARD_BRS = False
 HARD_BRS_TAG = None
