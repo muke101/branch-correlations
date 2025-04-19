@@ -38,10 +38,15 @@ class BenchmarkBranchLoader:
         try:
             self.branch_pc = int(branch_pc, 16)
         except ValueError:
-        
+            raise ValueError(f"Invalid hex format for branch_pc: {branch_pc}")
+            
         # File handle management
         self.current_file = None
         self.current_path = None
+        
+        # Initialize trace paths and instances
+        self.trace_paths = self._get_trace_paths(benchmark, dataset_type)
+        self.instances = self._collect_branch_instances()
 
     def _get_trace_paths(self, benchmark: str, dataset_type: str) -> List[str]:
         """Get all HDF5 file paths for this benchmark's dataset"""
@@ -164,4 +169,3 @@ class BenchmarkBranchLoader:
         """Cleanup file handle"""
         if self.current_file is not None:
             self.current_file.close()
-
