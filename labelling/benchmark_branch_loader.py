@@ -38,11 +38,6 @@ class BenchmarkBranchLoader:
         try:
             self.branch_pc = int(branch_pc, 16)
         except ValueError:
-            raise ValueError("branch_pc must be a valid hex string (e.g. '0x1234')")
-        
-        # Load configs and build instance index
-        self.trace_paths = self._get_trace_paths(benchmark, dataset_type)
-        self.instances = self._collect_branch_instances()
         
         # File handle management
         self.current_file = None
@@ -170,37 +165,3 @@ class BenchmarkBranchLoader:
         if self.current_file is not None:
             self.current_file.close()
 
-
-if __name__ == '__main__':
-    # Example usage with error handling
-    try:
-        # Try with valid benchmark but likely invalid branch PC
-        loader = BenchmarkBranchLoader('648.exchange2_s', '0x1234')
-        print(f"Found {len(loader)} instances")
-        
-        if len(loader) > 0:
-            try:
-                # Get first instance
-                history, label = loader.get_instance(0)
-                print(f"History shape: {history.shape}")
-                print(f"Label: {label.item()} ({'taken' if label.item() else 'not taken'})")
-                print(f"History dtype: {history.dtype}")
-                print(f"Label dtype: {label.dtype}")
-            except IndexError as e:
-                print(f"Error accessing instance: {e}")
-            except IOError as e:
-                print(f"Error reading HDF5 file: {e}")
-    except Exception as e:
-        print(f"Error initializing loader: {e}")
-
-    # Try invalid branch PC format
-    try:
-        loader = BenchmarkBranchLoader('648.exchange2_s', '1234')  # Missing 0x prefix
-    except ValueError as e:
-        print("Successfully caught invalid branch PC format")
-
-    # Try with invalid benchmark
-    try:
-        loader = BenchmarkBranchLoader('invalid_benchmark', '0x1234')
-    except KeyError:
-        print("Successfully caught invalid benchmark name")
