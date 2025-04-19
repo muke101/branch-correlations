@@ -31,18 +31,18 @@ for good_branch in good_branches:
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
  
-    with BenchmarkBranchLoader('648.exchange2_s', good_branch) as loader:
-        print('Branch:', good_branch)
-        print('Instances:', len(loader))
-        history, label = loader.get_instance(0)
-        print('Example:', history, label)
+    loader = BenchmarkBranchLoader('648.exchange2_s', good_branch)
+    print('Branch:', good_branch)
+    print('Instances:', len(loader))
+    history, label = loader.get_instance(0)
+    print('Example:', history, label)
 
-        with torch.no_grad():
-            history = history.unsqueeze(0).cuda()
-            label = label.cuda()
-            output = model(history)
+    with torch.no_grad():
+        history = history.unsqueeze(0).cuda()
+        label = label.cuda()
+        output = model(history)
 
-            print('Model output:', output)
+        print('Model output:', output)
 
         
 
