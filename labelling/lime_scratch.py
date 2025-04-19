@@ -5,12 +5,14 @@ dir_results = '/mnt/data/results/branch-project/results/test/648.exchange2_s'
 dir_h5 = '/mnt/data/results/branch-project/datasets/648.exchange2_s'
 good_branches = ['0x429a78', '0x429b50']
 
+import os
 import sys
 sys.path.append(dir_results)
+sys.path.append(os.getcwd())
 
 from model import BranchNet
 from model import BranchNetTrainingPhaseKnobs
-from labelling.benchmark_branch_loader import BenchmarkBranchLoader
+from benchmark_branch_loader import BenchmarkBranchLoader
 
 dir_ckpt = dir_results + '/checkpoints'
 dir_config = dir_results + '/config.yaml'
