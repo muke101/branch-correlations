@@ -89,6 +89,7 @@ class BenchmarkBranchLoader:
                     dataset_name = f'br_indices_{hex(self.branch_pc)}'
                     if dataset_name in f:
                         indices = f[dataset_name][:]
+                        indices = self._remove_incomplete_histories(indices)
                         for idx in indices:
                             if idx >= self.history_length:
                                 instances.append(BranchInstance(
@@ -104,7 +105,29 @@ class BenchmarkBranchLoader:
         if not instances:
             print(f"Warning: No instances found for branch PC {hex(self.branch_pc)}")
         return instances
+    
+    def _remove_incomplete_histories(self, br_indices):
+        """Filters out instances of a branch with incomplete histories.
 
+        Args:
+            br_indices: a numpy array of indices of the occurances of a branch
+            sorted in increasing order.
+            history_length: the minimum expected history length that should be
+            available for each instance of the target branch.
+
+        Returns:
+            a sorted numpy array of indices, each is guaranteed to meet the history
+            length requirement.
+        """
+        if br_indices.size != 0:
+            first_valid_idx = 0
+            while (first_valid_idx < len(br_indices) and
+                br_indices[first_valid_idx] < self.history_length):
+                first_valid_idx += 1
+            br_indices = br_indices[first_valid_idx:]
+
+        return br_indices
+    
     def __len__(self) -> int:
         """Total number of branch instances"""
         return len(self.instances)
