@@ -32,7 +32,7 @@ class BenchmarkBranchLoader:
         """
         self.pc_bits = 12  # From BranchNet big.yaml defaults
         self.pc_hash_bits = 12
-        self.history_length = 42  # Shortest history length from big.yaml
+        self.history_length = 582  # Longest history length from big.yaml
         if not branch_pc.startswith('0x'):
             raise ValueError("branch_pc must be a hex string starting with '0x'")
         try:
