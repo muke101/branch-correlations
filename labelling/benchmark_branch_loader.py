@@ -176,15 +176,28 @@ class BenchmarkBranchLoader:
 
     def _preprocess_history(self, history: np.ndarray) -> np.ndarray:
         """Apply PC hashing and preprocessing to history"""
-        pc_mask = (1 << (self.pc_bits + 1)) - 1
-        history = history & pc_mask
+
+        # Copied from BranchNet
+        pc_hash_bits = self.pc_hash_bits
+        pc_bits = self.pc_bits
         
-        if self.pc_hash_bits < self.pc_bits:
-            # Hash the PCs to specified width
-            pc_hash_mask = (1 << self.pc_hash_bits) - 1
-            temp = history >> self.pc_hash_bits
-            history = history ^ (temp & pc_hash_mask)
-            history = history & ((1 << (self.pc_hash_bits + 1)) - 1)
+        pc_mask = (1 << (1 + pc_bits)) - 1
+        np.bitwise_and(history, pc_mask, out=history)
+
+        if pc_hash_bits < pc_bits:
+            unprocessed_bits = pc_bits - pc_hash_bits
+            pc_hash_mask = ((1 << pc_hash_bits) - 1) << 1
+            shift_count = 1
+            temp = np.empty_like(history)
+            while unprocessed_bits > 0:
+                np.right_shift(history, shift_count * pc_hash_bits, out=temp)
+                np.bitwise_and(temp, pc_hash_mask, out=temp)
+                np.bitwise_xor(history, temp, out=history)
+                shift_count += 1
+                unprocessed_bits -= pc_hash_bits
+
+            stew_mask = (1 << (pc_hash_bits + 1)) - 1
+            np.bitwise_and(history, stew_mask, out=history)
             
         return history
 
