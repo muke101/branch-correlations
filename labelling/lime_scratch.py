@@ -5,6 +5,8 @@ dir_results = '/mnt/data/results/branch-project/results/test/648.exchange2_s'
 dir_h5 = '/mnt/data/results/branch-project/datasets/648.exchange2_s'
 good_branches = ['0x429a78', '0x429b50']
 
+USE_CUDA = False
+
 import os
 import sys
 sys.path.append(dir_results)
@@ -22,7 +24,8 @@ with open(dir_config, 'r') as f:
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda')
+if USE_CUDA:
+    model.to('cuda')
 
 for good_branch in good_branches:
     # Load the model checkpoint
@@ -31,18 +34,21 @@ for good_branch in good_branches:
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
  
-    loader = BenchmarkBranchLoader('648.exchange2_s', good_branch)
+    loader = BenchmarkBranchLoader('648.exchange2_s', good_branch, 'test')
     print('Branch:', good_branch)
     print('Instances:', len(loader))
     history, label = loader.get_instance(0)
     print('Example:', history, label)
 
     with torch.no_grad():
-        history = history.unsqueeze(0).cuda()
-        label = label.cuda()
+        history = history.unsqueeze(0)
+        if USE_CUDA:
+            history = history.cuda()
+            label = label.cuda()
         output = model(history)
-
-        print('Model output:', output)
+        probs = torch.sigmoid(output)
+        
+        # print('Model output:', output)
 
         
 
