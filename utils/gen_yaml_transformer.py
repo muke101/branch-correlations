@@ -10,10 +10,10 @@ partition_dict = {}
 
 def write_benchmarks(benchmark):
     sets = ["test", "train", "validate"]
-    inputs = []
-    input_sets = []
+    input_sets = {set_type: [] for set_type in sets}
 
     for inp_set in sets:
+        inputs = []
         workloads = get_traces.get_by_workload(benchmark, inp_set)
         for workload in workloads:
             input_dict = {"name": workload, "simpoints": []}
@@ -21,8 +21,8 @@ def write_benchmarks(benchmark):
                 simpoint_number = trace.split('.')[-2]
                 dataset = benchmark+"/"+'.'.join(trace.split('.')[:-1])+'.hdf5'
                 input_dict["simpoints"].append({"id": int(simpoint_number)-1, "path": trace_dir+trace, "dataset": dataset_dir+dataset, "type": "pinball", "weight": weight})
-            inputs.append(input_dict)
-        input_sets.append({inp_set: inputs})
+           # inputs.append(input_dict)
+            input_sets[inp_set].append(input_dict)
 
     benchmark_dict[benchmark] = {"inputs": input_sets}
 
