@@ -5,11 +5,15 @@ import os
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
-#TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+        "625.x264_s", "631.deepsjeng_s",
+        "641.leela_s", "657.xz_s", "602.gcc_s",
+        "620.omnetpp_s"]#, "648.exchange2_s"]
+TARGET_BENCHMARKS = ["641.leela_s"]
+#TARGET_BENCHMARKS = ["605.mcf_s", "623.xalancbmk_s",
 #        "625.x264_s", "631.deepsjeng_s",
-#        "641.leela_s", "657.xz_s", "602.gcc_s",
-#        "620.omnetpp_s", "648.exchange2_s"]
-TARGET_BENCHMARKS = ["648.exchange2_s"]
+#        "641.leela_s", 
+#        "620.omnetpp_s"]#, "648.exchange2_s"]
 TAGE_CONFIG_NAME = 'tagescl64'
 NUM_BRS_TO_PRINT = 100
 PRODUCE_HARD_BR_FILES = True
@@ -181,6 +185,7 @@ def get_input_set_stats(benchmark, list_inputs, brs=None):
 
 def main():
     for benchmark in TARGET_BENCHMARKS:
+        print(benchmark)
         validation_inputs = ML_INPUT_PARTIONS[benchmark]['validation_set']
         test_inputs = ML_INPUT_PARTIONS[benchmark]['test_set']
         brs = get_input_set_stats(benchmark, validation_inputs)
@@ -197,7 +202,7 @@ def main():
             os.makedirs(PATHS['hard_brs_dir'], exist_ok=True)
             filepath = '{}/{}_{}'.format(
                 PATHS['hard_brs_dir'], benchmark, HARD_BR_FILE_NAME)
-            with open(filepath, 'w') as f:
+            with open(filepath, 'w+') as f:
                 for br in brs:
                     f.write(hex(br) + '\n')
 

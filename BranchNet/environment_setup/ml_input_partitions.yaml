@@ -39,16 +39,16 @@
   - '1'
   - '2'
   train_set:
-  - burma
   - burma-2
-  - burma-gray
   - burma-gray-2
-  - disco
+  - burma-gray
+  - burma
   - disco-2
-  - disco-gray
   - disco-gray-2
-  - notld
+  - disco-gray
+  - disco
   - notld-2
+  - notld
   validation_set:
   - train.0
 631.deepsjeng_s:
@@ -86,17 +86,17 @@
 657.xz_s:
   spec_name: 657.xz_s
   test_set:
-  - '0'
   - '1'
+  - '0'
   train_set:
-  - comp-big
   - comp-big-rep
-  - comp-small
+  - comp-big
   - comp-small-rep
-  - xcomp-big
+  - comp-small
   - xcomp-big-rep
-  - xcomp-small
+  - xcomp-big
   - xcomp-small-rep
+  - xcomp-small
   validation_set:
   - train.0
   - train.1

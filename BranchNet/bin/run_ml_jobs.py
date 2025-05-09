@@ -11,9 +11,8 @@ import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
-JOBS = [
-    Job('648.exchange2_s', 'top100', 'test', 'big', 'float')
-]
+JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s", "657.xz_s", "602.gcc_s", "620.omnetpp_s"] ]
+
 
 BATCH_SIZE = 2048
 TRAINING_STEPS = [100, 100, 100]
@@ -28,12 +27,12 @@ CREATE_WORKDIRS = True
 WORKDIRS_OVERRIDE_OK = True
 
 def create_run_command(workdir, training_datasets, evaluation_datasets,
-                       validation_datasets, br_pc, training_mode):
+                       validation_datasets, br_pc, training_mode, c):
     return ('cd {workdir}; python3 run.py '
             '-trtr {tr} -evtr {ev} -vvtr {vv} --br_pc {pc} --batch_size {batch} '
             '-bsteps {bsteps} -fsteps {fsteps} --log_progress {log_validation} '
             '-lr {lr} -gcoeff {gcoeff} -rcoeff {rcoeff} -mode {mode} '
-            '-c config.yaml --cuda_device {cuda} &> run_logs/{pc}.out'.format(
+            '-c config.yaml --cuda_device {cuda} 2>&1 | tee -a run_logs/{pc}.out'.format(
                 workdir=workdir,
                 tr=' '.join(training_datasets),
                 ev=' '.join(evaluation_datasets),
@@ -47,7 +46,7 @@ def create_run_command(workdir, training_datasets, evaluation_datasets,
                 gcoeff=LASSO_COEFFICIENT,
                 rcoeff=REGULARIZATION_COEFFICIENT,
                 mode=training_mode,
-                cuda=CUDA_DEVICE,
+                cuda=c % 2,
             ))
 
 def get_workdir(job):
@@ -86,22 +85,18 @@ def create_job_commands():
                                for inp in ML_INPUT_PARTIONS[job.benchmark]['validation_set']
                                for dataset in glob.glob('{}/{}.{}.*.hdf5'.format(datasets_dir, job.benchmark, inp))]
 
-        for br in hard_brs:
+        for c, br in enumerate(hard_brs):
             cmd = create_run_command(workdir, training_datasets, evaluation_datasets,
-                                     validation_datasets, br, job.training_mode)
+                                     validation_datasets, br, job.training_mode, c)
             cmds.append(cmd)
     return cmds
-
 
 def main():
     if CREATE_WORKDIRS:
         create_workdirs()
 
     cmds = create_job_commands()
-    for cmd in cmds:
-        subprocess.run(cmd, check=True, shell=True)
-        time.sleep(60)
-    #common.run_parallel_commands_local(cmds, 1)
+    common.run_parallel_commands_local(cmds, num_threads=2)
 
 
 if __name__ == '__main__':

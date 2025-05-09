@@ -9,7 +9,7 @@ import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-  ('648.exchange2_s', '0', 1.0, 'top100'),
+  ('641.leela_s', '0', 1.0, 'top100'),
 ]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples

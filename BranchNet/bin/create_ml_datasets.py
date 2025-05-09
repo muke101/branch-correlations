@@ -17,8 +17,10 @@ import polars as pl
 import common
 from common import PATHS, BENCHMARKS_INFO
 
-
-TARGET_BENCHMARKS = ['648.exchange2_s']
+TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+ "625.x264_s", "631.deepsjeng_s",
+ "641.leela_s", "657.xz_s", "602.gcc_s",
+ "620.omnetpp_s", "648.exchange2_s"]
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30
@@ -77,7 +79,7 @@ def get_work_items():
                 dataset_path = '{}/{}.hdf5'.format(
                     datasets_dir, file_basename)
                 
-                #if os.path.exists(dataset_path): continue
+                if os.path.exists(dataset_path): continue
                 work_items.append((trace_path, dataset_path, hard_brs))
     return work_items
 
@@ -90,7 +92,7 @@ def gen_dataset(trace_path, dataset_path, hard_brs):
     fptr = create_new_dataset(dataset_path, pcs, directions)
 
     for br_pc in hard_brs:
-        print('processing branch {}'.format(hex(br_pc)))
+        #print('processing branch {}'.format(hex(br_pc)))
         #find indicies of hard branches
         trace_br_indices = np.argwhere(pcs == br_pc).squeeze(axis=1)
         fptr.create_dataset(
