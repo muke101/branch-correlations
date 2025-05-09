@@ -39,7 +39,7 @@ for trace, weight in get_traces.get_trace_set("641.leela_s", "test"):
     df = pl.read_parquet(trace_dir+trace)
     trace_total = 0
     for inst_addr in df['inst_addr'].unique():
-        if inst_addr in brs:
+        if hex(inst_addr) in brs:
             total += 1
             trace_total += 1
     weighted_total += trace_total * weight
