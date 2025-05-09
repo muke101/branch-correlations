@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+import subprocess
 trace_dir = "/mnt/data/results/branch-project/traces/"
 hdf5_dir = "/mnt/data/results/branch-project/datasets/"
 simpoint_dir = "/work/muke/simpoints-expanded/"
@@ -15,7 +16,10 @@ def get_simpoint_weight(benchmark, workload, checkpoint):
     simpt_file = open(simpoint_dir+benchmark+"."+workload+".simpts", "r")
     simpoints = [(int(s.strip().split()[0]), int(s.strip().split()[1])) for s in simpt_file.readlines()]
     simpoints = sorted(simpoints, key=lambda x: x[0])
-    simpoint_indx = simpoints[int(checkpoint)-1][1]
+    try:
+        simpoint_indx = simpoints[int(checkpoint)-1][1]
+    except:
+        return 0
     weight_file = open(simpoint_dir+benchmark+"."+workload+".weights", "r")
     weights = [w.split()[0] for w in weight_file.readlines()]
     simpt_file.close()
@@ -51,7 +55,13 @@ def get_by_workload(benchmark, set_type):
             print("Invalid set type!")
             exit(1)
 
-        workload_dict[workload].append((trace, get_simpoint_weight(benchmark, workload, trace.split('.')[-2])))
+        
+        weight = get_simpoint_weight(benchmark, workload, trace.split('.')[-2])
+        if weight == 0: 
+            print(trace)
+            subprocess.run("rm "+trace_dir+trace, shell=True)
+            continue
+        workload_dict[workload].append((trace, weight))
 
     return workload_dict
 
@@ -117,6 +127,10 @@ def get_trace_set(benchmark, set_type):
             exit(1)
         checkpoint = trace.split('.')[-2]
         weight = get_simpoint_weight(benchmark, workload, checkpoint)
+        if weight == 0: 
+            print(trace)
+            subprocess.run("rm "+trace_dir+trace, shell=True)
+            continue
         traces.append((trace, weight))
 
     return traces

@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 
 cwd = os.getcwd()
@@ -27,12 +28,13 @@ def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):
     sorted_br = sorted(mispred_dict, key=mispred_dict.get, reverse=True)
     return mispred_dict, sorted_br
 
-for benchmark in benchmarks:
+def process_benchmark(benchmark):
     workload_dict = get_by_workload(benchmark, "validate")
 
     mispred_dicts = {}
     sorted_brs = {}
     print("benchmark: {}".format(benchmark))
+    if os.path.exists("sorted_brs_{}.pkl".format(benchmark)): return
     for workload, files_weights in workload_dict.items():
         mispred_dicts[workload], sorted_brs[workload] = make_mispred_dict(files_weights)
         print("workload: {}, total addrs: {}, non-all-correct brs: {}".format(workload, len(mispred_dicts[workload]), len([k for k, v in mispred_dicts[workload].items() if v > 0])))
@@ -42,3 +44,15 @@ for benchmark in benchmarks:
 
     with open("sorted_brs_{}.pkl".format(benchmark), 'wb') as f:
         pickle.dump(sorted_brs, f)
+
+if __name__ == "__main__":
+    num_threads = os.cpu_count()
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = {executor.submit(process_benchmark, bench): bench for bench in benchmarks}
+
+        for future in as_completed(futures):
+            trace = futures[future]
+            try:
+                future.result()  # Raises exception if one occurred
+            except Exception as e:
+                print(f"Error processing trace {trace}: {e}")

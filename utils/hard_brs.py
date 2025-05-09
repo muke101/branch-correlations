@@ -8,7 +8,7 @@ import pickle
 import polars as pl
 from utils.get_traces import benchmarks
 
-hard_branches_dir = "/mnt/data/results/branch-project/h2ps/validate/"
+hard_branches_dir = "/mnt/data/results/branch-project/h2ps/"
 stats_dir = "/work/muke/Branch-Correlations/stats/"
 
 NUM_BRS_TO_PRINT = 100
@@ -52,9 +52,9 @@ if __name__ == "__main__":
         workloads = list(mispred_dicts.keys())
         brs, exceptions = greedy_select_top_brs(workloads, mispred_dicts, sorted_brs, NUM_BRS_TO_PRINT)
     
-        with open(hard_branches_dir+benchmark, 'w') as f:
+        with open(hard_branches_dir+benchmark, 'w+') as f:
             for br in brs:
-                f.write('{}\n'.format(br))
+                f.write('{}\n'.format(hex(br)))
     
         pl.DataFrame(exceptions).write_csv(hard_branches_dir+'exceptions/'+benchmark+".csv")
         

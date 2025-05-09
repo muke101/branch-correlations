@@ -2,6 +2,8 @@ import polars as pl
 import get_traces
 from collections import defaultdict
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
 
 benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
            "625.x264_s", "631.deepsjeng_s",
@@ -34,35 +36,47 @@ def get_most_mispredicted(trace_path, n):
         mispreds.append((row[0], num_executions, row[1]))
     return mispreds
 
+def process_benchmark(bench):
+    set_type = 'validate'
+    print("Processing set: ", set_type)
+    print("Processing bench: ", bench)
+    traces = get_traces.get_trace_set(bench, set_type)
+    executions_map = defaultdict(int)
+    mispredicted_map = defaultdict(int)
+    misprediction_rates = {}
+
+    for trace, weight in traces:
+        most_mispredicted = get_most_mispredicted(trace, n)
+        for pc, total, incorrect in most_mispredicted:
+            executions_map[pc] += total*weight
+            mispredicted_map[pc] += incorrect*weight
+    for pc in executions_map:
+        total = executions_map[pc]
+        incorrect = mispredicted_map[pc]
+        correct = mispredicted_map[pc]
+        accuracy = correct/total
+        if total >= 15000 and incorrect >= 1000 and accuracy < 0.99:
+            misprediction_rates[pc] = incorrect/total
+    hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
+
+    hard_branches_file = open(hard_branches_dir+set_type+"/"+bench, "w")
+    for branch in hard_branches:
+        hard_branches_file.write(hex(branch)+"\n")
+    hard_branches_file.close()
+
 def main():
-    set_types = ['validate', 'test']
+    set_types = ['validate']#, 'test']
+    num_threads = os.cpu_count()
     for set_type in set_types:
-        print("Processing set: ", set_type)
-        for bench in benches:
-            print("Processing bench: ", bench)
-            traces = get_traces.get_trace_set(bench, set_type)
-            executions_map = defaultdict(int)
-            mispredicted_map = defaultdict(int)
-            misprediction_rates = {}
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = {executor.submit(process_benchmark, bench): bench for bench in benches}
 
-            for trace, weight in traces:
-                most_mispredicted = get_most_mispredicted(trace, n)
-                for pc, total, incorrect in most_mispredicted:
-                    executions_map[pc] += total*weight
-                    mispredicted_map[pc] += incorrect*weight
-            for pc in executions_map:
-                total = executions_map[pc]
-                incorrect = mispredicted_map[pc]
-                correct = mispredicted_map[pc]
-                accuracy = correct/total
-                if total >= 15000 and incorrect >= 1000 and accuracy < 0.99:
-                    misprediction_rates[pc] = incorrect/total
-            hard_branches = [b for b, _ in sorted(misprediction_rates.items(), key=lambda x: x[1], reverse=True)[:100]]
-
-            hard_branches_file = open(hard_branches_dir+set_type+"/"+bench, "w")
-            for branch in hard_branches:
-                hard_branches_file.write(hex(branch)+"\n")
-            hard_branches_file.close()
+            for future in as_completed(futures):
+                trace = futures[future]
+                try:
+                    future.result()  # Raises exception if one occurred
+                except Exception as e:
+                    print(f"Error processing trace {trace}: {e}")
 
 if __name__ == "__main__":
     main()

@@ -2,14 +2,17 @@ import get_traces
 import os
 import csv
 import polars as pl
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 stats_dir = "/mnt/data/results/branch-project/stats/tagescl64/"
 trace_dir = "/mnt/data/results/branch-project/traces/"
 
 def write_stats(trace):
+    print("Processing ", trace)
     benchmark = '.'.join(trace.split('.')[0:2])
     out_file = stats_dir+benchmark+"/"+trace.split('.trace')[0]+".csv"
-    #if os.path.exists(out_file): return
+    if os.path.exists(out_file): return
     df = pl.read_parquet(trace_dir+trace)
     records = []
     aggregate_dir_t_pred_t = 0;
@@ -61,8 +64,21 @@ def write_stats(trace):
     f.close()
 
 if __name__ == "__main__":
+    all_traces = []
     for bench in get_traces.benchmarks:
-        traces = get_traces.get_trace_set(bench, 'validate')
+        traces = get_traces.get_trace_set(bench, 'test')
+        traces += get_traces.get_trace_set(bench, 'validate')
         for trace, _ in traces:
-            print("Processing ", trace)
-            write_stats(trace)
+            all_traces.append(trace)
+
+        num_threads = os.cpu_count()
+        
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = {executor.submit(write_stats, trace): trace for trace in all_traces}
+
+        for future in as_completed(futures):
+            trace = futures[future]
+            try:
+                future.result()  # Raises exception if one occurred
+            except Exception as e:
+                print(f"Error processing trace {trace}: {e}")
