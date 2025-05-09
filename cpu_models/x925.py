@@ -192,7 +192,7 @@ class BaseO3CPU(BaseCPU):
     #)
 
     branchPred = Param.BranchPredictor(
-        TAGE_EMILIO(numThreads=Parent.numThreads, indirectBranchPred=ITTAGE(), BTB=AssociativeBTB()), "Branch Predictor"
+        TAGE_EMILIO(numThreads=Parent.numThreads, indirectBranchPred=ITTAGE(), btb=AssociativeBTB()), "Branch Predictor"
     )
 
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
