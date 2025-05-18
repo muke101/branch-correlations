@@ -1144,17 +1144,17 @@ void Commit::trace_branch(const DynInstPtr &inst){
     // Jump address
     std::cerr << next_pc->instAddr() << ',';
 
-    if (*next_pc == *inst->predPC) {
-        //not mispredicted
-        std::cerr << inst->readPredTaken() << ',';
-    }
-    else {
-        //mispredicted
-        std::cerr << !(inst->readPredTaken()) << ',';
-    }
+    // Taken
+    bool branching = inst->pcState().branching();
+    std::cerr << branching << ',';
 
     // Mispredicted
-    std::cerr << (*next_pc != *inst->predPC);
+    if (branching == inst->readPredTaken()) {
+        std::cerr << "0";
+    }
+    else {
+        std::cerr << "1";
+    }
 
     std::cerr << std::endl;
 
