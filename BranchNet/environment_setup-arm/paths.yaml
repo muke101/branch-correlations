@@ -1,0 +1,5 @@
+branch_traces_dir: /mnt/data/results/branch-project/traces
+experiments_dir: /mnt/data/results/branch-project/results
+hard_brs_dir: /mnt/data/results/branch-project/h2ps
+ml_datasets_dir: /mnt/data/results/branch-project/datasets
+tage_stats_dir: /mnt/data/results/branch-project/stats

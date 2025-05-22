@@ -6,7 +6,7 @@ import re
 import subprocess
 import yaml
 
-SIMPOINT_LENGTH = 200000000
+SIMPOINT_LENGTH = 100e6
 
 __env_dir__ = os.path.dirname(__file__) + '/../environment_setup'
 __paths_file__ = __env_dir__ + '/paths.yaml'
@@ -36,12 +36,19 @@ with open(__ml_input_partitions__) as f:
 
 def run_cmd_using_shell(cmd):
   print('Running cmd:', cmd)
-  subprocess.call(cmd, shell=True)
-
+  p = subprocess.run(cmd, shell=True, check=True, executable="/bin/bash")
 
 def run_parallel_commands_local(cmds, num_threads=None):
   with multiprocessing.Pool(num_threads) as pool:
-    pool.map(run_cmd_using_shell, cmds)
+    try:
+        for res in pool.imap(run_cmd_using_shell, cmds):
+            continue
+    except Exception as e:
+        print(f"Exception occured: {e}")
+        pool.terminate()
+        pool.join()
+        exit(1)
+        
 
 
 class BranchStats:
@@ -193,7 +200,6 @@ def update_cnn_stats(cnn_stats, tage_stats, results_file, num_simpoints, target_
             else:
                 inp = row[0].split('.')[2]
                 simpoint_region = int(row[0].split('.')[3])-1
-            
             
             if inp != target_inp: continue
 

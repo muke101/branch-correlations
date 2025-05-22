@@ -5,8 +5,8 @@ import polars as pl
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-stats_dir = "/mnt/data/results/branch-project/stats/tagescl64/"
-trace_dir = "/mnt/data/results/branch-project/traces/"
+stats_dir = "/mnt/data/results/branch-project/stats-x86/tagescl64/"
+trace_dir = "/mnt/data/results/branch-project/traces-bpred/"
 
 def write_stats(trace):
     print("Processing ", trace)
@@ -29,8 +29,8 @@ def write_stats(trace):
         total_incorrect = filtered['mispredicted'].sum()
         total_correct = total - total_incorrect
         for row in filtered.iter_rows():
-            taken = int(row[4])
-            mispredicted = int(row[5])
+            taken = int(row[1])
+            mispredicted = int(row[2])
             if taken and not mispredicted:
                 dir_t_pred_t += 1
                 aggregate_dir_t_pred_t += 1
@@ -65,14 +65,15 @@ def write_stats(trace):
 
 if __name__ == "__main__":
     all_traces = []
-    for bench in get_traces.benchmarks:
+    #for bench in get_traces.benchmarks:
+    for bench in ["605.mcf_s"]:
         traces = get_traces.get_trace_set(bench, 'test')
         traces += get_traces.get_trace_set(bench, 'validate')
         for trace, _ in traces:
             all_traces.append(trace)
 
         num_threads = os.cpu_count()
-        
+
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = {executor.submit(write_stats, trace): trace for trace in all_traces}
 

@@ -17,10 +17,11 @@ import polars as pl
 import common
 from common import PATHS, BENCHMARKS_INFO
 
-TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
- "625.x264_s", "631.deepsjeng_s",
- "641.leela_s", "657.xz_s", "602.gcc_s",
- "620.omnetpp_s", "648.exchange2_s"]
+#TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+# "625.x264_s", #"631.deepsjeng_s",
+# "641.leela_s", "657.xz_s", "602.gcc_s",
+# "620.omnetpp_s", "648.exchange2_s"]
+TARGET_BENCHMARKS = ["605.mcf_s"]
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30

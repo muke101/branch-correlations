@@ -9,15 +9,15 @@ TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
         "625.x264_s", "631.deepsjeng_s",
         "641.leela_s", "657.xz_s", "602.gcc_s",
         "620.omnetpp_s"]#, "648.exchange2_s"]
-TARGET_BENCHMARKS = ["641.leela_s"]
+TARGET_BENCHMARKS = ["605.mcf_s"]
 #TARGET_BENCHMARKS = ["605.mcf_s", "623.xalancbmk_s",
 #        "625.x264_s", "631.deepsjeng_s",
 #        "641.leela_s", 
 #        "620.omnetpp_s"]#, "648.exchange2_s"]
 TAGE_CONFIG_NAME = 'tagescl64'
-NUM_BRS_TO_PRINT = 100
+NUM_BRS_TO_PRINT = 200
 PRODUCE_HARD_BR_FILES = True
-HARD_BR_FILE_NAME = 'top100'
+HARD_BR_FILE_NAME = 'top200'
 
 BRANCH_STATS_TEMPLATE = (
     "*****    {line_name: <15.15}{weighted_specifier:<12.12}"

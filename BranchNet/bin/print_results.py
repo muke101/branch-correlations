@@ -8,8 +8,19 @@ import operator
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
+#SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
+#  (i, '0', 1.0, 'top100') for i in ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "657.xz_s", "620.omnetpp_s", "648.exchange2_s"]
+#  #(i, '0', 1.0, 'top100') for i in ["641.leela_s"]
+#]
+#SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
+#  (i, '1', 1.0, 'top100') for i in ["600.perlbench_s", "625.x264_s", "657.xz_s"] 
+#]
+#SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
+#  (i, '2', 1.0, 'top100') for i in ["600.perlbench_s", "625.x264_s"] 
+#]
+
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-  ('641.leela_s', '0', 1.0, 'top100'),
+  (i, '0', 1.0, 'top100') for i in ["605.mcf_s"]
 ]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
@@ -22,7 +33,7 @@ CSV = False
 DUMP_PER_BR_STATS = True
 PRODUCE_HARD_BRS = False
 HARD_BRS_TAG = None
-BUDGET = 2
+BUDGET = 100
 
 State = namedtuple('State', ['selected_brs_set', 'selected_brs_breakdown',
                              'total_size', 'total_mpki_reduction'])
@@ -89,7 +100,7 @@ def get_mpki_reductions(benchmark, experiment, inp, hard_brs_name):
 
   return {br: (tage_stats[br].weighted_stats.mpki
                - cnn_stats[br].weighted_stats.mpki)
-          for br in good_brs if br in tage_stats and br in cnn_stats}
+          for br in good_brs if br in tage_stats and br in cnn_stats and tage_stats[br].weighted_stats.mpki > cnn_stats[br].weighted_stats.mpki}
 
 
 def select_next_br(mpki_reductions, selected_brs):
@@ -246,11 +257,11 @@ def print_results_verbose(benchmarks_dynamic_states, best_assignments, size):
       weight * common.read_tage_stats(
         TAGE_CONFIG_NAME, benchmark, inp, tag)[-1].weighted_stats.mpki
       for benchmark, inp, weight, hard_brs_name in SUITE) / sum_weights
-  
+
   print('========= Size: {}KB ============'.format(size))
   print('Total TAGE MPKI: {}'.format(total_tage_mpki))
   print('Total CNN MPKI: {}'.format(total_tage_mpki - total_mpki_reduction))
-  print('Total MPKI Reduction: {}'.format(total_mpki_reduction))
+  print('Total MPKI Reduction: {} ({}%)'.format(total_mpki_reduction, 100*(total_mpki_reduction/total_tage_mpki)))
 
   for benchmark_idx, (benchmark, inp, _, _) in enumerate(SUITE):
     state = benchmarks_dynamic_states[benchmark_idx][state_idx]
@@ -262,7 +273,7 @@ def print_results_verbose(benchmarks_dynamic_states, best_assignments, size):
     print('Benchmark: {}_{}'.format(benchmark, inp))
     print('TAGE MPKI: {}'.format(tage_mpki))
     print('CNN MPKI: {}'.format(tage_mpki - state.total_mpki_reduction))
-    print('MPKI Reduction: {}'.format(state.total_mpki_reduction))
+    print('MPKI Reduction: {} ({}%)'.format(state.total_mpki_reduction, 100*(state.total_mpki_reduction/tage_mpki)))
     for experiment, _ in CONFIGS:
       selected_brs = state.selected_brs_breakdown[experiment]
       print('Config {} ---> {} models: {}'.format(
@@ -287,14 +298,14 @@ def dump_per_br_stats(benchmarks_dynamic_states, best_assignments, size):
     stat_file_defs = [
       ('PC', lambda br, tage, cnn: hex(br)),
       ('Total', lambda br, tage, cnn: tage.total),
-      ('Tage Correct', lambda br, tage, cnn: tage.correct),
-      ('Tage Inorrect', lambda br, tage, cnn: tage.incorrect),
+      #('Tage Correct', lambda br, tage, cnn: tage.correct),
+      #('Tage Inorrect', lambda br, tage, cnn: tage.incorrect),
       ('Tage Accuracy', lambda br, tage, cnn: tage.accuracy),
-      ('Tage MPKI', lambda br, tage, cnn: tage.mpki),
-      ('CNN Correct', lambda br, tage, cnn: cnn.correct),
-      ('CNN Inorrect', lambda br, tage, cnn: cnn.incorrect),
+      #('Tage MPKI', lambda br, tage, cnn: tage.mpki),
+      #('CNN Correct', lambda br, tage, cnn: cnn.correct),
+      #('CNN Inorrect', lambda br, tage, cnn: cnn.incorrect),
       ('CNN Accuracy', lambda br, tage, cnn: cnn.accuracy),
-      ('CNN MPKI', lambda br, tage, cnn: cnn.mpki),
+      #('CNN MPKI', lambda br, tage, cnn: cnn.mpki),
       ('MPKI Reduction', lambda br, tage, cnn: tage.mpki - cnn.mpki),
       ('Selected Branch', (lambda br, tage, cnn:
                            'Yes' if br in state.selected_brs_set else 'No')),

@@ -2,7 +2,7 @@ import yaml
 import get_traces
 
 yaml_dir = "/work/muke/Branch-Correlations/BranchNet/environment_setup/"
-trace_dir = "/mnt/data/results/branch-project/traces/"
+trace_dir = "/mnt/data/results/branch-project/traces-x86/"
 
 benchmark_dict = {}
 partition_dict = {}
@@ -37,7 +37,7 @@ def write_partitions(benchmark):
 
 
 
-for bench in get_traces.benchmarks:
+for bench in ["605.mcf_s","641.leela_s"]:
     if bench == "648.exchange2_s":
         print("Warning: the alberta workloads for exchange2 still don't get serialised safely in yaml automatically")
     write_benchmarks(bench)
