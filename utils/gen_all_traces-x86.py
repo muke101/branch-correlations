@@ -7,12 +7,14 @@ import psutil
 import time
 
 chkpt_dir = "/mnt/data/checkpoints-expanded-x86/"
-results_dir = "/mnt/data/results/branch-project/traces-bpred/"
-#benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
-#           "625.x264_s", "631.deepsjeng_s",
-#           "641.leela_s", "657.xz_s", "602.gcc_s",
-#           "620.omnetpp_s", "648.exchange2_s"]
-benches = ["641.leela_s"]
+results_dir = "/mnt/data/results/branch-project/traces-x86/"
+benches = ["600.perlbench_s", "605.mcf_s", 
+           "623.xalancbmk_s",
+           "625.x264_s", "631.deepsjeng_s",
+           "641.leela_s", 
+           #"657.xz_s", "602.gcc_s",
+           "620.omnetpp_s", "648.exchange2_s"]
+benches = ["625.x264_s"]
 
 if len(sys.argv) > 1:
     sub_benches = []

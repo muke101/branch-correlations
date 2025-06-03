@@ -3,11 +3,11 @@ import sys
 import get_traces
 import polars as pl
 
-trace_dir = "/mnt/data/results/branch-project/traces/"
-h2p_dir = "/mnt/data/results/branch-project/h2ps/"
+trace_dir = "/mnt/data/results/branch-project/traces-x86/"
+h2p_dir = "/mnt/data/results/branch-project/h2ps-x86/"
 binary = sys.argv[1]
 r2 = r2pipe.open(binary)
-h2p_file = h2p_dir+"641.leela_s_top100"
+h2p_file = h2p_dir+"605.mcf_s_top100"
 
 addrs = [int(i.strip(),16) for i in open(h2p_file).readlines()]
 

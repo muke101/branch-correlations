@@ -17,8 +17,9 @@ def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):
     for file, weight in files_weights:
         df = pl.read_parquet(trace_dir+file)
         for inst_addr in df['inst_addr'].unique():
-            filtered = df.filter(df['inst_addr'] == inst_addr)
-            #total = filtered.shape[0]
+            filtered = df.filter((df['inst_addr'] == inst_addr) & (df['warmed_up'] == 1))
+            total = filtered.shape[0]
+            if total == 0: continue
             incorrect = filtered['mispredicted'].sum()
             #correct = total - incorrect
             mispred_dict[inst_addr] += incorrect * weight
@@ -48,6 +49,7 @@ def process_benchmark(benchmark):
 if __name__ == "__main__":
     num_threads = os.cpu_count()
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        #futures = {executor.submit(process_benchmark, bench): bench for bench in [b for b in benchmarks if b not in ["657.xz_s", "602.gcc_s", "600.perlbench_s"]]}
         futures = {executor.submit(process_benchmark, bench): bench for bench in ["605.mcf_s"]}
 
         for future in as_completed(futures):

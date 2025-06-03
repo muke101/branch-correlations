@@ -1,12 +1,12 @@
 import get_traces
 import os
 import csv
-import polars as pl
+import polars as pl 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 stats_dir = "/mnt/data/results/branch-project/stats-x86/tagescl64/"
-trace_dir = "/mnt/data/results/branch-project/traces-bpred/"
+trace_dir = "/mnt/data/results/branch-project/traces-x86/"
 
 def write_stats(trace):
     print("Processing ", trace)
@@ -24,8 +24,10 @@ def write_stats(trace):
         dir_t_pred_nt = 0;
         dir_nt_pred_t = 0;
         dir_nt_pred_nt = 0;
-        filtered = df.filter(df['inst_addr'] == inst_addr)
+        filtered = df.filter((df['inst_addr'] == inst_addr) & (df['warmed_up'] == 1))
         total = filtered.height
+        #branch only occurs in warmup
+        if total == 0: continue
         total_incorrect = filtered['mispredicted'].sum()
         total_correct = total - total_incorrect
         for row in filtered.iter_rows():
@@ -67,6 +69,7 @@ if __name__ == "__main__":
     all_traces = []
     #for bench in get_traces.benchmarks:
     for bench in ["605.mcf_s"]:
+        if bench in ["657.xz_s", "600.perlbench_s", "602.gcc_s"]: continue
         traces = get_traces.get_trace_set(bench, 'test')
         traces += get_traces.get_trace_set(bench, 'validate')
         for trace, _ in traces:
