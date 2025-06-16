@@ -1,4 +1,4 @@
-branch_traces_dir: /mnt/data/results/branch-project/traces-bpred
+branch_traces_dir: /mnt/data/results/branch-project/traces-x86
 experiments_dir: /mnt/data/results/branch-project/results-x86
 hard_brs_dir: /mnt/data/results/branch-project/h2ps-x86
 ml_datasets_dir: /mnt/data/results/branch-project/datasets-x86
