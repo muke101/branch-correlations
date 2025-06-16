@@ -18,19 +18,27 @@ import common
 from common import PATHS, BENCHMARKS_INFO
 
 #TARGET_BENCHMARKS = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
-# "625.x264_s", #"631.deepsjeng_s",
+# "625.x264_s", "631.deepsjeng_s",
 # "641.leela_s", "657.xz_s", "602.gcc_s",
 # "620.omnetpp_s", "648.exchange2_s"]
+TARGET_BENCHMARKS = ["605.mcf_s", "623.xalancbmk_s",
+ "625.x264_s", "631.deepsjeng_s",
+ "641.leela_s", 
+ "620.omnetpp_s", "648.exchange2_s"]
 TARGET_BENCHMARKS = ["605.mcf_s"]
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30
 
 
-def read_branch_trace(trace_path):
+def read_full_branch_trace(trace_path):
     df = pl.read_parquet(trace_path)
     return df['inst_addr'].to_numpy(), df['taken'].to_numpy() 
 
+def read_warmed_up_branch_trace(trace_path):
+    df = pl.read_parquet(trace_path)
+    df = df.filter(df['warmed_up'] == 1)
+    return df['inst_addr'].to_numpy(), df['taken'].to_numpy() 
 
 def create_new_dataset(dataset_path, pcs, directions):
     '''
@@ -80,22 +88,25 @@ def get_work_items():
                 dataset_path = '{}/{}.hdf5'.format(
                     datasets_dir, file_basename)
                 
-                if os.path.exists(dataset_path): continue
+                #if os.path.exists(dataset_path): continue
                 work_items.append((trace_path, dataset_path, hard_brs))
     return work_items
 
 
 def gen_dataset(trace_path, dataset_path, hard_brs):
     print('reading file', trace_path)
-    pcs, directions = read_branch_trace(trace_path)
+    pcs, directions = read_full_branch_trace(trace_path)
 
-    print('Creating output file', dataset_path)
     fptr = create_new_dataset(dataset_path, pcs, directions)
+
+    #only index along the part of the trace after warmup
+    warmed_up_pcs, warmed_up_directions = read_warmed_up_branch_trace(trace_path)
 
     for br_pc in hard_brs:
         #print('processing branch {}'.format(hex(br_pc)))
         #find indicies of hard branches
         trace_br_indices = np.argwhere(pcs == br_pc).squeeze(axis=1)
+        trace_br_indices = np.array([i for i in filter(lambda i: i > len(pcs) - len(warmed_up_pcs), trace_br_indices)])
         fptr.create_dataset(
             'br_indices_{}'.format(hex(br_pc)),
             data=trace_br_indices,
@@ -103,11 +114,14 @@ def gen_dataset(trace_path, dataset_path, hard_brs):
             compression_opts=9,
         )
         num_taken = np.count_nonzero(
-            np.bitwise_and(pcs == br_pc, directions == 1))
+            np.bitwise_and(warmed_up_pcs == br_pc, warmed_up_directions == 1))
         num_not_taken = np.count_nonzero(
-            np.bitwise_and(pcs == br_pc, directions == 0))
+            np.bitwise_and(warmed_up_pcs == br_pc, warmed_up_directions == 0))
         fptr.attrs['num_taken_{}'.format(hex(br_pc))] = num_taken
         fptr.attrs['num_not_taken_{}'.format(hex(br_pc))] = num_not_taken
+
+    fptr.close()
+    print('Created output file', dataset_path)
 
 
 def main():

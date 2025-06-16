@@ -15,9 +15,9 @@ TARGET_BENCHMARKS = ["605.mcf_s"]
 #        "641.leela_s", 
 #        "620.omnetpp_s"]#, "648.exchange2_s"]
 TAGE_CONFIG_NAME = 'tagescl64'
-NUM_BRS_TO_PRINT = 200
+NUM_BRS_TO_PRINT = 100
 PRODUCE_HARD_BR_FILES = True
-HARD_BR_FILE_NAME = 'top200'
+HARD_BR_FILE_NAME = 'top100'
 
 BRANCH_STATS_TEMPLATE = (
     "*****    {line_name: <15.15}{weighted_specifier:<12.12}"

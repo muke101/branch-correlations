@@ -8,20 +8,18 @@ import operator
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
-#SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-#  (i, '0', 1.0, 'top100') for i in ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "657.xz_s", "620.omnetpp_s", "648.exchange2_s"]
-#  #(i, '0', 1.0, 'top100') for i in ["641.leela_s"]
-#]
-#SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
-#  (i, '1', 1.0, 'top100') for i in ["600.perlbench_s", "625.x264_s", "657.xz_s"] 
-#]
-#SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
-#  (i, '2', 1.0, 'top100') for i in ["600.perlbench_s", "625.x264_s"] 
-#]
-
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-  (i, '0', 1.0, 'top100') for i in ["605.mcf_s"]
+  (i, '0', 1.0, 'top100') for i in ["605.mcf_s", "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "620.omnetpp_s", "648.exchange2_s"]
 ]
+SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
+  (i, '1', 1.0, 'top100') for i in ["625.x264_s"] 
+]
+SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
+  (i, '2', 1.0, 'top100') for i in ["625.x264_s"] 
+]
+#SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
+#  (i, '0', 1.0, 'top100') for i in ["625.x264_s"]
+#]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
   ('test', 1),
@@ -30,10 +28,10 @@ CONFIGS = [ # list of (experiment name, model budget) tuples
 TAGE_CONFIG_NAME = 'tagescl64'
 
 CSV = False
-DUMP_PER_BR_STATS = True
+DUMP_PER_BR_STATS = False
 PRODUCE_HARD_BRS = False
 HARD_BRS_TAG = None
-BUDGET = 100
+BUDGET = 50
 
 State = namedtuple('State', ['selected_brs_set', 'selected_brs_breakdown',
                              'total_size', 'total_mpki_reduction'])
@@ -100,7 +98,7 @@ def get_mpki_reductions(benchmark, experiment, inp, hard_brs_name):
 
   return {br: (tage_stats[br].weighted_stats.mpki
                - cnn_stats[br].weighted_stats.mpki)
-          for br in good_brs if br in tage_stats and br in cnn_stats and tage_stats[br].weighted_stats.mpki > cnn_stats[br].weighted_stats.mpki}
+          for br in good_brs if br in tage_stats and br in cnn_stats} #and tage_stats[br].weighted_stats.mpki > cnn_stats[br].weighted_stats.mpki}
 
 
 def select_next_br(mpki_reductions, selected_brs):
