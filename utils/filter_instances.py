@@ -153,13 +153,15 @@ def filter_instances(loader, stats):
                 stats.selected_confidence_average += output
     return results
 
-def coalecse_branches(correlated_branches):
+#FIXME not sure i like the top80 approach to figuring out distribution. if a single feature had 50% of the impact that'd still be enough. need a better way to determine when a single branch is informative enough. something like concentration instead?
+
+def coalecse_branches(correlated_branches, stats):
 
     # each checkpoint has many instances, with different selections of impactful branches.
     # take the average of absolute impactfulness in the right direction for each branch, to select the overall most impactful branch in that checkpoint
     # have to pass through the real results and penalize branches that go in the opposite direction
 
-    #TODO: figure out what impact represents. if its already a percentage of 100 then that makes things easy, otherwise have to calculate that myself to find top 80%
+    #TODO: figure out what impact represents. if its already a percentage of 100 then that makes things easy, otherwise have to calculate that myself to find top 80%. im not sure how this fits with negative values tho
     
     for workload in correlated_branches:
         for checkpoint in correlated_branches[workload]:
@@ -167,25 +169,60 @@ def coalecse_branches(correlated_branches):
             for instance in correlated_branches[workload][checkpoint]:
                 #per instance goes here
                 total_impact = 0
-                i = 0
-                for pc, impact in instance: 
+                top80_impact = 0
+                n = 0
+                for pc, impact, label in instance: 
+                    correct_direction = (impact < 0 and label < 0) or (impact > 0 and label > 0)
+                    impact = abs(impact)
+                    if not correct_direction: impact *= -1
                     unique_branches[pc].append(impact) 
-                    total_impact += impact
-                    i += 1 
+
+                stats.top80_instance_average_count += n
 
             for pc in unique_branches:
                 #per checkpoint goes here
                 unique_branches[pc] = statistics.fmean(unique_branches[pc])
-        #per workload goes here
+
+            #select the features which provide 80% of the total impact
+            sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+            total_impact = sum([i[1] for i in sorted_features])
+            top80_impact = 0
+            n = 0
+            for f in sorted_features:
+               top80_impact += f[1]
+               n += 1
+               if top80_impact / total_impact >= 0.8: break
+            stats.top80_checkpoints_average_count += n
+
+            correlated_branches[workload][checkpoint] = sorted_features[:n] #FIXME: truancating with potentially bad method. its possible we may not want to trauncate until weighting anyway.
+
+    return correlated_branches
 
 
-def weight_branches(correlated_branches):
-    
+def weight_branches(correlated_branches, stats):
+
+    # collaspe per-checkpoint averages of instances into per-workload averages of checkpoints
+    # for each checkpoint build a map of unique branches to checkpoint averages. then take the weighted gmean of this list by the simpoint weight.
+
     for workload in correlated_branches:
+        unique_branches = defaultdict(lambda: ([],[])) #impact, weight
         for checkpoint in correlated_branches[workload]:
-            for instance in correlated_branches[workload][checkpoint]:
-                pass
-            
+            weight = get_traces.get_simpoint_weight(benchmark, workload, checkpoint)
+            for pc, impact in correlated_branches[workload][checkpoint]:
+                unique_branches[pc][0].append(impact)
+                unique_branches[pc][1].append(weight)
+        for pc in unique_branches:
+            unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
+
+        correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+    #per workload goes here
+
+    return correlated_branches
+
+#average branches:
+# build up another dictionary of unique pcs, now across workloads, taking the gmean and sorting at the end. you then have a list of N most impactful branches for this specific H2P! still not sure how to decide how many is enough.
+# have an option to do this final step with just eval or with eval plus training
+# TODO: might have to add another layer of averaging stats
 
 aggregated_stats = AggregatedStats()
 
@@ -208,34 +245,13 @@ for branch in good_branches:
     good_instances = filter_instances(train_loader, stats)
     good_instances.update(filter_instances(eval_loader, stats))
 
-
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = some_lime_function(good_instances, num_features = 5)
+    correlated_branches = some_lime_function(good_instances, num_features = 50)
 
     # combines results per-instances to select most impactful branches per checkpoint
-    correlated_branches = coalesce_branches(correlated_branches)
+    correlated_branches = coalesce_branches(correlated_branches, stats)
 
-    correlated_branches = weight_branches(correlated_branches)
-
-    total = 0
-    correct = 0
-    # train.0, alberta.0...
-    for workload in results:
-        workload_total = 0
-        workload_correct = 0
-        for checkpoint in results[workload]:
-            weight = get_traces.get_simpoint_weight(benchmark, workload, checkpoint) #TODO: parameterise benchmark
-            results[workload][checkpoint][0] *= weight
-            results[workload][checkpoint][1] *= weight
-            workload_total += results[workload][checkpoint][0] 
-            workload_correct += results[workload][checkpoint][1] 
-        #FIXME: figure out if this is the correct way to aggregate across multiple workloads. probably isn't as weights should equal 1 within workloads. I think we're going off-script from branchnet with considering workloads together here.
-        total += workload_total
-        correct += workload_correct
-    accuracy = (correct/total)*100
-    print("Total accuracy for "+str(branch)+": ", accuracy)
-    print("Total histories: ", len(loader.instances))
-    print("Unique histories: ", len(unique_histories))
+    correlated_branches = weight_branches(correlated_branches, stats)
 
     stats.finalise()
     aggregated_stats.add(stats)
