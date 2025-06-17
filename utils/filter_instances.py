@@ -11,6 +11,7 @@ import numpy as np
 benchmark = sys.argv[1]
 
 class AggregateStats:
+    # This class aggregates statistics across multiple branches for a specific benchmark.
     def __init__(self):
         self.stats = {} 
         self.confidence_average = []
@@ -19,9 +20,10 @@ class AggregateStats:
         self.selected_confidence_average = []
         self.selected_confidence_stddev = []
         self.percent_selected_detrimental_impact_average = []
-        self.top80_instance_average_count = []
-        self.top80_checkpoint_average_count = []
-        self.top80_workload_average_count = []
+        self.instance_gini_coeff = []
+        self.checkpoint_gini_coeff = []
+        self.workload_gini_coeff = []
+        self.benchmark_gini_coeff = []
 
     def add(self, stat):
         self.confidence_average.append(stat.confidence_average) 
@@ -29,10 +31,11 @@ class AggregateStats:
         self.confidence_75th_percentile.append(stat.confidence_75th_percentile) 
         self.selected_confidence_average.append(stat.selected_confidence_average) 
         self.selected_confidence_stddev.append(stat.selected_confidence_stddev) 
-        self.percent_selected_detrimental_impact_average.append(stat.percent_selected_detrimental_impact_average) 
-        self.top80_instance_average_count.append(stat.top80_instance_average_count) 
-        self.top80_checkpoint_average_count.append(stat.top80_checkpoint_average_count) 
-        self.top80_workload_average_count.append(stat.top80_workload_average_count) 
+        self.percent_selected_detrimental_impact_average.append(stat.percent_selected_detrimental_impact_average)
+        self.instance_gini_coeff.append(stat.instance_gini_coeff)
+        self.checkpoint_gini_coeff.append(stat.checkpoint_gini_coeff)
+        self.workload_gini_coeff.append(stat.workload_gini_coeff)
+        self.benchmark_gini_coeff.append(stat.benchmark_gini_coeff)
         self.stats[stat.pc] = stat
 
     def finalise(self):
@@ -50,11 +53,12 @@ class AggregateStats:
         log_stddev_avg = np.sqrt(np.mean(log_stddevs ** 2))
         self.selected_confidence_average = np.exp(log_mean_avg)
         self.selected_confidence_stddev = np.exp(log_stddev_avg)
+        self.instance_gini_coeff = gmean(self.instance_gini_coeff)
+        self.checkpoint_gini_coeff = gmean(self.checkpoint_gini_coeff)
+        self.workload_gini_coeff = gmean(self.workload_gini_coeff)
+        self.benchmark_gini_coeff = gmean(self.benchmark_gini_coeff)
 
         self.percent_selected_detrimental_impact_average = gmean(self.percent_selected_detrimental_impact_average)
-        self.top80_instance_average_count = gmean(self.top80_instance_average_count)
-        self.top80_checkpoint_average_count = gmean(self.top80_checkpoint_average_count)
-        self.top80_workload_average_count = gmean(self.top80_workload_average_count)
 
     def print(self):
         print("Average stats for benchmark "+benchmark+":")
@@ -64,23 +68,26 @@ class AggregateStats:
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
         print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
-        print("\tAverage per instance number of features capturing 80% of impact: ", self.top80_instance_average_count)
-        print("\tAverage per checkpoint number of features capturing 80% of impact: ", self.top80_checkpoint_average_count)
-        print("\tAverage per workload number of features capturing 80% of impact: ", self.top80_workload_average_count)
+        print("\tAverage Gini coefficient per instance ", self.instance_gini_coeff)
+        print("\tAverage Gini coefficient per checkpoint ", self.checkpoint_gini_coeff)
+        print("\tAverage Gini coefficient per workload ", self.workload_gini_coeff)
+        print("\tAverage Gini coefficient for benchmark ", self.benchmark_gini_coeff)
         print()
 
 class Stats:
+    # This class holds statistics for a specific branch.
     def __init__(self, pc):
         self.pc = pc
-        self.confidence_average = 0
+        self.confidence_average = []
         self.confidence_stddev = 0
         self.confidence_75th_percentile = 0
-        self.selected_confidence_average = 0
+        self.selected_confidence_average = []
         self.selected_confidence_stddev = 0
-        self.percent_selected_detrimental_impact_average = 0
-        self.top80_instance_average_count = 0
-        self.top80_checkpoint_average_count = 0
-        self.top80_workload_average_count = 0
+        self.percent_selected_detrimental_impact_average = []
+        self.instance_gini_coeff = []
+        self.checkpoint_gini_coeff = []
+        self.workload_gini_coeff = []
+        self.benchmark_gini_coeff = 0
 
     def finalise(self):
         self.confidence_75th_percentile = np.quantile(self.confidence_average, 0.75)
@@ -89,9 +96,9 @@ class Stats:
         self.selected_confidence_stddev = np.std(self.selected_confidence_average)
         self.selected_confidence_average = statistics.fmean(self.selected_confidence_average)
         self.percent_selected_detrimental_impact_average = gmean(self.percent_selected_detrimental_impact_average)
-        self.top80_instance_average_count = statistics.fmean(self.top80_instance_average_count)
-        self.top80_checkpoint_average_count = statistics.fmean(self.top80_checkpoint_average_count)
-        self.top80_workload_average_count = statistics.fmean(self.top80_workload_average_count)
+        self.instance_gini_coeff = statistics.fmean(self.instance_gini_coeff)
+        self.checkpoint_gini_coeff = statistics.fmean(self.checkpoint_gini_coeff)
+        self.workload_gini_coeff = statistics.fmean(self.workload_gini_coeff)
 
     def print(self):
         print("Stats for branch "+self.pc+":")
@@ -101,9 +108,10 @@ class Stats:
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
         print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
-        print("\tAverage per instance number of features capturing 80% of impact: ", self.top80_instance_average_count)
-        print("\tAverage per checkpoint number of features capturing 80% of impact: ", self.top80_checkpoint_average_count)
-        print("\tAverage per workload number of features capturing 80% of impact: ", self.top80_workload_average_count)
+        print("\tAverage Gini coefficient per instance ", self.instance_gini_coeff)
+        print("\tAverage Gini coefficient per checkpoint ", self.checkpoint_gini_coeff)
+        print("\tAverage Gini coefficient per workload ", self.workload_gini_coeff)
+        print("\tGini coefficient for benchmark ", self.benchmark_gini_coeff)
         print()
 
 dir_results = '/mnt/data/results/branch-project/results/test/'+benchmark
@@ -127,6 +135,19 @@ training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
 model.to('cuda')
 
+def gini(array):
+    array = array.flatten()
+    # Values cannot be 0:
+    array = array + 0.0000001
+    # Values must be sorted:
+    array = np.sort(array)
+    # Index per array element:
+    index = np.arange(1,array.shape[0]+1)
+    # Number of array elements:
+    n = array.shape[0]
+    # Gini coefficient:
+    return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
+
 def filter_instances(loader, stats):
     num_instances = len(loader.instances)
     results = {}
@@ -144,16 +165,13 @@ def filter_instances(loader, stats):
                 print(history) 
                 print("Found history with more dimensions than expected")
                 exit(1)
-            history_list = tuple(history[0].tolist())
             label = label.cuda()
             output = model(history)
-            stats.confidence_average += output
+            stats.confidence_average.append(output)
             if ((output > 0 and label == 1) or (output < 0 and label == 0)) and abs(output) > threshhold:
                 results[workload][checkpoint].append(instance)
-                stats.selected_confidence_average += output
+                stats.selected_confidence_average.append(output)
     return results
-
-#FIXME not sure i like the top80 approach to figuring out distribution. if a single feature had 50% of the impact that'd still be enough. need a better way to determine when a single branch is informative enough. something like concentration instead?
 
 def coalecse_branches(correlated_branches, stats):
 
@@ -161,40 +179,27 @@ def coalecse_branches(correlated_branches, stats):
     # take the average of absolute impactfulness in the right direction for each branch, to select the overall most impactful branch in that checkpoint
     # have to pass through the real results and penalize branches that go in the opposite direction
 
-    #TODO: figure out what impact represents. if its already a percentage of 100 then that makes things easy, otherwise have to calculate that myself to find top 80%. im not sure how this fits with negative values tho
-    
     for workload in correlated_branches:
         for checkpoint in correlated_branches[workload]:
             unique_branches = defaultdict(list)
             for instance in correlated_branches[workload][checkpoint]:
-                #per instance goes here
-                total_impact = 0
-                top80_impact = 0
-                n = 0
-                for pc, impact, label in instance: 
+                impacts = []
+                for pc, impact, label in instance:
                     correct_direction = (impact < 0 and label < 0) or (impact > 0 and label > 0)
                     impact = abs(impact)
+                    impacts.append(impact)
                     if not correct_direction: impact *= -1
-                    unique_branches[pc].append(impact) 
-
-                stats.top80_instance_average_count += n
+                    unique_branches[pc].append(impact)
+                stats.instance_gini_coeff.append(gini(np.array(impacts)))
 
             for pc in unique_branches:
-                #per checkpoint goes here
                 unique_branches[pc] = statistics.fmean(unique_branches[pc])
 
-            #select the features which provide 80% of the total impact
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
-            total_impact = sum([i[1] for i in sorted_features])
-            top80_impact = 0
-            n = 0
-            for f in sorted_features:
-               top80_impact += f[1]
-               n += 1
-               if top80_impact / total_impact >= 0.8: break
-            stats.top80_checkpoints_average_count += n
 
-            correlated_branches[workload][checkpoint] = sorted_features[:n] #FIXME: truancating with potentially bad method. its possible we may not want to trauncate until weighting anyway.
+            stats.checkpoint_gini_coeff.append(gini(np.array([i[1] for i in sorted_features])))
+
+            correlated_branches[workload][checkpoint] = sorted_features
 
     return correlated_branches
 
@@ -215,16 +220,33 @@ def weight_branches(correlated_branches, stats):
             unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
 
         correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
-    #per workload goes here
+
+        stats.workload_gini_coeff.append(gini(np.array([i[1] for i in correlated_branches[workload]])))
 
     return correlated_branches
 
-#average branches:
-# build up another dictionary of unique pcs, now across workloads, taking the gmean and sorting at the end. you then have a list of N most impactful branches for this specific H2P! still not sure how to decide how many is enough.
-# have an option to do this final step with just eval or with eval plus training
-# TODO: might have to add another layer of averaging stats
+def average_branches(correlated_branches, stats, use_train = True):
+    # now we have a list of branches per workload, we can average them across workloads
+    # this is the final step to get the most impactful branches for this H2P
 
-aggregated_stats = AggregatedStats()
+    unique_branches = defaultdict(list)
+    for workload in correlated_branches:
+        if not use_train and 'train' not in workload: continue #eval workloads are actually called 'train'
+        for pc, impact in correlated_branches[workload]:
+            unique_branches[pc].append(impact)
+
+    for pc in unique_branches:
+        unique_branches[pc] = gmean(unique_branches[pc])
+
+    sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+
+    gini_coeff = gini(np.array([i[1] for i in sorted_features]))
+
+    stats.benchmark_gini_coeff = gini_coeff
+
+    return (sorted_features, gini_coeff)
+
+aggregate_stats = AggregateStats()
 
 for branch in good_branches:
 
@@ -246,15 +268,36 @@ for branch in good_branches:
     good_instances.update(filter_instances(eval_loader, stats))
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = some_lime_function(good_instances, num_features = 50)
+    correlated_branches = some_lime_function(good_instances, num_features = 50, samples = 10000)
 
     # combines results per-instances to select most impactful branches per checkpoint
-    correlated_branches = coalesce_branches(correlated_branches, stats)
+    correlated_branches = coalecse_branches(correlated_branches, stats)
 
     correlated_branches = weight_branches(correlated_branches, stats)
 
-    stats.finalise()
-    aggregated_stats.add(stats)
+    # finally, returns correlated_branches as a sorted list of branch pcs paired with impact
+    correlated_branches, gini_coeff = average_branches(correlated_branches, stats)
 
-aggregated_stats.finalise()
-aggregated_stats.print()
+    gamma = 0.3
+    threshold = 1.0 - gamma * gini_coeff
+    total = sum([i[1] for i in correlated_branches])
+    cumulative = 0
+    selected_branches = []
+    for pc, impact in correlated_branches:
+        cumulative += impact
+        if cumulative / total < threshold:
+            selected_branches.append((pc, impact))
+        else:
+            break
+
+    print("Selected branches for branch {}:".format(branch), end=' ')
+    c = 0
+    for pc, impact in selected_branches:
+        print("{}: {}".format(pc, impact), end=', ' if c < len(selected_branches) - 1 else '\n')
+        c += 1
+
+    stats.finalise()
+    aggregate_stats.add(stats)
+
+aggregate_stats.finalise()
+aggregate_stats.print()
