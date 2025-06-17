@@ -3,9 +3,55 @@
   test_set:
   - '0'
   train_set:
-  - test01
   - test03
   - test02
+  - test01
+  validation_set:
+  - train.0
+623.xalancbmk_s:
+  spec_name: 623.xalancbmk_s
+  test_set:
+  - '0'
+  train_set:
+  - xsltm-short
+  - functions
+  - decoy
+  - xmark
+  validation_set:
+  - train.0
+625.x264_s:
+  spec_name: 625.x264_s
+  test_set:
+  - '0'
+  - '1'
+  - '2'
+  train_set:
+  - notld-2
+  - burma-gray-2
+  - disco
+  - disco-2
+  - burma
+  - notld
+  - burma-2
+  - burma-gray
+  - disco-gray-2
+  - disco-gray
+  validation_set:
+  - train.0
+631.deepsjeng_s:
+  spec_name: 631.deepsjeng_s
+  test_set:
+  - '0'
+  train_set:
+  - medium-2
+  - short-1
+  - long-1
+  - short-2
+  - medium-3
+  - medium-1
+  - long-2
+  - short-3
+  - long-3
   validation_set:
   - train.0
 641.leela_s:
@@ -22,5 +68,36 @@
   - short-19
   - short-13
   - long-9
+  validation_set:
+  - train.0
+620.omnetpp_s:
+  spec_name: 620.omnetpp_s
+  test_set:
+  - '0'
+  train_set:
+  - rand9
+  - line
+  - star
+  - rand27
+  - ring
+  - tree
+  - rand18
+  validation_set:
+  - train.0
+648.exchange2_s:
+  spec_name: 648.exchange2_s
+  test_set:
+  - '0'
+  train_set:
+  - '009'
+  - '003'
+  - '004'
+  - '002'
+  - '008'
+  - '000'
+  - '007'
+  - '006'
+  - '001'
+  - '005'
   validation_set:
   - train.0

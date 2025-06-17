@@ -37,7 +37,7 @@ def write_partitions(benchmark):
 
 
 
-for bench in ["605.mcf_s","641.leela_s"]:
+for bench in [b for b in get_traces.benchmarks if b not in ["600.perlbench_s", "602.gcc_s", "657.xz_s"]]:
     if bench == "648.exchange2_s":
         print("Warning: the alberta workloads for exchange2 still don't get serialised safely in yaml automatically")
     write_benchmarks(bench)

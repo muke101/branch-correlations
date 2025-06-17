@@ -2,10 +2,11 @@ import os
 import subprocess
 from subprocess import Popen
 
-spec = ["600.perlbench_s", "602.gcc_s", #"605.mcf_s",
+spec = ["600.perlbench_s", #"602.gcc_s", #"605.mcf_s",
         "620.omnetpp_s", "623.xalancbmk_s", "625.x264_s",
         "631.deepsjeng_s", #"641.leela_s", "657.xz_s"]
         "648.exchange2_s"]
+spec = ["625.x264_s"]
 expanded_spec_path = "/work/muke/spec2017-expanded-x86/"
 spec_path = "/work/muke/spec2017-x86/"
 simpoint = "/work/muke/SimPoint/bin/simpoint"
@@ -46,8 +47,8 @@ def run_alberta():
             bench_name = (bench,workload)
             bench_names.append(bench_name)
 
-run_test()
-run_train()
+#run_test()
+#run_train()
 run_alberta()
 
 for bench,workload in bench_names:

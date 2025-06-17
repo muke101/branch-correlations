@@ -11,7 +11,7 @@ import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
-#JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "648.exchange2_s", "657.xz_s", "602.gcc_s", "620.omnetpp_s"] ]
+#JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["605.mcf_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "648.exchange2_s", "620.omnetpp_s"] ]
 JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["605.mcf_s"] ]
 
 
@@ -98,7 +98,7 @@ def main():
         create_workdirs()
 
     cmds = create_job_commands()
-    common.run_parallel_commands_local(cmds, num_threads=3)
+    common.run_parallel_commands_local(cmds, num_threads=1)
 
 
 if __name__ == '__main__':

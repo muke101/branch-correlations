@@ -6,12 +6,12 @@ import random
 import time
 
 #run from base spec dir
-base_dir = os.getcwd() # = /mnt/data/checkpoints-expanded/benchmark
+base_dir = os.getcwd() # = /mnt/data/checkpoints-expanded-x86/benchmark
 base_run = False
-spec_path = "/work/muke/spec2017/"
-expanded_spec_path = "/work/muke/spec2017-expanded/"
+spec_path = "/work/muke/spec2017-x86/"
+expanded_spec_path = "/work/muke/spec2017-expanded-x86/"
 gem5 = "/work/muke/Branch-Correlations/trace-gem5/"
-results_dir = "/mnt/data/results/branch-project/traces-warmup/"
+results_dir = "/mnt/data/results/branch-project/traces-x86/"
 label_file_dir = "/work/muke/Branch-Correlations/label_files/"
 workloads = "/work/muke/alberta-workloads/"
 benchmark = base_dir.split("/")[4]
@@ -21,7 +21,7 @@ procs = []
 def get_bench_flags(run_name):
     #test
     if run_name.isdigit() and len(run_name) == 1:
-        if benchmark in ["602.gcc_s", "657.xs_s", "648.exchange2_s"]:
+        if benchmark in ["602.gcc_s", "657.xs_s"]:
             run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/modified/run_peak_refspeed_mytest-64.0000/"
         else:
             run_dir = spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
@@ -76,13 +76,19 @@ for out_dir in os.listdir(base_dir):
             outdir += str(cpt_number)+".out"
             trace_file = results_dir+benchmark+"."+run_name+"."+str(cpt_number)+".trace"
             #if os.path.exists(trace_file): continue #already ran this checkpoint
-            run = gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 2> >(grep -e 'TRACE:' -e 'Warmed up!' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
+            run = gem5+"build/X86/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 2> >(grep -e 'TRACE:' -e 'Warmed up!' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60)
             #try:
-            p = subprocess.Popen(run, shell=True, executable='/bin/bash')#, check=True)
-            time.sleep(60)
+            p = subprocess.run(run, shell=True, executable='/bin/bash', check=True)
+            #procs.append(p)
+            #time.sleep(60)
             #except ChildProcessError:
             #    subprocess.run("rm -f "+trace_file, shell=True)
             #    exit(1)
             os.chdir(base_dir)
+            break
+
+for p in procs:
+    code = p.wait()
+    if code is not None and code != 0: print("Crash: ", p.args); exit(1)

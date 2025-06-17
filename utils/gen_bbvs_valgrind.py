@@ -6,12 +6,12 @@ import psutil
 
 expanded_spec_path = "/work/muke/spec2017-expanded-x86/"
 spec_path = "/work/muke/spec2017-x86/"
-spec = ["600.perlbench_s", #"605.mcf_s",
-       "625.x264_s", "631.deepsjeng_s",
+#spec = #["600.perlbench_s", #"605.mcf_s",
+       #"625.x264_s", "631.deepsjeng_s",
        #"641.leela_s", 
        #"657.xz_s",
-       "620.omnetpp_s", "602.gcc_s", "623.xalancbmk_s",
-       "648.exchange2_s"]
+       #"620.omnetpp_s", "602.gcc_s", "623.xalancbmk_s",
+spec = ["625.x264_s"]
 workloads = "/work/muke/alberta-workloads/"
 
 procs = []
@@ -61,12 +61,12 @@ def run_alberta():
             flags = control.readlines()[0].strip()
             control.close()
             bench_name = bench+"."+workload
-            p = subprocess.run("valgrind --tool=exp-bbv --bb-out-file="+checkpoint_path+"/bbvs."+str(workload)+" "+binary+" "+flags+" 2>&1 > "+bench_name+".out 2>&1", shell=True, check=True)
-            #procs.append(p)
-            #load_balance()
+            p = subprocess.Popen("valgrind --tool=exp-bbv --bb-out-file="+checkpoint_path+"/bbvs."+str(workload)+" "+binary+" "+flags+" 2>&1 > "+bench_name+".out 2>&1", shell=True)#, check=True)
+            procs.append(p)
+            load_balance()
 
-run_test()
-run_train()
+#run_test()
+#run_train()
 run_alberta()
 
 active_procs = procs.copy()
