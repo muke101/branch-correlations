@@ -6,6 +6,8 @@ import sys
 from lime_functions import dir_config
 import pickle
 from dataset_loader import BranchDataset
+from model import BranchNet
+from model import BranchNetTrainingPhaseKnobs
 
 benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
@@ -15,9 +17,6 @@ good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].s
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
-
-from model import BranchNet
-from model import BranchNetTrainingPhaseKnobs
 
 dir_ckpt = dir_results + '/checkpoints'
 dir_config = dir_results + '/config.yaml'
@@ -33,7 +32,9 @@ def filter_instances(loader):
 
     results = {}
     for batch_x, batch_y, checkpoints, workloads in loader:
-        outputs = model(batch_x)
+        batch_x.to('cuda')
+        with torch.no_grad():
+            outputs = model(batch_x)
         for i in range(len(outputs)):
             workload = workloads[i]
             checkpoint = checkpoints[i]
