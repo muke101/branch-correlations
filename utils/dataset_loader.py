@@ -257,8 +257,7 @@ class BranchDataset(Dataset):
       True if TraceFileAccessor implementation is not thread-safe.
   """
 
-  def __init__(self, trace_paths, *,
-               br_pc, history_length, pc_bits, pc_hash_bits, hash_dir_with_pc,
+  def __init__(self, trace_paths, br_pc, history_length, pc_bits, pc_hash_bits, hash_dir_with_pc,
                in_mem=True, use_lock=False):
     """Creates a TraceFileAccessor for each trace_path and sets
     trace_end_instances to provide a unified global view to all traces.

@@ -70,7 +70,7 @@ def get_hdf5_set(benchmark, set_type):
     datasets = []
     test_pattern = r"^\d$"
 
-    for trace in os.listdir(hdf5_dir):
+    for trace in os.listdir(hdf5_dir+"/"+benchmark):
         if not trace.endswith('.hdf5') or not trace.startswith(benchmark): continue
         workload = trace.split('.')[2]
         if set_type == 'test':

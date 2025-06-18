@@ -8,10 +8,10 @@ import pickle
 from dataset_loader import BranchDataset
 
 benchmark = sys.argv[1]
-dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
+dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
+dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark+"/"
 #good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i for i in open(benchmark+"_branches").readlines()[0].split(",")]
+good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -32,6 +32,7 @@ model.to('cuda')
 def filter_instances(loader):
 
     results = {}
+    breakpoint()
     for batch_x, batch_y, checkpoint, workload in loader:
         breakpoint()
         if workload not in results:
@@ -62,9 +63,9 @@ for branch in good_branches:
     model.eval()
  
     #train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
-    #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validation')
-    train_loader = BranchDataset(get_traces.get_hdf5_set(benchmark, 'train'), branch, config['history_length'], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    eval_loader = BranchDataset(get_traces.get_hdf5_set(benchmark, 'validation'), branch, config['history_length'], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validate')
+    train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
     train_loader = torch.utils.data.DataLoader(train_loader, batch_size=64, shuffle=False)
     eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=64, shuffle=False)
 
