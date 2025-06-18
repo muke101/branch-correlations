@@ -1,9 +1,11 @@
+import get_traces
 import yaml
 import torch
 import os
 import sys
 from lime_functions import dir_config
 import pickle
+from dataset_loader import BranchDataset
 
 benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
@@ -16,7 +18,6 @@ sys.path.append(os.getcwd())
 
 from model import BranchNet
 from model import BranchNetTrainingPhaseKnobs
-from benchmark_branch_loader import BenchmarkBranchLoader
 
 dir_ckpt = dir_results + '/checkpoints'
 dir_config = dir_results + '/config.yaml'
@@ -30,11 +31,9 @@ model.to('cuda')
 
 def filter_instances(loader):
 
-    num_instances = len(loader.instances)
     results = {}
-    for c in range(0, num_instances):
-        instance = loader.get_instance(c)
-        history, label, workload, checkpoint = instance
+    for batch_x, batch_y, checkpoint, workload in loader:
+        breakpoint()
         if workload not in results:
             results[workload] = {}
         if checkpoint not in results[workload]:
@@ -62,8 +61,12 @@ for branch in good_branches:
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
  
-    train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
-    eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validation')
+    #train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
+    #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validation')
+    train_loader = BranchDataset(get_traces.get_hdf5_set(benchmark, 'train'), branch, config['history_length'], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    eval_loader = BranchDataset(get_traces.get_hdf5_set(benchmark, 'validation'), branch, config['history_length'], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    train_loader = torch.utils.data.DataLoader(train_loader, batch_size=64, shuffle=False)
+    eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=64, shuffle=False)
 
     confidences = filter_instances(train_loader)
     confidences.update(filter_instances(eval_loader))
