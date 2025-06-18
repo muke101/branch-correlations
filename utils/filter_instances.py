@@ -126,9 +126,10 @@ class Stats:
         print("\tGini coefficient for benchmark ", self.benchmark_gini_coeff)
         print()
 
-dir_results = '/mnt/data/results/branch-project/results/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets/'+benchmark
-good_branches = ['0x41faa0'] #TODO: actually populate this somehow
+dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
+#good_branches = ['0x41faa0'] #TODO: actually populate this somehow
+good_branches = [i for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -185,7 +186,7 @@ def filter_instances(loader, stats):
                 stats.selected_confidence_average.append(output)
     return results
 
-def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 10000):
+def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
 
     for workload in instances:
         for checkpoint in instances[workload]:
@@ -294,19 +295,29 @@ for branch in good_branches:
     model.eval()
  
     train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
-    eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validate')
+    eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validation')
+
+    print("Filtering instances")
 
     # good_instaces -> {workload: {checkpoint: [instances]}}
     good_instances = filter_instances(train_loader, stats)
     good_instances.update(filter_instances(eval_loader, stats))
 
+    print("Running lime")
+
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = run_lime(good_instances, eval_wrapper, num_features = 50, num_samples = 10000)
+    correlated_branches = run_lime(good_instances, eval_wrapper, num_features = 50, num_samples = 5000)
+
+    print("Averaging instances")
 
     # combines results per-instances to select most impactful branches per checkpoint
     correlated_branches = coalecse_branches(correlated_branches, stats)
 
+    print("Weighting checkpoints")
+
     correlated_branches = weight_branches(correlated_branches, stats)
+
+    print("Averaging workloads")
 
     # finally, returns correlated_branches as a sorted list of branch pcs paired with impact
     correlated_branches, gini_coeff = average_branches(correlated_branches, stats)
@@ -330,6 +341,8 @@ for branch in good_branches:
         c += 1
 
     stats.finalise()
+    stats.print()
+    exit(1)
     aggregate_stats.add(stats)
 
 aggregate_stats.finalise()

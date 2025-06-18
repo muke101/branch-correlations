@@ -111,10 +111,10 @@ class EvalWrapper:
         return EvalWrapper(model)
 
 
-with open(dir_tests + "example_history.pt", "rb") as f:
-    test_input = torch.load(f)
-with open(dir_tests + "example_label.pt", "rb") as f:
-    test_label = torch.load(f)
+#with open(dir_tests + "example_history.pt", "rb") as f:
+#    test_input = torch.load(f)
+#with open(dir_tests + "example_label.pt", "rb") as f:
+#    test_label = torch.load(f)
 
 """
 
