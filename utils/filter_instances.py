@@ -32,23 +32,20 @@ model.to('cuda')
 def filter_instances(loader):
 
     results = {}
-    breakpoint()
-    for batch_x, batch_y, checkpoint, workload in loader:
-        breakpoint()
-        if workload not in results:
-            results[workload] = {}
-        if checkpoint not in results[workload]:
-            results[workload][checkpoint] = [] 
-        with torch.no_grad():
-            history = history.unsqueeze(0).cuda()
-            if len(history.tolist()) != 1:
-                print(history) 
-                print("Found history with more dimensions than expected")
-                exit(1)
-            label = label.cuda()
-            output = model(history)
+    for batch_x, batch_y, checkpoints, workloads in loader:
+        outputs = model(batch_x)
+        for i in range(len(outputs)):
+            workload = workloads[i]
+            checkpoint = checkpoints[i]
+            history = batch_x[i]
+            output = outputs[i]
+            label = batch_y[i]
+            if workload not in results:
+                results[workload] = {}
+            if checkpoint not in results[workload]:
+                results[workload][checkpoint] = []
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                results[workload][checkpoint].append((label,output))
+                results[workload][checkpoint].append((label,output,history))
 
     return results
 
