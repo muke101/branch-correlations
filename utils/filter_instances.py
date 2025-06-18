@@ -7,6 +7,18 @@ import statistics
 from collections import defaultdict
 from scipy.stats import gmean
 import numpy as np
+from lime_functions import EvalWrapper, dir_config, tensor_to_string
+from lime.lime_text import LimeTextExplainer
+
+lime_explainer = LimeTextExplainer(
+    class_names=["not_taken", "taken"],
+    char_level=False,
+    split_expression=lambda x: x.split(" "),
+    bow=False,
+    feature_selection="forward_selection",
+    mask_string="0x000:not_taken",  # Mask string for unknown addresses
+)
+
 
 benchmark = sys.argv[1]
 
@@ -173,6 +185,26 @@ def filter_instances(loader, stats):
                 stats.selected_confidence_average.append(output)
     return results
 
+def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 10000):
+
+    for workload in instances:
+        for checkpoint in instances[workload]:
+            for i in range(len(instances[workload][checkpoint])):
+                history, label, _, _ = instances[workload][checkpoint][i]
+
+                exp = lime_explainer.explain_instance(
+                    tensor_to_string(history),
+                    eval_wrapper.probs_from_list_of_strings,
+                    num_features=num_features,
+                    num_samples=num_samples,
+                )
+
+                exp = (exp.as_list(), label)
+
+                instances[workload][checkpoint][i] = exp
+
+    return instances
+
 def coalecse_branches(correlated_branches, stats):
 
     # each checkpoint has many instances, with different selections of impactful branches.
@@ -183,17 +215,18 @@ def coalecse_branches(correlated_branches, stats):
         for checkpoint in correlated_branches[workload]:
             unique_branches = defaultdict(list)
             for instance in correlated_branches[workload][checkpoint]:
+                history, label = instance
                 impacts = []
-                for pc, impact, label in instance:
+                for pc, impact in history:
                     correct_direction = (impact < 0 and label < 0) or (impact > 0 and label > 0)
                     impact = abs(impact)
                     impacts.append(impact)
                     if not correct_direction: impact *= -1
-                    unique_branches[pc].append(impact)
-                stats.instance_gini_coeff.append(gini(np.array(impacts)))
+                    unique_branches[int(pc,16)].append(impact) #converting to int for performance
+                stats.instance_gini_coeff.append(gini(np.array(impacts))) #NOTE: this may not entirely make sense because it's blind to direction
 
             for pc in unique_branches:
-                unique_branches[pc] = statistics.fmean(unique_branches[pc])
+                unique_branches[pc] = np.mean(np.array(unique_branches[pc]))
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -202,7 +235,6 @@ def coalecse_branches(correlated_branches, stats):
             correlated_branches[workload][checkpoint] = sorted_features
 
     return correlated_branches
-
 
 def weight_branches(correlated_branches, stats):
 
@@ -257,6 +289,7 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config)
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
  
@@ -268,7 +301,7 @@ for branch in good_branches:
     good_instances.update(filter_instances(eval_loader, stats))
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = some_lime_function(good_instances, num_features = 50, samples = 10000)
+    correlated_branches = run_lime(good_instances, eval_wrapper, num_features = 50, num_samples = 10000)
 
     # combines results per-instances to select most impactful branches per checkpoint
     correlated_branches = coalecse_branches(correlated_branches, stats)
