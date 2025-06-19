@@ -32,7 +32,6 @@ class AggregateStats:
         self.stats = {} 
         self.confidence_average = []
         self.confidence_stddev = []
-        self.confidence_75th_percentile = []
         self.selected_confidence_average = []
         self.selected_confidence_stddev = []
         self.percent_selected_detrimental_impact_average = []
@@ -44,7 +43,6 @@ class AggregateStats:
     def add(self, stat):
         self.confidence_average.append(stat.confidence_average) 
         self.confidence_stddev.append(stat.confidence_stddev) 
-        self.confidence_75th_percentile.append(stat.confidence_75th_percentile) 
         self.selected_confidence_average.append(stat.selected_confidence_average) 
         self.selected_confidence_stddev.append(stat.selected_confidence_stddev) 
         self.percent_selected_detrimental_impact_average.append(stat.percent_selected_detrimental_impact_average)
@@ -61,7 +59,6 @@ class AggregateStats:
         log_stddev_avg = np.sqrt(np.mean(log_stddevs ** 2))
         self.confidence_average = np.exp(log_mean_avg)
         self.confidence_stddev = np.exp(log_stddev_avg)
-        self.confidence_75th_percentile = gmean(self.confidence_75th_percentile)
 
         log_averages = np.log(np.array(self.selected_confidence_average))
         log_stddevs = np.array(self.selected_confidence_stddev) / np.array(self.selected_confidence_average)
@@ -80,7 +77,6 @@ class AggregateStats:
         print("Average stats for benchmark "+benchmark+":")
         print("\tAverage confidence: ", self.confidence_average)
         print("\tConfidence stddev: ", self.confidence_stddev)
-        print("\t75th Percentile of confidence: ", self.confidence_75th_percentile)
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
         print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
@@ -94,10 +90,9 @@ class Stats:
     # This class holds statistics for a specific branch.
     def __init__(self, pc):
         self.pc = pc
-        self.confidence_average = []
+        self.confidence_average = 0
         self.confidence_stddev = 0
-        self.confidence_75th_percentile = 0
-        self.selected_confidence_average = []
+        self.selected_confidence_average = 0
         self.selected_confidence_stddev = 0
         self.percent_selected_detrimental_impact_average = []
         self.instance_gini_coeff = []
@@ -106,7 +101,6 @@ class Stats:
         self.benchmark_gini_coeff = 0
 
     def finalise(self):
-        self.confidence_75th_percentile = np.quantile(self.confidence_average, 0.75)
         self.confidence_stddev = np.std(self.confidence_average)
         self.confidence_average = statistics.fmean(self.confidence_average)
         self.selected_confidence_stddev = np.std(self.selected_confidence_average)
@@ -120,7 +114,6 @@ class Stats:
         print("Stats for branch "+self.pc+":")
         print("\tAverage confidence: ", self.confidence_average)
         print("\tConfidence stddev: ", self.confidence_stddev)
-        print("\t75th Percentile of confidence: ", self.confidence_75th_percentile)
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
         print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
@@ -168,10 +161,20 @@ def gini(array):
 def filter_instances(df, stats):
     # remove rows where the confidence is below a threshold
 
+    average_confidence = df['output'].mean()
+    stats.confidence_average = average_confidence
+
     threhold = logit(0.8)
-    pre_filtered_len = df.shape[0]
+    unfiltered_len = df.shape[0]
     filtered = df.filter(abs(df['output']) > threhold)
     filtered_len = filtered.shape[0]
+
+    selected_confidence_average = filtered['output'].mean()
+    stats.selected_confidence_average = selected_confidence_average
+
+    print("Unfiltered instances: "+str(unfiltered_len))
+    print("Filtered instances: "+str(filtered_len))
+    print("Filtered " + str(unfiltered_len - filtered_len) + " instances")
 
     return filtered
 
