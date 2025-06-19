@@ -38,9 +38,10 @@ def filter_instances(loader):
 
     workload_list = np.empty(batch_size*len(loader), dtype=str)
     checkpoint_list = np.empty(batch_size*len(loader), dtype=int)
-    history_list = np.empty(batch_size*len(loader), dtype=loader[0][0].numpy().dtype)
+    history_list = np.empty(batch_size*len(loader), dtype=(float, config['history_lengths'][-1]))
     output_list = np.empty(batch_size*len(loader), dtype=float)
     label_list = np.empty(batch_size*len(loader), dtype=int)
+    
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
             outputs = model(batch_x)
@@ -51,11 +52,11 @@ def filter_instances(loader):
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                workload_list.append(workload)
-                checkpoint_list.append(int(checkpoint))
-                history_list.append(history.numpy())
-                output_list.append(float(output))
-                label_list.append(int(label))
+                np.append(workload_list, workload)
+                np.append(checkpoint_list, int(checkpoint))
+                np.append(history_list, history.numpy())
+                np.append(output_list, float(output))
+                np.append(label_list, int(label))
 
     df = pl.DataFrame({
         "workload": workload_list,
