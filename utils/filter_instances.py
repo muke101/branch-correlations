@@ -52,11 +52,11 @@ def filter_instances(loader):
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                workload_list.append(workload)
-                checkpoint_list.append(int(checkpoint))
-                history_list.append(history.numpy())
-                output_list.append(float(output))
-                label_list.append(int(label))
+                np.append(workload_list, workload)
+                np.append(checkpoint_list, int(checkpoint))
+                np.append(history_list, history.numpy())
+                np.append(output_list, float(output))
+                np.append(label_list, int(label))
 
     df = pl.DataFrame({
         "workload": workload_list,
