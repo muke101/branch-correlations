@@ -6,6 +6,8 @@ import sys
 from lime_functions import dir_config
 import pickle
 from dataset_loader import BranchDataset
+import polars as pl
+import numpy as np
 
 torch.set_default_device('cuda')
 batch_size = 16384
@@ -34,7 +36,11 @@ model.to('cuda')
 
 def filter_instances(loader):
 
-    results = {}
+    workload_list = np.empty(batch_size*len(loader), dtype=str)
+    checkpoint_list = np.empty(batch_size*len(loader), dtype=int)
+    history_list = np.empty(batch_size*len(loader), dtype=loader[0][0].numpy().dtype)
+    output_list = np.empty(batch_size*len(loader), dtype=float)
+    label_list = np.empty(batch_size*len(loader), dtype=int)
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
             outputs = model(batch_x)
@@ -44,14 +50,22 @@ def filter_instances(loader):
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
-            if workload not in results:
-                results[workload] = {}
-            if checkpoint not in results[workload]:
-                results[workload][checkpoint] = []
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                results[workload][checkpoint].append((label,output,history))
+                workload_list.append(workload)
+                checkpoint_list.append(int(checkpoint))
+                history_list.append(history.numpy())
+                output_list.append(float(output))
+                label_list.append(int(label))
 
-    return results
+    df = pl.DataFrame({
+        "workload": workload_list,
+        "checkpoint": checkpoint_list,
+        "label": label_list,
+        "output": output_list,
+        "history": pl.Series("history", history_list)
+    })
+
+    return df
 
 for branch in good_branches:
 
@@ -73,13 +87,13 @@ for branch in good_branches:
     eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
     print("Running train batches: ", len(train_loader))
-    confidences = filter_instances(train_loader)
+    train_confidences = filter_instances(train_loader)
     print("Running eval batches: ", len(eval_loader))
-    confidences.update(filter_instances(eval_loader))
+    eval_confidences = filter_instances(eval_loader)
 
-    f = open("branch_{}_confidences.pickle".format(branch), "wb")
-    pickle.dump(confidences, f)
-    f.close()
+    pl.concat([train_confidences, eval_confidences])
 
-    del train_loader, eval_loader, confidences
+    train_confidences.write_parquet("{}_branch_{}_confidences.parquet".format(benchmark,branch))
+
+    del train_loader, eval_loader, train_confidences, eval_confidences
     torch.cuda.empty_cache()
