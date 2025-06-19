@@ -133,7 +133,7 @@ class Stats:
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
 #good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i for i in open(benchmark+"_branches").readlines()[0].split(",")]
+good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -179,16 +179,16 @@ def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
 
     results = {}
 
-    for workload in instances['workloads'].unique():
+    for workload in instances['workload'].unique():
         results[workload] = {}
-        workload_instances = instances.filter(instances['workloads'] == workload)
+        workload_instances = instances.filter(instances['workload'] == workload)
         for checkpoint in workload_instances['checkpoint'].unique():
             results[workload][checkpoint] = []
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
-            for _, _, label, _, history in checkpoint_instances:
+            for _, _, label, _, history in checkpoint_instances.iter_rows():
 
                 exp = lime_explainer.explain_instance(
-                    tensor_to_string(torch.from_numpy(history)),
+                    tensor_to_string(torch.tensor(history)),
                     eval_wrapper.probs_from_list_of_strings,
                     num_features=num_features,
                     num_samples=num_samples,
@@ -290,13 +290,15 @@ for branch in good_branches:
 
     # header: workload, checkpoint, label, output, history
     confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet".format(benchmark, branch))
+
+    print("Filtering instances")
  
-    good_instances = filter_instances(confidence_scores, stats)
+    confidence_scores = filter_instances(confidence_scores, stats)
 
     print("Running lime")
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = run_lime(good_instances, eval_wrapper, num_features = 50, num_samples = 5000)
+    correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features = 50, num_samples = 5000)
 
     del confidence_scores
 
