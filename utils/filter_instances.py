@@ -67,10 +67,14 @@ for branch in good_branches:
     #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validate')
     train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
     eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    print("Num train instances: ", len(train_loader))
+    print("Num eval instances: ", len(eval_loader))
     train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
     eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
+    print("Running train batches: ", len(train_loader))
     confidences = filter_instances(train_loader)
+    print("Running eval batches: ", len(eval_loader))
     confidences.update(filter_instances(eval_loader))
 
     f = open("branch_{}_confidences.pickle".format(branch), "wb")
