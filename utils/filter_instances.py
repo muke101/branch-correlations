@@ -6,8 +6,9 @@ import sys
 from lime_functions import dir_config
 import pickle
 from dataset_loader import BranchDataset
-from model import BranchNet
-from model import BranchNetTrainingPhaseKnobs
+
+torch.set_default_device('cuda')
+batch_size = 16384
 
 benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
@@ -24,6 +25,9 @@ dir_config = dir_results + '/config.yaml'
 with open(dir_config, 'r') as f:
     config = yaml.safe_load(f)
 
+from model import BranchNet
+from model import BranchNetTrainingPhaseKnobs
+
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
 model.to('cuda')
@@ -32,15 +36,14 @@ def filter_instances(loader):
 
     results = {}
     for batch_x, batch_y, checkpoints, workloads in loader:
-        batch_x.to('cuda')
         with torch.no_grad():
             outputs = model(batch_x)
         for i in range(len(outputs)):
             workload = workloads[i]
             checkpoint = checkpoints[i]
-            history = batch_x[i]
-            output = outputs[i]
-            label = batch_y[i]
+            history = batch_x[i].cpu()
+            output = outputs[i].cpu()
+            label = batch_y[i].cpu()
             if workload not in results:
                 results[workload] = {}
             if checkpoint not in results[workload]:
@@ -64,8 +67,8 @@ for branch in good_branches:
     #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validate')
     train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
     eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    train_loader = torch.utils.data.DataLoader(train_loader, batch_size=64, shuffle=False)
-    eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=64, shuffle=False)
+    train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
+    eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
     confidences = filter_instances(train_loader)
     confidences.update(filter_instances(eval_loader))
@@ -73,3 +76,6 @@ for branch in good_branches:
     f = open("branch_{}_confidences.pickle".format(branch), "wb")
     pickle.dump(confidences, f)
     f.close()
+
+    del train_loader, eval_loader, confidences
+    torch.cuda.empty_cache()
