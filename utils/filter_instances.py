@@ -14,6 +14,7 @@ batch_size = 16384
 
 benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
+confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark+"/"
 #good_branches = ['0x41faa0'] #TODO: actually populate this somehow
 good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
@@ -95,7 +96,7 @@ for branch in good_branches:
 
     pl.concat([train_confidences, eval_confidences])
 
-    train_confidences.write_parquet("{}_branch_{}_confidences.parquet".format(benchmark,branch))
+    train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences.parquet".format(benchmark,branch))
 
     del train_confidences, eval_confidences
     torch.cuda.empty_cache()
