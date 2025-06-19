@@ -88,12 +88,14 @@ for branch in good_branches:
 
     print("Running train batches: ", len(train_loader))
     train_confidences = filter_instances(train_loader)
+    del train_loader
     print("Running eval batches: ", len(eval_loader))
     eval_confidences = filter_instances(eval_loader)
+    del eval_loader
 
     pl.concat([train_confidences, eval_confidences])
 
     train_confidences.write_parquet("{}_branch_{}_confidences.parquet".format(benchmark,branch))
 
-    del train_loader, eval_loader, train_confidences, eval_confidences
+    del train_confidences, eval_confidences
     torch.cuda.empty_cache()
