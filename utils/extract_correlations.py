@@ -8,6 +8,7 @@ from collections import defaultdict
 from scipy.stats import gmean
 from scipy.special import logit
 import numpy as np
+import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
 
@@ -22,6 +23,8 @@ lime_explainer = LimeTextExplainer(
 
 
 benchmark = sys.argv[1]
+
+confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
 class AggregateStats:
     # This class aggregates statistics across multiple branches for a specific benchmark.
@@ -162,41 +165,30 @@ def gini(array):
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
 
-def filter_instances(loader, stats):
-    num_instances = len(loader.instances)
-    results = {}
-    threshold = logit(0.8)
-    for c in range(0, num_instances):
-        instance = loader.get_instance(c)
-        history, label, workload, checkpoint = instance
-        if workload not in results:
-            results[workload] = {}
-        if checkpoint not in results[workload]:
-            results[workload][checkpoint] = [] #good instances
-        with torch.no_grad():
-            history = history.unsqueeze(0).cuda()
-            if len(history.tolist()) != 1:
-                print(history) 
-                print("Found history with more dimensions than expected")
-                exit(1)
-            label = label.cuda()
-            output = model(history)
-            abs_output = abs(output)
-            if ((output > 0 and label == 1) or (output < 0 and label == 0)) and abs_output > threshold:
-                results[workload][checkpoint].append(instance)
-                stats.selected_confidence_average.append(abs_output)
-            stats.confidence_average.append(abs_output)
-    return results
+def filter_instances(df, stats):
+    # remove rows where the confidence is below a threshold
+
+    threhold = logit(0.8)
+    pre_filtered_len = df.shape[0]
+    filtered = df.filter(abs(df['output']) > threhold)
+    filtered_len = filtered.shape[0]
+
+    return filtered
 
 def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
 
-    for workload in instances:
-        for checkpoint in instances[workload]:
-            for i in range(len(instances[workload][checkpoint])):
-                history, label, _, _ = instances[workload][checkpoint][i]
+    results = {}
+
+    for workload in instances['workloads'].unique():
+        results[workload] = {}
+        workload_instances = instances.filter(instances['workloads'] == workload)
+        for checkpoint in workload_instances['checkpoint'].unique():
+            results[workload][checkpoint] = []
+            checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
+            for _, _, label, _, history in checkpoint_instances:
 
                 exp = lime_explainer.explain_instance(
-                    tensor_to_string(history),
+                    tensor_to_string(torch.from_numpy(history)),
                     eval_wrapper.probs_from_list_of_strings,
                     num_features=num_features,
                     num_samples=num_samples,
@@ -204,9 +196,9 @@ def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
 
                 exp = (exp.as_list(), label)
 
-                instances[workload][checkpoint][i] = exp
+                results[workload][checkpoint].append(exp)
 
-    return instances
+    return results
 
 def coalecse_branches(correlated_branches, stats):
 
@@ -295,20 +287,18 @@ for branch in good_branches:
     eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config)
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
+
+    # header: workload, checkpoint, label, output, history
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet".format(benchmark, branch))
  
-    train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
-    eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validation')
-
-    print("Filtering instances")
-
-    # good_instaces -> {workload: {checkpoint: [instances]}}
-    good_instances = filter_instances(train_loader, stats)
-    good_instances.update(filter_instances(eval_loader, stats))
+    good_instances = filter_instances(confidence_scores, stats)
 
     print("Running lime")
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
     correlated_branches = run_lime(good_instances, eval_wrapper, num_features = 50, num_samples = 5000)
+
+    del confidence_scores
 
     print("Averaging instances")
 
