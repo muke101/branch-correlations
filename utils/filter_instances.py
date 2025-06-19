@@ -36,11 +36,11 @@ model.to('cuda')
 
 def filter_instances(loader):
 
-    workload_list = np.empty(batch_size*len(loader), dtype=str)
-    checkpoint_list = np.empty(batch_size*len(loader), dtype=int)
-    history_list = np.empty(batch_size*len(loader), dtype=loader[0][0].numpy().dtype)
-    output_list = np.empty(batch_size*len(loader), dtype=float)
-    label_list = np.empty(batch_size*len(loader), dtype=int)
+    workload_list = []
+    checkpoint_list = []
+    history_list = []
+    output_list = []
+    label_list = []
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
             outputs = model(batch_x)
