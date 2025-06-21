@@ -213,7 +213,8 @@ def coalecse_branches(correlated_branches, stats):
             unique_branches = defaultdict(list)
             for instance in correlated_branches[workload][checkpoint]:
                 history, label = instance
-                impacts = []
+                impacts = defaultdict(list)
+                all_impacts = []
                 for feature, impact in history:
                     feature = int(feature, 16) #TODO: ensure features are in hex
                     taken = feature & 1
@@ -221,11 +222,12 @@ def coalecse_branches(correlated_branches, stats):
                     correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
                     if not correct_direction: continue
                     impact = abs(impact)
-                    impacts.append(impact)
-                if len(impacts) == 0: continue
-                impacts = np.array(impacts)
-                unique_branches[pc].append(np.mean(impacts))
-                stats.instance_gini_coeff.append(gini(impacts))
+                    impacts[pc].append(impact)
+                    all_impacts.append(impact)
+                if len(impacts) == 0: continue #extreme corner case, shouldn't happen if we filter properly
+                for pc in impacts:
+                    unique_branches[pc].append(statistics.fmean(impacts[pc]))
+                stats.instance_gini_coeff.append(gini(np.array(all_impacts)))
 
             for pc in unique_branches:
                 unique_branches[pc] = gmean(unique_branches[pc])
