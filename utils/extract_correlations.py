@@ -226,6 +226,7 @@ def coalecse_branches(correlated_branches, stats):
                 impacts = np.array(impacts)
                 unique_branches[pc].append(np.mean(impacts))
                 stats.instance_gini_coeff.append(gini(impacts))
+
             for pc in unique_branches:
                 unique_branches[pc] = gmean(unique_branches[pc])
 
@@ -241,6 +242,8 @@ def weight_branches(correlated_branches, stats):
 
     # collaspe per-checkpoint averages of instances into per-workload averages of checkpoints
     # for each checkpoint build a map of unique branches to checkpoint averages. then take the weighted gmean of this list by the simpoint weight.
+
+    # TODO: there may be something to consider around the number of instances per checkpoint vs the checkpoint weight. these are related, but still seperate values. two checkpoint may have the same weight but very different number of instances, which implies the one with more is more important. this'd only be a concern if the averaged impacts signifcantly differ though
 
     for workload in correlated_branches:
         unique_branches = defaultdict(lambda: ([],[])) #impact, weight
