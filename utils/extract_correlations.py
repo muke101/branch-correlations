@@ -207,7 +207,6 @@ def coalecse_branches(correlated_branches, stats):
 
     # each checkpoint has many instances, with different selections of impactful branches.
     # take the average of absolute impactfulness in the right direction for each branch, to select the overall most impactful branch in that checkpoint
-    # have to pass through the real results and penalize branches that go in the opposite direction
 
     for workload in correlated_branches:
         for checkpoint in correlated_branches[workload]:
@@ -215,16 +214,20 @@ def coalecse_branches(correlated_branches, stats):
             for instance in correlated_branches[workload][checkpoint]:
                 history, label = instance
                 impacts = []
-                for pc, impact in history:
-                    correct_direction = (impact < 0 and label < 0) or (impact > 0 and label > 0)
+                for feature, impact in history:
+                    feature = int(feature, 16) #TODO: ensure features are in hex
+                    taken = feature & 1
+                    pc = feature >> 1
+                    correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
+                    if not correct_direction: continue
                     impact = abs(impact)
                     impacts.append(impact)
-                    if not correct_direction: impact *= -1
-                    unique_branches[int(pc,16)].append(impact) #converting to int for performance
-                stats.instance_gini_coeff.append(gini(np.array(impacts))) #NOTE: this may not entirely make sense because it's blind to direction
-
+                if len(impacts) == 0: continue
+                impacts = np.array(impacts)
+                unique_branches[pc].append(np.mean(impact))
+                stats.instance_gini_coeff.append(gini(impacts)) #NOTE: this may not entirely make sense because it's blind to direction
             for pc in unique_branches:
-                unique_branches[pc] = np.mean(np.array(unique_branches[pc]))
+                unique_branches[pc] = gmean(unique_branches[pc])
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
