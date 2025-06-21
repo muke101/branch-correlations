@@ -224,8 +224,8 @@ def coalecse_branches(correlated_branches, stats):
                     impacts.append(impact)
                 if len(impacts) == 0: continue
                 impacts = np.array(impacts)
-                unique_branches[pc].append(np.mean(impact))
-                stats.instance_gini_coeff.append(gini(impacts)) #NOTE: this may not entirely make sense because it's blind to direction
+                unique_branches[pc].append(np.mean(impacts))
+                stats.instance_gini_coeff.append(gini(impacts))
             for pc in unique_branches:
                 unique_branches[pc] = gmean(unique_branches[pc])
 
