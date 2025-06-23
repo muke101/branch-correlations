@@ -37,7 +37,7 @@ model.to('cuda')
 
 def filter_instances(loader):
 
-    unique_histories = set()
+    unique_histories = {}
     workload_list = []
     checkpoint_list = []
     history_list = []
@@ -52,8 +52,8 @@ def filter_instances(loader):
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
-            if history in unique_histories: continue
-            unique_histories.add(history)
+            if history in unique_histories and abs(output) < unique_histories[history] : continue
+            unique_histories[history] = output
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
                 workload_list.append(workload)
                 checkpoint_list.append(int(checkpoint))
