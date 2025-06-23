@@ -53,13 +53,13 @@ def filter_instances(loader):
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if history in unique_histories and abs(output) < unique_histories[history] : continue
-            unique_histories[history] = output
+            unique_histories[history] = abs(output)
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
                 workload_list.append(workload)
                 checkpoint_list.append(int(checkpoint))
                 history_list.append(history.numpy())
                 output_list.append(float(output))
-                label_list.apend(int(label))
+                label_list.append(int(label))
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
@@ -99,7 +99,7 @@ for branch in good_branches:
 
     pl.concat([train_confidences, eval_confidences])
 
-    train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences.parquet".format(benchmark,branch))
+    train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences_filtered.parquet".format(benchmark,branch))
 
     del train_confidences, eval_confidences
     torch.cuda.empty_cache()

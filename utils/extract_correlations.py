@@ -17,7 +17,7 @@ lime_explainer = LimeTextExplainer(
     char_level=False,
     split_expression=lambda x: x.split(" "),
     bow=False,
-    feature_selection="forward_selection",
+    feature_selection="lasso_path",
     mask_string="0x000:not_taken",  # Mask string for unknown addresses
 )
 
@@ -34,7 +34,6 @@ class AggregateStats:
         self.confidence_stddev = []
         self.selected_confidence_average = []
         self.selected_confidence_stddev = []
-        self.percent_selected_detrimental_impact_average = []
         self.instance_gini_coeff = []
         self.checkpoint_gini_coeff = []
         self.workload_gini_coeff = []
@@ -45,7 +44,6 @@ class AggregateStats:
         self.confidence_stddev.append(stat.confidence_stddev) 
         self.selected_confidence_average.append(stat.selected_confidence_average) 
         self.selected_confidence_stddev.append(stat.selected_confidence_stddev) 
-        self.percent_selected_detrimental_impact_average.append(stat.percent_selected_detrimental_impact_average)
         self.instance_gini_coeff.append(stat.instance_gini_coeff)
         self.checkpoint_gini_coeff.append(stat.checkpoint_gini_coeff)
         self.workload_gini_coeff.append(stat.workload_gini_coeff)
@@ -71,7 +69,6 @@ class AggregateStats:
         self.workload_gini_coeff = gmean(self.workload_gini_coeff)
         self.benchmark_gini_coeff = gmean(self.benchmark_gini_coeff)
 
-        self.percent_selected_detrimental_impact_average = gmean(self.percent_selected_detrimental_impact_average)
 
     def print(self):
         print("Average stats for benchmark "+benchmark+":")
@@ -79,7 +76,6 @@ class AggregateStats:
         print("\tConfidence stddev: ", self.confidence_stddev)
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
-        print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
         print("\tAverage Gini coefficient per instance ", self.instance_gini_coeff)
         print("\tAverage Gini coefficient per checkpoint ", self.checkpoint_gini_coeff)
         print("\tAverage Gini coefficient per workload ", self.workload_gini_coeff)
@@ -94,18 +90,12 @@ class Stats:
         self.confidence_stddev = 0
         self.selected_confidence_average = 0
         self.selected_confidence_stddev = 0
-        self.percent_selected_detrimental_impact_average = []
         self.instance_gini_coeff = []
         self.checkpoint_gini_coeff = []
         self.workload_gini_coeff = []
         self.benchmark_gini_coeff = 0
 
     def finalise(self):
-        self.confidence_stddev = np.std(self.confidence_average)
-        self.confidence_average = statistics.fmean(self.confidence_average)
-        self.selected_confidence_stddev = np.std(self.selected_confidence_average)
-        self.selected_confidence_average = statistics.fmean(self.selected_confidence_average)
-        self.percent_selected_detrimental_impact_average = gmean(self.percent_selected_detrimental_impact_average)
         self.instance_gini_coeff = statistics.fmean(self.instance_gini_coeff)
         self.checkpoint_gini_coeff = statistics.fmean(self.checkpoint_gini_coeff)
         self.workload_gini_coeff = statistics.fmean(self.workload_gini_coeff)
@@ -116,7 +106,6 @@ class Stats:
         print("\tConfidence stddev: ", self.confidence_stddev)
         print("\tAverage confidence of selected instances: ", self.selected_confidence_average)
         print("\tStddev of selected instance confidence: ", self.selected_confidence_stddev)
-        print("\tAverage percent of detrimental impact of selected features: ", self.percent_selected_detrimental_impact_average)
         print("\tAverage Gini coefficient per instance ", self.instance_gini_coeff)
         print("\tAverage Gini coefficient per checkpoint ", self.checkpoint_gini_coeff)
         print("\tAverage Gini coefficient per workload ", self.workload_gini_coeff)
@@ -161,16 +150,15 @@ def gini(array):
 def filter_instances(df, stats):
     # remove rows where the confidence is below a threshold
 
-    average_confidence = df['output'].mean()
-    stats.confidence_average = average_confidence
+    df = df.with_columns(pl.col('output').abs().alias('output'))
 
-    threhold = logit(0.8)
+    stats.confidence_average = df['output'].mean()
+    stats.confidence_stddev = df['output'].std()
+
+    threshold = logit(0.8)
     unfiltered_len = df.shape[0]
-    filtered = df.filter(abs(df['output']) > threhold)
+    filtered = df.filter(df['output'] > threshold)
     filtered_len = filtered.shape[0]
-
-    selected_confidence_average = filtered['output'].mean()
-    stats.selected_confidence_average = selected_confidence_average
 
     print("Unfiltered instances: "+str(unfiltered_len))
     print("Filtered instances: "+str(filtered_len))
@@ -188,7 +176,7 @@ def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
         for checkpoint in workload_instances['checkpoint'].unique():
             results[workload][checkpoint] = []
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
-            for _, _, label, _, history in checkpoint_instances.iter_rows():
+            for _, _, _, label, _, history in checkpoint_instances.iter_rows():
 
                 exp = lime_explainer.explain_instance(
                     tensor_to_string(torch.tensor(history)),
@@ -216,9 +204,8 @@ def coalecse_branches(correlated_branches, stats):
                 impacts = defaultdict(list)
                 all_impacts = []
                 for feature, impact in history:
-                    feature = int(feature, 16) #TODO: ensure features are in hex
-                    taken = feature & 1
-                    pc = feature >> 1
+                    pc = int(feature.split(':')[0],16)
+                    taken = 1 if feature.split(':')[1] == 'taken' else 0
                     correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
                     if not correct_direction: continue
                     impact = abs(impact)
@@ -306,6 +293,9 @@ for branch in good_branches:
  
     confidence_scores = filter_instances(confidence_scores, stats)
 
+    stats.selected_confidence_average = confidence_scores['output'].mean()
+    stats.selected_confidence_stddev = confidence_scores['output'].std()
+
     print("Running lime")
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
@@ -342,7 +332,7 @@ for branch in good_branches:
     print("Selected branches for branch {}:".format(branch), end=' ')
     c = 0
     for pc, impact in selected_branches:
-        print("{}: {}".format(pc, impact), end=', ' if c < len(selected_branches) - 1 else '\n')
+        print("{}: {}".format(hex(pc), impact), end=', ' if c < len(selected_branches) - 1 else '\n')
         c += 1
 
     stats.finalise()
