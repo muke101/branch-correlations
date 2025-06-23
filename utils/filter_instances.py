@@ -37,6 +37,7 @@ model.to('cuda')
 
 def filter_instances(loader):
 
+    unique_histories = set()
     workload_list = []
     checkpoint_list = []
     history_list = []
@@ -51,19 +52,21 @@ def filter_instances(loader):
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
+            if history in unique_histories: continue
+            unique_histories.add(history)
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                np.append(workload_list, workload)
-                np.append(checkpoint_list, int(checkpoint))
-                np.append(history_list, history.numpy())
-                np.append(output_list, float(output))
-                np.append(label_list, int(label))
+                workload_list.append(workload)
+                checkpoint_list.append(int(checkpoint))
+                history_list.append(history.numpy())
+                output_list.append(float(output))
+                label_list.apend(int(label))
 
     df = pl.DataFrame({
-        "workload": workload_list,
-        "checkpoint": checkpoint_list,
-        "label": label_list,
-        "output": output_list,
-        "history": pl.Series("history", history_list)
+        "workload": np.array(workload_list),
+        "checkpoint": np.array(checkpoint_list),
+        "label": np.array(label_list),
+        "output": np.array(output_list),
+        "history": pl.Series("history", np.array(history_list))
     })
 
     return df
