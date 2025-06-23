@@ -12,6 +12,8 @@ import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
 
+selection_gamma = 0.3
+
 lime_explainer = LimeTextExplainer(
     class_names=["not_taken", "taken"],
     char_level=False,
@@ -21,10 +23,9 @@ lime_explainer = LimeTextExplainer(
     mask_string="0x000:not_taken",  # Mask string for unknown addresses
 )
 
-
 benchmark = sys.argv[1]
 
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
+explain_dir = "/mnt/data/results/branch-project/explained-instances/"
 
 class AggregateStats:
     # This class aggregates statistics across multiple branches for a specific benchmark.
@@ -147,29 +148,6 @@ def gini(array):
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
 
-def filter_instances(df, stats):
-    # remove rows where the confidence is below a threshold
-
-    df = df.with_columns(pl.col('output').abs().alias('output'))
-
-    stats.confidence_average = df['output'].mean()
-    stats.confidence_stddev = df['output'].std()
-
-    threshold = logit(0.8)
-    unfiltered_len = df.shape[0]
-    filtered = df.filter(df['output'] > threshold)
-    filtered_len = filtered.shape[0]
-
-    print("Unfiltered instances: "+str(unfiltered_len))
-    print("Filtered instances: "+str(filtered_len))
-    print("Filtered " + str(unfiltered_len - filtered_len) + " instances")
-
-    return filtered
-
-def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
-
-    results = {}
-
     for workload in instances['workload'].unique():
         results[workload] = {}
         workload_instances = instances.filter(instances['workload'] == workload)
@@ -191,16 +169,21 @@ def run_lime(instances, eval_wrapper, num_features = 50, num_samples = 5000):
 
     return results
 
-def coalecse_branches(correlated_branches, stats):
+def coalecse_branches(explained_branches, stats):
 
     # each checkpoint has many instances, with different selections of impactful branches.
     # take the average of absolute impactfulness in the right direction for each branch, to select the overall most impactful branch in that checkpoint
 
-    for workload in correlated_branches:
-        for checkpoint in correlated_branches[workload]:
+    correlated_branches = {}
+
+    for workload in explained_branches['workload'].unique():
+        correlated_branches[workload] = {}
+        workload_instances = explained_branches.filter(explained_branches['workload'] == workload)
+        for checkpoint in workload_instances['checkpoint'].unique():
+            correlated_branches[workload][checkpoint] = []
+            checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
             unique_branches = defaultdict(list)
-            for instance in correlated_branches[workload][checkpoint]:
-                history, label = instance
+            for _, _, _, label, _, history in checkpoint_instances.iter_rows():
                 impacts = defaultdict(list)
                 all_impacts = []
                 for feature, impact in history:
@@ -287,26 +270,17 @@ for branch in good_branches:
     model.eval()
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet".format(benchmark, branch))
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_explained-instances.parquet".format(benchmark, branch))
 
-    print("Filtering instances")
- 
-    confidence_scores = filter_instances(confidence_scores, stats)
-
-    stats.selected_confidence_average = confidence_scores['output'].mean()
-    stats.selected_confidence_stddev = confidence_scores['output'].std()
-
-    print("Running lime")
-
-    # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features = 50, num_samples = 5000)
-
-    del confidence_scores
+    stats.selected_confidence_average = explained_instances['output'].mean()
+    stats.selected_confidence_stddev = explained_instances['output'].std()
 
     print("Averaging instances")
 
     # combines results per-instances to select most impactful branches per checkpoint
-    correlated_branches = coalecse_branches(correlated_branches, stats)
+    correlated_branches = coalecse_branches(explained_instances, stats)
+
+    del explained_instances
 
     print("Weighting checkpoints")
 
@@ -317,14 +291,13 @@ for branch in good_branches:
     # finally, returns correlated_branches as a sorted list of branch pcs paired with impact
     correlated_branches, gini_coeff = average_branches(correlated_branches, stats)
 
-    gamma = 0.3
-    threshold = 1.0 - gamma * gini_coeff
+    selection_threshold = 1.0 - selection_gamma * gini_coeff
     total = sum([i[1] for i in correlated_branches])
     cumulative = 0
     selected_branches = []
     for pc, impact in correlated_branches:
         cumulative += impact
-        if cumulative / total < threshold:
+        if cumulative / total < selection_threshold:
             selected_branches.append((pc, impact))
         else:
             break
