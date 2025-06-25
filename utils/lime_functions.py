@@ -6,6 +6,9 @@ import sys
 import lime
 from lime.lime_text import LimeTextExplainer
 from torch import nn
+import time
+
+torch.set_default_device('cuda')
 
 sys.path.append(os.getcwd())  # which means the script should be run at labelling/
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # add the current directory
@@ -61,6 +64,7 @@ class EvalWrapper:
     def __init__(self, model: nn.Module) -> None:
 
         self.model = model
+        model.to('cuda')
         self.model.eval()
 
     def _probs(self, input_data) -> torch.Tensor:
@@ -68,9 +72,13 @@ class EvalWrapper:
         Args:
             input_data (torch.Tensor): Input data of shape (batch_size, input_length).
         """
+        t1 = time.perf_counter()
         with torch.no_grad():
+            input_data.to('cuda')
             output = self.model(input_data)
-            probs = torch.sigmoid(output)
+            probs = torch.sigmoid(output).cpu()
+        t2 = time.perf_counter()
+        print(t2-t1)
         return probs
 
     def _prob_from_one_string(self, input_string: str) -> torch.Tensor:
@@ -88,7 +96,8 @@ class EvalWrapper:
         Args:
             input_strings (list[str]): List of input strings of hex addresses in the format '0x759:taken 0x759:not_taken ...'.
         """
-        positive_class_answer = self._probs(torch.stack(instances))
+        instances = torch.tensor(instances)
+        positive_class_answer = self._probs(instances)
         negative_class_answer = 1 - positive_class_answer
         return (
             torch.stack([negative_class_answer, positive_class_answer])
