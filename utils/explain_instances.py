@@ -82,7 +82,7 @@ def filter_instances(df):
 
 def run_lime(instances, eval_wrapper, num_features, num_samples):
 
-    return instances.with_columns(pl.col('history').apply(lambda history: lime_explainer.explaine_instance(tensor_to_string(torch.tensor(history)), eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples).as_list()).alias('history'))
+    return instances.with_columns(pl.col('history').apply(lambda history: lime_explainer.explaine_instance(torch.tensor(history), eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples).as_list()).alias('history'))
 
 for branch in good_branches:
 

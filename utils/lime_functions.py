@@ -81,15 +81,14 @@ class EvalWrapper:
         input_tensor = string_to_tensor(input_string)
         return self._probs(input_tensor.unsqueeze(0))
 
-    def probs_from_list_of_strings(self, input_strings: list[str]) -> torch.Tensor:
+    def probs_from_list_of_strings(self, instances: torch.Tensor) -> torch.Tensor:
         """Get the probabilities of a list of input strings using the model.
         the output is a tensor of shape (batch_size, 2) where the first column is the probability of not taken and the second column is the probability of taken.
         This output format is for matching the expected output of LimeTextExplainer, or the sklearn predict_proba method.
         Args:
             input_strings (list[str]): List of input strings of hex addresses in the format '0x759:taken 0x759:not_taken ...'.
         """
-        input_tensors = [string_to_tensor(s) for s in input_strings]
-        positive_class_answer = self._probs(torch.stack(input_tensors))
+        positive_class_answer = self._probs(torch.stack(instances))
         negative_class_answer = 1 - positive_class_answer
         return (
             torch.stack([negative_class_answer, positive_class_answer])
