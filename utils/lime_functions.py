@@ -72,13 +72,10 @@ class EvalWrapper:
         Args:
             input_data (torch.Tensor): Input data of shape (batch_size, input_length).
         """
-        t1 = time.perf_counter()
         with torch.no_grad():
             input_data.to('cuda')
             output = self.model(input_data)
             probs = torch.sigmoid(output).cpu()
-        t2 = time.perf_counter()
-        print(t2-t1)
         return probs
 
     def _prob_from_one_string(self, input_string: str) -> torch.Tensor:
@@ -96,7 +93,6 @@ class EvalWrapper:
         Args:
             input_strings (list[str]): List of input strings of hex addresses in the format '0x759:taken 0x759:not_taken ...'.
         """
-        instances = torch.tensor(instances)
         positive_class_answer = self._probs(instances)
         negative_class_answer = 1 - positive_class_answer
         return (

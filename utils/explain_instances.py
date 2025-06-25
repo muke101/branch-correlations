@@ -12,20 +12,6 @@ import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
 
-threshold = logit(0.8)
-num_features = 20 #TODO: probably need to make this all features
-nums_samples = 5000
-
-lime_explainer = LimeTextExplainer(
-    class_names=["not_taken", "taken"],
-    char_level=False,
-    split_expression=lambda x: x.split(" "),
-    bow=False,
-    feature_selection="lasso_path",
-    mask_string="0x000:not_taken",  # Mask string for unknown addresses
-)
-
-
 benchmark = sys.argv[1]
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
@@ -48,9 +34,23 @@ dir_config = dir_results + '/config.yaml'
 with open(dir_config, 'r') as f:
     config = yaml.safe_load(f)
 
+#parameters 
+threshold = logit(0.8)
+num_features = config['history_lengths'][-1]
+num_samples = 5000
+
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
 model.to('cuda')
+
+lime_explainer = LimeTextExplainer(
+    class_names=["not_taken", "taken"],
+    char_level=False,
+    split_expression=lambda x: x.split(" "),
+    bow=False,
+    feature_selection="lasso_path",
+    mask_string="0x000:not_taken",  # Mask string for unknown addresses
+)
 
 def gini(array):
     array = array.flatten()
@@ -82,7 +82,12 @@ def filter_instances(df):
 
 def run_lime(instances, eval_wrapper, num_features, num_samples):
 
-    return instances.with_columns(pl.col('history').apply(lambda history: lime_explainer.explaine_instance(torch.tensor(history), eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples).as_list()).alias('history'))
+    exps = []
+    histories = []
+    for row in instances.iter_rows():
+        histories.append(np.array(row[-1]))
+    exps = [exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)]
+    return instances.with_columns(pl.Series("explanation", exps, dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float64)]))))
 
 for branch in good_branches:
 
