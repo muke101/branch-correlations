@@ -157,7 +157,7 @@ def gini(array):
             for _, _, _, label, _, history in checkpoint_instances.iter_rows():
 
                 exp = lime_explainer.explain_instance(
-                    tensor_to_string(torch.tensor(history)),
+                    torch.tensor(history),
                     eval_wrapper.probs_from_list_of_strings,
                     num_features=num_features,
                     num_samples=num_samples,
@@ -187,8 +187,8 @@ def coalecse_branches(explained_branches, stats):
                 impacts = defaultdict(list)
                 all_impacts = []
                 for feature, impact in history:
-                    pc = int(feature.split(':')[0],16)
-                    taken = 1 if feature.split(':')[1] == 'taken' else 0
+                    taken = feature & 1
+                    pc = feature >> 1
                     correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
                     if not correct_direction: continue
                     impact = abs(impact)

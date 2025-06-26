@@ -38,6 +38,7 @@ with open(dir_config, 'r') as f:
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
 num_samples = 5000
+batch_size = 2**14
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
@@ -83,10 +84,15 @@ def filter_instances(df):
 def run_lime(instances, eval_wrapper, num_features, num_samples):
 
     exps = []
-    histories = []
-    for row in instances.iter_rows():
-        histories.append(np.array(row[-1]))
-    exps = [exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)]
+    interval = batch_size // num_samples
+    histories = [np.array(instances[0]['history'][0])]
+    for i in range(1, len(instances)):
+        histories.append(np.array(instances[i]['history'][0]))
+        if i % interval == 0:
+            exps.extend([exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)])
+            histories = []
+    if len(histories) > 0: #clean up remainder
+        exps.extend([exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)])
     return instances.with_columns(pl.Series("explanation", exps, dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float64)]))))
 
 for branch in good_branches:
