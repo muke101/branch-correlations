@@ -8,6 +8,7 @@ import pickle
 from dataset_loader import BranchDataset
 import polars as pl
 import numpy as np
+from collections import defaultdict
 
 torch.set_default_device('cuda')
 batch_size = 16384
@@ -38,6 +39,7 @@ model.to('cuda')
 def filter_instances(loader):
 
     unique_histories = {}
+    unique_history_count = defaultdict(int)
     workload_list = []
     checkpoint_list = []
     history_list = []
@@ -52,6 +54,7 @@ def filter_instances(loader):
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
+            unique_history_count[history] += 1
             if history in unique_histories and abs(output) < unique_histories[history] : continue
             unique_histories[history] = abs(output)
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
@@ -61,12 +64,16 @@ def filter_instances(loader):
                 output_list.append(float(output))
                 label_list.append(int(label))
 
+    total = sum([i[1] for i in unique_history_count.items()]
+    weights = [unique_history_count[history]/total for history in history_list]
+
     df = pl.DataFrame({
         "workload": np.array(workload_list),
         "checkpoint": np.array(checkpoint_list),
         "label": np.array(label_list),
         "output": np.array(output_list),
-        "history": pl.Series("history", np.array(history_list))
+        "history": pl.Series("history", np.array(history_list)),
+        "weight": np.array(weights)
     })
 
     return df

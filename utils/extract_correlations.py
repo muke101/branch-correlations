@@ -14,15 +14,6 @@ from lime.lime_text import LimeTextExplainer
 
 selection_gamma = 0.3
 
-lime_explainer = LimeTextExplainer(
-    class_names=["not_taken", "taken"],
-    char_level=False,
-    split_expression=lambda x: x.split(" "),
-    bow=False,
-    feature_selection="lasso_path",
-    mask_string="0x000:not_taken",  # Mask string for unknown addresses
-)
-
 benchmark = sys.argv[1]
 
 explain_dir = "/mnt/data/results/branch-project/explained-instances/"
@@ -148,26 +139,26 @@ def gini(array):
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
 
-    for workload in instances['workload'].unique():
-        results[workload] = {}
-        workload_instances = instances.filter(instances['workload'] == workload)
-        for checkpoint in workload_instances['checkpoint'].unique():
-            results[workload][checkpoint] = []
-            checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
-            for _, _, _, label, _, history in checkpoint_instances.iter_rows():
+    #for workload in instances['workload'].unique():
+    #    results[workload] = {}
+    #    workload_instances = instances.filter(instances['workload'] == workload)
+    #    for checkpoint in workload_instances['checkpoint'].unique():
+    #        results[workload][checkpoint] = []
+    #        checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
+    #        for _, _, _, label, _, history in checkpoint_instances.iter_rows():
 
-                exp = lime_explainer.explain_instance(
-                    torch.tensor(history),
-                    eval_wrapper.probs_from_list_of_strings,
-                    num_features=num_features,
-                    num_samples=num_samples,
-                )
+    #            exp = lime_explainer.explain_instance(
+    #                torch.tensor(history),
+    #                eval_wrapper.probs_from_list_of_strings,
+    #                num_features=num_features,
+    #                num_samples=num_samples,
+    #            )
 
-                exp = (exp.as_list(), label)
+    #            exp = (exp.as_list(), label)
 
-                results[workload][checkpoint].append(exp)
+    #            results[workload][checkpoint].append(exp)
 
-    return results
+    #return results
 
 def coalecse_branches(explained_branches, stats):
 
@@ -183,7 +174,9 @@ def coalecse_branches(explained_branches, stats):
             correlated_branches[workload][checkpoint] = []
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
             unique_branches = defaultdict(list)
-            for _, _, _, label, _, history in checkpoint_instances.iter_rows():
+            for _, _, _, label, _, _, weight, history in checkpoint_instances.iter_rows():
+                # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
+                # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
                 impacts = defaultdict(list)
                 all_impacts = []
                 for feature, impact in history:
@@ -196,11 +189,13 @@ def coalecse_branches(explained_branches, stats):
                     all_impacts.append(impact)
                 if len(impacts) == 0: continue #extreme corner case, shouldn't happen if we filter properly
                 for pc in impacts:
-                    unique_branches[pc].append(statistics.fmean(impacts[pc]))
+                    unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
                 stats.instance_gini_coeff.append(gini(np.array(all_impacts)))
 
             for pc in unique_branches:
-                unique_branches[pc] = gmean(unique_branches[pc])
+                avg_impacts = np.array([i[0] for i in unique_branches[pc]])
+                weights = np.array([i[1] for i in unique_branches[pc]])
+                unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
