@@ -39,7 +39,6 @@ model.to('cuda')
 def filter_instances(loader):
 
     unique_histories = {}
-    unique_history_count = defaultdict(int)
     workload_list = []
     checkpoint_list = []
     history_list = []
@@ -50,13 +49,16 @@ def filter_instances(loader):
             outputs = model(batch_x)
         for i in range(len(outputs)):
             workload = workloads[i]
+            if workload not in unique_histories:
+                unique_histories[workload] = {}
             checkpoint = checkpoints[i]
+            if checkpoint not in unique_histories[workload]:
+                unique_histories[workload][checkpoint] = defaultdict(int)
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
-            unique_history_count[history] += 1
-            if history in unique_histories and abs(output) < unique_histories[history] : continue
-            unique_histories[history] = abs(output)
+            unique_histories[workload][checkpoint][history] += 1
+            if unique_histories[workload][checkpoint][history] > 1: continue
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
                 workload_list.append(workload)
                 checkpoint_list.append(int(checkpoint))
@@ -64,8 +66,13 @@ def filter_instances(loader):
                 output_list.append(float(output))
                 label_list.append(int(label))
 
-    total = sum([i[1] for i in unique_history_count.items()]
-    weights = [unique_history_count[history]/total for history in history_list]
+    weights = []
+    for i in range(len(history_list)):
+        workload = workload_list[i]
+        checkpoint = checkpoint_list[i]
+        history = history_list[i]
+        total = sum(unique_histories[workload][checkpoint].values())
+        weights.append(unique_histories[workload][checkpoint][history]/total)
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
