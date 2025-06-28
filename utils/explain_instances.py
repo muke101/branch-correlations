@@ -85,14 +85,27 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
 
     exps = []
     interval = batch_size // num_samples
+    unique_histories = {}
     histories = [np.array(instances[0]['history'][0])]
+
     for i in range(1, len(instances)):
-        histories.append(np.array(instances[i]['history'][0]))
-        if i % interval == 0:
-            exps.extend([exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)])
+        history = instances[i]['history'][0]
+        if history in unique_histories: exps.append(unique_histories[history])
+        else: histories.append(np.array(history))
+
+        if len(histories) == interval:
+            batch_exps = lime_explainer.explain_instances(histories,
+                                        eval_wrapper.probs_from_list_of_strings,
+                                        num_features=num_features, num_samples=num_samples)
+            for c, exp in enumerate(batch_exps):
+                exp = exp.as_list()
+                unique_histories[histories[c]] = exp
+                exps.append(exp)
             histories = []
+
     if len(histories) > 0: #clean up remainder
         exps.extend([exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)])
+
     return instances.with_columns(pl.Series("explanation", exps, dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float64)]))))
 
 for branch in good_branches:
