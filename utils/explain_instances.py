@@ -90,7 +90,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
 
     for i in range(1, len(instances)):
         history = instances[i]['history'][0]
-        if history in unique_histories: exps.append(unique_histories[history])
+        if tuple(history.to_list()) in unique_histories: exps.append(unique_histories[tuple(history.to_list())])
         else: histories.append(np.array(history))
 
         if len(histories) == interval:
@@ -99,7 +99,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                                         num_features=num_features, num_samples=num_samples)
             for c, exp in enumerate(batch_exps):
                 exp = exp.as_list()
-                unique_histories[histories[c]] = exp
+                unique_histories[tuple(histories[c].tolist())] = exp
                 exps.append(exp)
             histories = []
 
@@ -120,7 +120,7 @@ for branch in good_branches:
     model.eval()
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet".format(benchmark, branch))
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet.old".format(benchmark, branch))
 
     print("Filtering instances")
  
