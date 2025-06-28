@@ -38,12 +38,26 @@ model.to('cuda')
 
 def filter_instances(loader):
 
+    history_indxs = {}
+    history_list = []
+
+    for batch_x, _, _, _ in loader:
+        for i in range(len(batch_x)):
+            history = tuple(batch_x[i].cpu().to_list())
+            if history not in history_indxs:
+                history_list.append(history)
+                history_indxs[history] = len(history_list) - 1
+
+    history_df = pl.DataFrame({
+        "history": pl.Series("history", np.array(history_list))
+    })
+
     unique_histories = {}
     workload_list = []
     checkpoint_list = []
-    history_list = []
     output_list = []
     label_list = []
+    indx_list = []
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
             outputs = model(batch_x)
@@ -54,7 +68,7 @@ def filter_instances(loader):
             checkpoint = int(checkpoints[i])
             if checkpoint not in unique_histories[workload]:
                 unique_histories[workload][checkpoint] = defaultdict(int)
-            history = batch_x[i].cpu()
+            history = tuple(batch_x[i].cpu().to_list())
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
@@ -62,7 +76,7 @@ def filter_instances(loader):
                 if unique_histories[workload][checkpoint][history] > 1: continue
                 workload_list.append(workload)
                 checkpoint_list.append(checkpoint)
-                history_list.append(history)
+                indx_list.append(history_indxs[history])
                 output_list.append(float(output))
                 label_list.append(int(label))
 
@@ -73,14 +87,13 @@ def filter_instances(loader):
         history = history_list[i]
         total = sum(unique_histories[workload][checkpoint].values())
         weights.append(unique_histories[workload][checkpoint][history]/total)
-        history_list[i] = np.array(history) #hack to keep history hashable up to now
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
         "checkpoint": np.array(checkpoint_list),
         "label": np.array(label_list),
         "output": np.array(output_list),
-        "history": pl.Series("history", np.array(history_list)),
+        "history_index": np.array(indx_list),
         "weight": np.array(weights)
     })
 
