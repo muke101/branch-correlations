@@ -12,7 +12,7 @@ import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
 
-selection_gamma = 0.3
+selection_gamma = 0.9
 
 benchmark = sys.argv[1]
 
@@ -174,12 +174,14 @@ def coalecse_branches(explained_branches, stats):
             correlated_branches[workload][checkpoint] = []
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
             unique_branches = defaultdict(list)
-            for _, _, _, label, _, _, weight, history in checkpoint_instances.iter_rows():
+            for _, _, _, label, _, _, history in checkpoint_instances.iter_rows():
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
                 impacts = defaultdict(list)
                 all_impacts = []
-                for feature, impact in history:
+                for item in history:
+                    feature = int(item['feature'])
+                    impact = float(item['impact'])
                     taken = feature & 1
                     pc = feature >> 1
                     correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
@@ -189,13 +191,15 @@ def coalecse_branches(explained_branches, stats):
                     all_impacts.append(impact)
                 if len(impacts) == 0: continue #extreme corner case, shouldn't happen if we filter properly
                 for pc in impacts:
-                    unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
+                    #unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
+                    unique_branches[pc].append(statistics.fmean(impacts[pc]))
                 stats.instance_gini_coeff.append(gini(np.array(all_impacts)))
 
             for pc in unique_branches:
-                avg_impacts = np.array([i[0] for i in unique_branches[pc]])
-                weights = np.array([i[1] for i in unique_branches[pc]])
-                unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean
+                #avg_impacts = np.array([i[0] for i in unique_branches[pc]])
+                #weights = np.array([i[1] for i in unique_branches[pc]])
+                #unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean
+                unique_branches[pc] = statistics.fmean(unique_branches[pc])
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -209,8 +213,6 @@ def weight_branches(correlated_branches, stats):
 
     # collaspe per-checkpoint averages of instances into per-workload averages of checkpoints
     # for each checkpoint build a map of unique branches to checkpoint averages. then take the weighted gmean of this list by the simpoint weight.
-
-    # TODO: there may be something to consider around the number of instances per checkpoint vs the checkpoint weight. these are related, but still seperate values. two checkpoint may have the same weight but very different number of instances, which implies the one with more is more important. this'd only be a concern if the averaged impacts signifcantly differ though
 
     for workload in correlated_branches:
         unique_branches = defaultdict(lambda: ([],[])) #impact, weight
@@ -234,12 +236,13 @@ def average_branches(correlated_branches, stats, use_train = True):
 
     unique_branches = defaultdict(list)
     for workload in correlated_branches:
+        print(workload)
         if not use_train and 'train' not in workload: continue #eval workloads are actually called 'train'
         for pc, impact in correlated_branches[workload]:
             unique_branches[pc].append(impact)
 
     for pc in unique_branches:
-        unique_branches[pc] = gmean(unique_branches[pc])
+        unique_branches[pc] = statistics.fmean(unique_branches[pc])
 
     sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -265,7 +268,7 @@ for branch in good_branches:
     model.eval()
 
     # header: workload, checkpoint, label, output, history
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_explained-instances.parquet".format(benchmark, branch))
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_explained_instances.parquet".format(benchmark, branch))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
     stats.selected_confidence_stddev = explained_instances['output'].std()

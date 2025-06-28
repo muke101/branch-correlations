@@ -11,7 +11,7 @@ import numpy as np
 from collections import defaultdict
 
 torch.set_default_device('cuda')
-batch_size = 16384
+batch_size = 2**14
 
 benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
@@ -51,18 +51,18 @@ def filter_instances(loader):
             workload = workloads[i]
             if workload not in unique_histories:
                 unique_histories[workload] = {}
-            checkpoint = checkpoints[i]
+            checkpoint = int(checkpoints[i])
             if checkpoint not in unique_histories[workload]:
                 unique_histories[workload][checkpoint] = defaultdict(int)
             history = batch_x[i].cpu()
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
-            unique_histories[workload][checkpoint][history] += 1
-            if unique_histories[workload][checkpoint][history] > 1: continue
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
+                unique_histories[workload][checkpoint][history] += 1
+                if unique_histories[workload][checkpoint][history] > 1: continue
                 workload_list.append(workload)
-                checkpoint_list.append(int(checkpoint))
-                history_list.append(history.numpy())
+                checkpoint_list.append(checkpoint)
+                history_list.append(history)
                 output_list.append(float(output))
                 label_list.append(int(label))
 
@@ -73,6 +73,7 @@ def filter_instances(loader):
         history = history_list[i]
         total = sum(unique_histories[workload][checkpoint].values())
         weights.append(unique_histories[workload][checkpoint][history]/total)
+        history_list[i] = np.array(history) #hack to keep history hashable up to now
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
