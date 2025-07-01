@@ -41,16 +41,24 @@ def filter_instances(loader):
     history_indxs = {}
     history_list = []
 
+    print("Filtering instances")
+
     for batch_x, _, _, _ in loader:
         for i in range(len(batch_x)):
-            history = tuple(batch_x[i].cpu().to_list())
+            history = batch_x[i].cpu().numpy().astype(np.int16).tobytes()
             if history not in history_indxs:
                 history_list.append(history)
                 history_indxs[history] = len(history_list) - 1
 
+    print("Creating data frame")
+
     history_df = pl.DataFrame({
-        "history": pl.Series("history", np.array(history_list))
+        "history": pl.Series("history", history_list)
     })
+
+    del history_list
+
+    print("Collected unique histories")
 
     unique_histories = {}
     workload_list = []
@@ -68,25 +76,28 @@ def filter_instances(loader):
             checkpoint = int(checkpoints[i])
             if checkpoint not in unique_histories[workload]:
                 unique_histories[workload][checkpoint] = defaultdict(int)
-            history = tuple(batch_x[i].cpu().to_list())
+            history = batch_x[i].cpu().numpy().astype(np.int16).tobytes()
+            indx = history_indxs[history]
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                unique_histories[workload][checkpoint][history] += 1
-                if unique_histories[workload][checkpoint][history] > 1: continue
+                unique_histories[workload][checkpoint][indx] += 1
+                if unique_histories[workload][checkpoint][indx] > 1: continue
                 workload_list.append(workload)
                 checkpoint_list.append(checkpoint)
-                indx_list.append(history_indxs[history])
+                indx_list.append(indx)
                 output_list.append(float(output))
                 label_list.append(int(label))
 
+    print("Ran inferences")
+
     weights = []
-    for i in range(len(history_list)):
+    for i in range(len(workload_list)):
         workload = workload_list[i]
         checkpoint = checkpoint_list[i]
-        history = history_list[i]
+        indx = indx_list[i]
         total = sum(unique_histories[workload][checkpoint].values())
-        weights.append(unique_histories[workload][checkpoint][history]/total)
+        weights.append(unique_histories[workload][checkpoint][indx]/total)
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
@@ -97,7 +108,7 @@ def filter_instances(loader):
         "weight": np.array(weights)
     })
 
-    return df
+    return history_df, df
 
 for branch in good_branches:
 
@@ -119,15 +130,17 @@ for branch in good_branches:
     eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
     print("Running train batches: ", len(train_loader))
-    train_confidences = filter_instances(train_loader)
+    train_histories, train_confidences = filter_instances(train_loader)
     del train_loader
     print("Running eval batches: ", len(eval_loader))
-    eval_confidences = filter_instances(eval_loader)
+    eval_histories, eval_confidences = filter_instances(eval_loader)
     del eval_loader
 
     pl.concat([train_confidences, eval_confidences])
+    pl.concat([train_histories, eval_histories])
 
     train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences_filtered.parquet".format(benchmark,branch))
+    train_histories.write_parquet(confidence_dir+"{}_branch_{}_histories.parquet".format(benchmark,branch))
 
     del train_confidences, eval_confidences
     torch.cuda.empty_cache()

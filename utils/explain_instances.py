@@ -81,17 +81,26 @@ def filter_instances(df):
 
     return filtered
 
-def run_lime(instances, eval_wrapper, num_features, num_samples):
+class History:
+    def __init__(self, history_dataframe):
+        self.history_dataframe = history_dataframe
 
+    def __getitem__(self, i):
+        return np.frombuffer(self.history_dataframe['history'][i], dtype=np.int16).astype(np.int32)
+
+def run_lime(instances, history_dataframe, eval_wrapper, num_features, num_samples):
+
+    history_record = History(history_dataframe)
     exps = []
     interval = batch_size // num_samples
     unique_histories = {}
-    histories = [np.array(instances[0]['history'][0])]
+    histories = [history_record[instances['history_index'][0]]]
 
     for i in range(1, len(instances)):
-        history = instances[i]['history'][0]
-        if tuple(history.to_list()) in unique_histories: exps.append(unique_histories[tuple(history.to_list())])
-        else: histories.append(np.array(history))
+        history = history_record[instances['history_index'][i]]
+        hashable_history = tuple(history.tolist())
+        if hashable_history in unique_histories: exps.append(unique_histories[hashable_history])
+        else: histories.append(history)
 
         if len(histories) == interval:
             batch_exps = lime_explainer.explain_instances(histories,
@@ -120,7 +129,7 @@ for branch in good_branches:
     model.eval()
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences.parquet.old".format(benchmark, branch))
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences_filtered.parquet".format(benchmark, branch))
 
     print("Filtering instances")
  
@@ -128,8 +137,10 @@ for branch in good_branches:
 
     print("Running lime")
 
+    history_record = pl.read_parquet(confidence_dir + "{}_branch_{}_histories.parquet".format(benchmark, branch))
+
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
+    correlated_branches = run_lime(confidence_scores, history_record, eval_wrapper, num_features, num_samples)
 
     # Save the results
     correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_explained_instances.parquet".format(benchmark, branch))
