@@ -13,6 +13,7 @@ from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
 
 selection_gamma = 0.9
+threshold_percent = 0.7
 
 benchmark = sys.argv[1]
 
@@ -104,6 +105,108 @@ class Stats:
         print("\tGini coefficient for benchmark ", self.benchmark_gini_coeff)
         print()
 
+class Pattern:
+    def __init__(self, pc):
+        self.pc = pc
+        self.takenness = {'taken': [], 'not_taken': []}
+        self.instance_takenness = {'taken': [], 'not_taken': []}
+        self.checkpoint_takenness = {'taken': [], 'not_taken': []}
+        self.series = []
+        self.offsets = defaultdict(int)
+        self.strides = defaultdict(int)
+        self.groups = defaultdict(int)
+
+    def add(self, taken, impact):
+        if taken:
+            self.takenness['taken'].append(impact)
+        else:
+            self.takenness['not_taken'].append(impact)
+
+        self.series.append(impact)
+
+    def finalise_instance(self, weight):
+        weight = 1
+        self.instance_takenness['taken'].append((statistics.fmean(self.takenness['taken']), weight))
+        self.instance_takenness['not_taken'].append((statistics.fmean(self.takenness['not_taken']), weight))
+        self.takenness = {'taken': [], 'not_taken': []}
+        indecies = self.threshold_impacts()
+        self.find_offset(indecies, weight)
+        self.find_stride(indecies, weight)
+        self.find_group(indecies, weight)
+        self.series = []
+
+    #def finalise_checkpoint(self, weight):
+    #    taken_impact = np.array([i[0] for i in self.instance_takenness['taken']])
+    #    taken_weight = np.array([i[1] for i in self.instance_takenness['taken']])
+    #    self.checkpoint_takenness['taken'].append((np.average(taken_impact, weights=taken_weight), weight))
+    #    not_taken_impact = np.array([i[0] for i in self.instance_takenness['not_taken']])
+    #    not_taken_weight = np.array([i[1] for i in self.instance_takenness['not_taken']])
+    #    self.checkpoint_takenness['not_taken'].append((np.average(not_taken_impact, weights=not_taken_weight), weight))
+    #    self.instance_takenness = {'taken': [], 'not_taken': []}
+
+    def find_offset(self, indecies, weight):
+
+        if len(indecies) == 1:
+            self.offsets[indecies[0]] += weight
+        else:
+            self.offsets[-1] += weight
+
+    def find_stride(self, indecies, weight):
+
+        if len(indecies) == 1:
+            self.strides[-1] += weight
+            return
+
+        stride = 0
+        for i in range(len(indecies) - 2):
+            distance = indecies[i+1] - indecies[i]
+            if stride == 0:
+                stride = distance
+            elif stride != distance:
+                self.strides[-1] += weight
+                return
+        self.strides[stride] += weight
+
+    def find_group(self, indecies, weight):
+
+        if len(indecies) == 1:
+            self.groups[-1] += weight
+            return
+
+        start = indecies[0]
+        end = indecies[-1]
+        for i in range(start, end):
+            if i not in indecies:
+                self.groups[-1] += weight
+                return
+
+        self.groups[(start, end)] += weight
+
+    def threshold_impacts(self):
+    # This function returns the indecies of the impacts that are above a certain threshold.
+
+        impacts = np.array(self.series)
+        sorted_impacts = np.sort(impacts)
+        total = np.sum(sorted_impacts)
+        cumulative = 0
+        threshold = threshold_percent * total
+        selected_indices = []
+        for i in range(len(sorted_impacts)):
+            cumulative += sorted_impacts[i]
+            if cumulative >= threshold:
+                break
+            selected_indices.append(np.where(impacts == sorted_impacts[i])[0][0]) #assumes impacts are unique
+        return selected_indices
+
+    def print(self):
+        print("Patterns for branch "+self.pc+":")
+        print("\tOffsets: ", self.offsets)
+        print("\tStrides: ", self.strides)
+        print("\tGroups: ", self.groups)
+        print("\tTaken impact: ", statistics.fmean(self.instance_takenness['taken']))
+        print("\tNot taken impact: ", statistics.fmean(self.instance_takenness['not_taken']))
+
+
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
 #good_branches = ['0x41faa0'] #TODO: actually populate this somehow
@@ -174,12 +277,13 @@ def coalecse_branches(explained_branches, stats):
             correlated_branches[workload][checkpoint] = []
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
             unique_branches = defaultdict(list)
-            for _, _, _, label, _, _, history in checkpoint_instances.iter_rows():
+            patterns = {}
+            for _, _, _, label, _, _, weight, explanation in checkpoint_instances.iter_rows():
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
                 impacts = defaultdict(list)
                 all_impacts = []
-                for item in history:
+                for item in explanation:
                     feature = int(item['feature'])
                     impact = float(item['impact'])
                     taken = feature & 1
@@ -189,17 +293,20 @@ def coalecse_branches(explained_branches, stats):
                     impact = abs(impact)
                     impacts[pc].append(impact)
                     all_impacts.append(impact)
+                    if pc not in patterns:
+                        patterns[pc] = Pattern(pc)
+                    patterns[pc].add(taken, impact)
                 if len(impacts) == 0: continue #extreme corner case, shouldn't happen if we filter properly
                 for pc in impacts:
-                    #unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
-                    unique_branches[pc].append(statistics.fmean(impacts[pc]))
+                    unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
+                    patterns[pc].finalise_instance(weight)
                 stats.instance_gini_coeff.append(gini(np.array(all_impacts)))
 
             for pc in unique_branches:
-                #avg_impacts = np.array([i[0] for i in unique_branches[pc]])
-                #weights = np.array([i[1] for i in unique_branches[pc]])
-                #unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean
-                unique_branches[pc] = statistics.fmean(unique_branches[pc])
+                avg_impacts = np.array([i[0] for i in unique_branches[pc]])
+                weights = np.array([i[1] for i in unique_branches[pc]])
+                unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean #TODO: might actually want an arithmetic mean
+                #patterns[pc].print()
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -222,7 +329,7 @@ def weight_branches(correlated_branches, stats):
                 unique_branches[pc][0].append(impact)
                 unique_branches[pc][1].append(weight)
         for pc in unique_branches:
-            unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
+            unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1]))) #TODO: might actually want an arithmetic mean
 
         correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -267,7 +374,7 @@ for branch in good_branches:
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
 
-    # header: workload, checkpoint, label, output, history
+    # header: workload, checkpoint, label, output, history, weight, explanation
     explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_explained_instances.parquet".format(benchmark, branch))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
