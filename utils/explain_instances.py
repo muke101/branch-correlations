@@ -39,10 +39,11 @@ threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
 num_samples = 4000
 batch_size = 2**14
+percentile = 100 - int(sys.argv[2])
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda')
+model.to('cuda:'+sys.argv[3])
 
 lime_explainer = LimeTextExplainer(
     class_names=["not_taken", "taken"],
@@ -71,10 +72,10 @@ def filter_instances(df):
 
     df = df.with_columns(pl.col('output').abs().alias('output'))
 
-    percentile_90th = np.percentile(np.array(df['output']), 95)
+    percentile_value = np.percentile(np.array(df['output']), percentile)
 
     unfiltered_len = df.shape[0]
-    filtered = df.filter(df['output'] > percentile_90th)
+    filtered = df.filter(df['output'] > percentile_value)
     filtered_len = filtered.shape[0]
 
     print("Unfiltered instances: "+str(unfiltered_len))
@@ -118,7 +119,7 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config)
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=sys.argv[3])
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
 
@@ -135,4 +136,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_test_explained_instances.parquet".format(benchmark, branch))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_test_explained_instances_top"+str(sys.argv[2])+".parquet".format(benchmark, branch))

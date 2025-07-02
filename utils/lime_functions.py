@@ -8,7 +8,6 @@ from lime.lime_text import LimeTextExplainer
 from torch import nn
 import time
 
-torch.set_default_device('cuda')
 
 sys.path.append(os.getcwd())  # which means the script should be run at labelling/
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # add the current directory
@@ -61,10 +60,11 @@ def string_to_tensor(string: str) -> torch.Tensor:
 
 
 class EvalWrapper:
-    def __init__(self, model: nn.Module) -> None:
+    def __init__(self, model: nn.Module, device) -> None:
 
         self.model = model
-        model.to('cuda')
+        self.device = device
+        model.to('cuda:'+device)
         self.model.eval()
 
     def _probs(self, input_data) -> torch.Tensor:
@@ -73,7 +73,7 @@ class EvalWrapper:
             input_data (torch.Tensor): Input data of shape (batch_size, input_length).
         """
         with torch.no_grad():
-            input_data.to('cuda')
+            input_data.to('cuda:'+self.device)
             output = self.model(input_data)
             probs = torch.sigmoid(output).cpu()
         return probs
@@ -102,8 +102,10 @@ class EvalWrapper:
         )
 
     @staticmethod
-    def from_checkpoint(checkpoint_path, config_path=dir_config) -> "EvalWrapper":
+    def from_checkpoint(checkpoint_path, config_path=dir_config, device="0") -> "EvalWrapper":
         """Load a model from a BranchNet checkpoint path and config and return an EvalWrapper instance."""
+
+        torch.set_default_device('cuda:'+device)
 
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -112,7 +114,7 @@ class EvalWrapper:
         model = BranchNet(config, training_phase_knobs)
         model.load_state_dict(torch.load(checkpoint_path))
         model.eval()
-        return EvalWrapper(model)
+        return EvalWrapper(model, device)
 
 
 #with open(dir_tests + "example_history.pt", "rb") as f:
