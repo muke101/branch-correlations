@@ -38,34 +38,31 @@ model.to('cuda')
 
 def filter_instances(loader):
 
-    history_indxs = {}
-    history_list = []
+    #print("Filtering instances")
 
-    print("Filtering instances")
+    #for batch_x, _, _, _ in loader:
+    #    for i in range(len(batch_x)):
+    #        history = batch_x[i].cpu().numpy().astype(np.int16).tobytes()
+    #        if history not in history_indxs:
+    #            history_list.append(history)
+    #            history_indxs[history] = len(history_list) - 1
 
-    for batch_x, _, _, _ in loader:
-        for i in range(len(batch_x)):
-            history = batch_x[i].cpu().numpy().astype(np.int16).tobytes()
-            if history not in history_indxs:
-                history_list.append(history)
-                history_indxs[history] = len(history_list) - 1
+    #print("Creating data frame")
 
-    print("Creating data frame")
+    #history_df = pl.DataFrame({
+    #    "history": pl.Series("history", history_list)
+    #})
 
-    history_df = pl.DataFrame({
-        "history": pl.Series("history", history_list)
-    })
+    #del history_list
 
-    del history_list
-
-    print("Collected unique histories")
+    #print("Collected unique histories")
 
     unique_histories = {}
     workload_list = []
     checkpoint_list = []
     output_list = []
     label_list = []
-    indx_list = []
+    history_list = []
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
             outputs = model(batch_x)
@@ -76,16 +73,15 @@ def filter_instances(loader):
             checkpoint = int(checkpoints[i])
             if checkpoint not in unique_histories[workload]:
                 unique_histories[workload][checkpoint] = defaultdict(int)
-            history = batch_x[i].cpu().numpy().astype(np.int16).tobytes()
-            indx = history_indxs[history]
+            history = batch_x[i].cpu().numpy().astype(np.int16)
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                unique_histories[workload][checkpoint][indx] += 1
-                if unique_histories[workload][checkpoint][indx] > 1: continue
+                unique_histories[workload][checkpoint][history.tobytes()] += 1
+                if unique_histories[workload][checkpoint][history.tobytes()] > 1: continue
                 workload_list.append(workload)
                 checkpoint_list.append(checkpoint)
-                indx_list.append(indx)
+                history_list.append(history)
                 output_list.append(float(output))
                 label_list.append(int(label))
 
@@ -95,20 +91,20 @@ def filter_instances(loader):
     for i in range(len(workload_list)):
         workload = workload_list[i]
         checkpoint = checkpoint_list[i]
-        indx = indx_list[i]
+        history = history_list[i]
         total = sum(unique_histories[workload][checkpoint].values())
-        weights.append(unique_histories[workload][checkpoint][indx]/total)
+        weights.append(unique_histories[workload][checkpoint][history.tobytes()]/total)
 
     df = pl.DataFrame({
         "workload": np.array(workload_list),
-        "checkpoint": np.array(checkpoint_list),
-        "label": np.array(label_list),
+        "checkpoint": np.array(checkpoint_list, dtype=np.uint8),
+        "label": np.array(label_list, dtype=np.uint8),
         "output": np.array(output_list),
-        "history_index": np.array(indx_list),
+        "history": np.array(history_list, dtype=np.int16),
         "weight": np.array(weights)
     })
 
-    return history_df, df
+    return df
 
 for branch in good_branches:
 
@@ -120,27 +116,31 @@ for branch in good_branches:
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
  
-    #train_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'train')
-    #eval_loader = BenchmarkBranchLoader(benchmark, branch, dataset_type = 'validate')
-    train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    print("Num train instances: ", len(train_loader))
-    print("Num eval instances: ", len(eval_loader))
-    train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
-    eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
+    #train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    #eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    #print("Num train instances: ", len(train_loader))
+    #print("Num eval instances: ", len(eval_loader))
+    #train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
+    #eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
-    print("Running train batches: ", len(train_loader))
-    train_histories, train_confidences = filter_instances(train_loader)
-    del train_loader
-    print("Running eval batches: ", len(eval_loader))
-    eval_histories, eval_confidences = filter_instances(eval_loader)
-    del eval_loader
+    #print("Running train batches: ", len(train_loader))
+    #train_confidences = filter_instances(train_loader)
+    #del train_loader
+    #print("Running eval batches: ", len(eval_loader))
+    #eval_confidences = filter_instances(eval_loader)
+    #del eval_loader
 
-    pl.concat([train_confidences, eval_confidences])
-    pl.concat([train_histories, eval_histories])
+    #pl.concat([train_confidences, eval_confidences])
+    #pl.concat([train_histories, eval_histories])
 
-    train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences_filtered.parquet".format(benchmark,branch))
-    train_histories.write_parquet(confidence_dir+"{}_branch_{}_histories.parquet".format(benchmark,branch))
+    #train_confidences.write_parquet(confidence_dir+"{}_branch_{}_confidences_filtered.parquet".format(benchmark,branch))
 
-    del train_confidences, eval_confidences
+    test_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'test')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    test_loader = torch.utils.data.DataLoader(test_loader, batch_size=batch_size, shuffle=False)
+    print("Running test batches: ", len(test_loader))
+    test_confidences = filter_instances(test_loader)
+    del test_loader
+    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_test_confidences_filtered.parquet".format(benchmark,branch))
+
+    #del train_confidences, eval_confidences
     torch.cuda.empty_cache()

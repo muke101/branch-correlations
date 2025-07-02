@@ -1,19 +1,17 @@
 import yaml
-import torch
 import get_traces
 import os
 import sys
 import statistics
 from collections import defaultdict
-from scipy.stats import gmean
-from scipy.special import logit
+#from scipy.stats import gmean
+#from scipy.special import logit
 import numpy as np
 import polars as pl
-from lime_functions import EvalWrapper, dir_config, tensor_to_string
-from lime.lime_text import LimeTextExplainer
+#from lime_functions import EvalWrapper, dir_config, tensor_to_string
+#from lime.lime_text import LimeTextExplainer
 
-selection_gamma = 0.9
-threshold_percent = 0.7
+selection_gamma = 2.5
 
 benchmark = sys.argv[1]
 
@@ -215,19 +213,11 @@ good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].s
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
 
-from model import BranchNet
-from model import BranchNetTrainingPhaseKnobs
-from benchmark_branch_loader import BenchmarkBranchLoader
-
 dir_ckpt = dir_results + '/checkpoints'
 dir_config = dir_results + '/config.yaml'
 
 with open(dir_config, 'r') as f:
     config = yaml.safe_load(f)
-
-training_phase_knobs = BranchNetTrainingPhaseKnobs()
-model = BranchNet(config, training_phase_knobs)
-model.to('cuda')
 
 def gini(array):
     array = array.flatten()
@@ -241,27 +231,6 @@ def gini(array):
     n = array.shape[0]
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
-
-    #for workload in instances['workload'].unique():
-    #    results[workload] = {}
-    #    workload_instances = instances.filter(instances['workload'] == workload)
-    #    for checkpoint in workload_instances['checkpoint'].unique():
-    #        results[workload][checkpoint] = []
-    #        checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
-    #        for _, _, _, label, _, history in checkpoint_instances.iter_rows():
-
-    #            exp = lime_explainer.explain_instance(
-    #                torch.tensor(history),
-    #                eval_wrapper.probs_from_list_of_strings,
-    #                num_features=num_features,
-    #                num_samples=num_samples,
-    #            )
-
-    #            exp = (exp.as_list(), label)
-
-    #            results[workload][checkpoint].append(exp)
-
-    #return results
 
 def coalecse_branches(explained_branches, stats):
 
@@ -278,7 +247,7 @@ def coalecse_branches(explained_branches, stats):
             checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
             unique_branches = defaultdict(list)
             patterns = {}
-            for _, _, _, label, _, _, weight, explanation in checkpoint_instances.iter_rows():
+            for _, _, label, _, _, weight, explanation in checkpoint_instances.iter_rows():
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
                 impacts = defaultdict(list)
@@ -305,8 +274,8 @@ def coalecse_branches(explained_branches, stats):
             for pc in unique_branches:
                 avg_impacts = np.array([i[0] for i in unique_branches[pc]])
                 weights = np.array([i[1] for i in unique_branches[pc]])
-                unique_branches[pc] = np.exp(np.average(np.log(avg_impacts), weights=weights)) # weighted gmean #TODO: might actually want an arithmetic mean
                 #patterns[pc].print()
+                unique_branches[pc] = np.average(avg_impacts, weights=weights) # weighted average
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -329,7 +298,8 @@ def weight_branches(correlated_branches, stats):
                 unique_branches[pc][0].append(impact)
                 unique_branches[pc][1].append(weight)
         for pc in unique_branches:
-            unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1]))) #TODO: might actually want an arithmetic mean
+            #unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
+            unique_branches[pc] = np.average(np.array(unique_branches[pc][0]), weights=np.array(unique_branches[pc][1]))
 
         correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -343,7 +313,6 @@ def average_branches(correlated_branches, stats, use_train = True):
 
     unique_branches = defaultdict(list)
     for workload in correlated_branches:
-        print(workload)
         if not use_train and 'train' not in workload: continue #eval workloads are actually called 'train'
         for pc, impact in correlated_branches[workload]:
             unique_branches[pc].append(impact)
@@ -367,15 +336,8 @@ for branch in good_branches:
 
     stats = Stats(branch)
 
-    # Load the model checkpoint
-    dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
-    print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config)
-    model.load_state_dict(torch.load(dir_ckpt))
-    model.eval()
-
-    # header: workload, checkpoint, label, output, history, weight, explanation
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_explained_instances.parquet".format(benchmark, branch))
+    # header: workload, checkpoint, label, output, history
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_test_explained_instances.parquet".format(benchmark, branch))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
     stats.selected_confidence_stddev = explained_instances['output'].std()
