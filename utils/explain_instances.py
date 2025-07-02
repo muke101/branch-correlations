@@ -37,7 +37,7 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-num_samples = 5000
+num_samples = 4000
 batch_size = 2**14
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
@@ -71,8 +71,10 @@ def filter_instances(df):
 
     df = df.with_columns(pl.col('output').abs().alias('output'))
 
+    percentile_90th = np.percentile(np.array(df['output']), 95)
+
     unfiltered_len = df.shape[0]
-    filtered = df.filter(df['output'] > threshold)
+    filtered = df.filter(df['output'] > percentile_90th)
     filtered_len = filtered.shape[0]
 
     print("Unfiltered instances: "+str(unfiltered_len))
@@ -81,23 +83,15 @@ def filter_instances(df):
 
     return filtered
 
-class History:
-    def __init__(self, history_dataframe):
-        self.history_dataframe = history_dataframe
+def run_lime(instances, eval_wrapper, num_features, num_samples):
 
-    def __getitem__(self, i):
-        return np.frombuffer(self.history_dataframe['history'][i], dtype=np.int16).astype(np.int32)
-
-def run_lime(instances, history_dataframe, eval_wrapper, num_features, num_samples):
-
-    history_record = History(history_dataframe)
     exps = []
     interval = batch_size // num_samples
     unique_histories = {}
-    histories = [history_record[instances['history_index'][0]]]
+    histories = [np.array(instances['history'][0], dtype=np.int32)]
 
     for i in range(1, len(instances)):
-        history = history_record[instances['history_index'][i]]
+        history = np.array(instances['history'][i], dtype=np.int32)
         hashable_history = tuple(history.tolist())
         if hashable_history in unique_histories: exps.append(unique_histories[hashable_history])
         else: histories.append(history)
@@ -115,7 +109,7 @@ def run_lime(instances, history_dataframe, eval_wrapper, num_features, num_sampl
     if len(histories) > 0: #clean up remainder
         exps.extend([exp.as_list() for exp in lime_explainer.explain_instances(histories, eval_wrapper.probs_from_list_of_strings, num_features=num_features, num_samples=num_samples)])
 
-    return instances.with_columns(pl.Series("explanation", exps, dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float64)]))))
+    return instances.with_columns(pl.Series("explanation", exps, dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int16),pl.Field("impact",pl.Float64)]))))
 
 for branch in good_branches:
 
@@ -129,7 +123,7 @@ for branch in good_branches:
     model.eval()
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_confidences_filtered.parquet".format(benchmark, branch))
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_test_confidences_filtered.parquet".format(benchmark, branch))
 
     print("Filtering instances")
  
@@ -137,10 +131,8 @@ for branch in good_branches:
 
     print("Running lime")
 
-    history_record = pl.read_parquet(confidence_dir + "{}_branch_{}_histories.parquet".format(benchmark, branch))
-
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
-    correlated_branches = run_lime(confidence_scores, history_record, eval_wrapper, num_features, num_samples)
+    correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_explained_instances.parquet".format(benchmark, branch))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_test_explained_instances.parquet".format(benchmark, branch))
