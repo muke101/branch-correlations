@@ -4,12 +4,9 @@ import os
 import sys
 import statistics
 from collections import defaultdict
-#from scipy.stats import gmean
-#from scipy.special import logit
 import numpy as np
 import polars as pl
-#from lime_functions import EvalWrapper, dir_config, tensor_to_string
-#from lime.lime_text import LimeTextExplainer
+from numba import jit
 
 selection_gamma = 2.5
 threshold_percent = 0.7
@@ -91,7 +88,7 @@ class Stats:
         self.benchmark_gini_coeff = 0
 
     def finalise(self):
-        self.instance_gini_coeff = statistics.fmean(self.instance_gini_coeff)
+        self.instance_gini_coeff = fast_mean(np.array(self.instance_gini_coeff))
         self.checkpoint_gini_coeff = statistics.fmean(self.checkpoint_gini_coeff)
         self.workload_gini_coeff = statistics.fmean(self.workload_gini_coeff)
 
@@ -146,11 +143,11 @@ class Pattern:
         taken_impact = np.array([i[0] for i in self.instance_takenness['taken']])
         taken_weight = np.array([i[1] for i in self.instance_takenness['taken']])
         if len(taken_impact) > 0:
-            self.checkpoint_takenness['taken'].append((np.average(taken_impact, weights=taken_weight), weight))
+            self.checkpoint_takenness['taken'].append((fast_weighted_mean(taken_impact, weights=taken_weight), weight))
         not_taken_impact = np.array([i[0] for i in self.instance_takenness['not_taken']])
         not_taken_weight = np.array([i[1] for i in self.instance_takenness['not_taken']])
         if len(not_taken_impact) > 0:
-            self.checkpoint_takenness['not_taken'].append((np.average(not_taken_impact, weights=not_taken_weight), weight))
+            self.checkpoint_takenness['not_taken'].append((fast_weighted_mean(not_taken_impact, weights=not_taken_weight), weight))
         self.instance_takenness = {'taken': [], 'not_taken': []}
         self.average_checkpoint_length.append((statistics.fmean(self.average_instance_length), weight))
         self.average_instance_length = []
@@ -182,15 +179,15 @@ class Pattern:
             self.strides[-1] += weight
             return
 
-        stride = 0
-        for i in range(len(indecies) - 2):
-            distance = indecies[i+1] - indecies[i]
-            if stride == 0:
-                stride = distance
-            elif stride != distance:
-                self.strides[-1] += weight
-                return
-        self.strides[stride] += weight
+        if len(indecies) < 3:
+            self.strides[-1] += weight
+            return
+
+        distances = np.diff(indecies)
+        if np.all(distances == distances[0]):
+            self.strides[distances[0]] += weight
+        else:
+            self.strides[-1] += weight
 
     def find_group(self, indecies, weight):
 
@@ -198,33 +195,26 @@ class Pattern:
             self.groups[-1] += weight
             return
 
-        start = indecies[0]
-        end = indecies[-1]
-        if start == 0 and end == len(self.series) - 1:
+        start, end = indecies[0], indecies[-1]
+        expected_indecies = set(range(start, end + 1))
+        if set(indecies) == expected_indecies:
+            self.groups[(start, end)] += weight
+        else:
             self.groups[-1] += weight
-            return
-        for i in range(start, end):
-            if i not in indecies:
-                self.groups[-1] += weight
-                return
-
-        self.groups[(start, end)] += weight
 
     def threshold_impacts(self):
-    # This function returns the indecies of the impacts that are above a certain threshold.
+
+        if len(self.series) == 0:
+            return np.array([])
 
         impacts = np.array(self.series)
-        sorted_impacts = np.sort(impacts)[::-1]
-        total = np.sum(sorted_impacts)
-        cumulative = 0
+        sorted_indices = np.argsort(impacts)[::-1]
+        sorted_impacts = impacts[sorted_indices]
+        cumulative = np.cumsum(sorted_impacts)
+        total = cumulative[-1]
         threshold = threshold_percent * total
-        selected_indices = []
-        for i in range(len(sorted_impacts)):
-            cumulative += sorted_impacts[i]
-            selected_indices.append(np.where(impacts == sorted_impacts[i])[0][0]) #assumes impacts are unique
-            if cumulative >= threshold:
-                break
-        return selected_indices
+        cutoff_indx = np.searchsorted(cumulative, threshold)
+        return sorted_indices[:cutoff_indx + 1]
 
     def print(self):
         print("Patterns for branch "+hex(self.pc)+":")
@@ -265,6 +255,7 @@ dir_config = dir_results + '/config.yaml'
 with open(dir_config, 'r') as f:
     config = yaml.safe_load(f)
 
+@jit(nopython=True)
 def gini(array):
     array = array.flatten()
     # Values cannot be 0:
@@ -277,6 +268,14 @@ def gini(array):
     n = array.shape[0]
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
+
+@jit(nopython=True)
+def fast_mean(array):
+    return np.mean(array)
+
+@jit(nopython=True)
+def fast_weighted_mean(array, weights):
+    return np.sum(array * weights) / np.sum(weights)
 
 def coalecse_branches(explained_branches, patterns, stats):
 
@@ -319,7 +318,7 @@ def coalecse_branches(explained_branches, patterns, stats):
             for pc in unique_branches:
                 avg_impacts = np.array([i[0] for i in unique_branches[pc]])
                 weights = np.array([i[1] for i in unique_branches[pc]])
-                unique_branches[pc] = np.average(avg_impacts, weights=weights) # weighted average
+                unique_branches[pc] = fast_weighted_mean(avg_impacts, weights=weights) # weighted average
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -344,8 +343,9 @@ def weight_branches(correlated_branches, patterns, stats):
                 #patterns[pc].finalise_checkpoint(weight)
         for pc in unique_branches:
             #unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
-            if sum(unique_branches[pc][1]) == 0: breakpoint()
-            unique_branches[pc] = np.average(np.array(unique_branches[pc][0]), weights=np.array(unique_branches[pc][1]))
+            impacts = np.array(unique_branches[pc][0])
+            weights = np.array(unique_branches[pc][1])
+            unique_branches[pc] = fast_weighted_mean(impacts, weights)
             patterns[pc].finalise_workload()
             if statistics.fmean(patterns[pc].instance_lengths) >= 5:
                 patterns[pc].print_instance()
