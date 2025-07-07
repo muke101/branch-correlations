@@ -37,13 +37,14 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-num_samples = 4000
+#num_samples = 4000
+num_samples = 500
 batch_size = 2**14
 percentile = 100 - int(sys.argv[2])
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda:'+sys.argv[3])
+model.to('cuda:'+sys.argv[4])
 
 lime_explainer = LimeTextExplainer(
     class_names=["not_taken", "taken"],
@@ -119,7 +120,7 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=sys.argv[3])
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=sys.argv[4])
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
 
@@ -136,4 +137,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_test_explained_instances_top"+str(sys.argv[2])+".parquet".format(benchmark, branch))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))

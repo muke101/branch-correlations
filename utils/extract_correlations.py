@@ -18,6 +18,9 @@ benchmark = sys.argv[1]
 
 explain_dir = "/mnt/data/results/branch-project/explained-instances/"
 
+#TODO: if we keep a Pattern class around for everything, need to create a workload -> checkpoint -> instances dictionary.
+# alternatively, can create per-checkpoint classes and average those into new structures
+
 class AggregateStats:
     # This class aggregates statistics across multiple branches for a specific benchmark.
     def __init__(self):
@@ -115,7 +118,8 @@ class Pattern:
         self.offsets = defaultdict(int)
         self.strides = defaultdict(int)
         self.groups = defaultdict(int)
-        self.average_length = []
+        self.instance_lengths = []
+        self.average_checkpoint_length = []
 
     def add(self, taken, impact):
         if taken:
@@ -135,7 +139,7 @@ class Pattern:
         self.find_offset(indecies, weight)
         self.find_stride(indecies, weight)
         self.find_group(indecies, weight)
-        self.average_length.append(len(self.series))
+        self.instance_lengths.append(len(self.series))
         self.series = []
 
     def finalise_checkpoint(self, weight):
@@ -148,6 +152,8 @@ class Pattern:
         if len(not_taken_impact) > 0:
             self.checkpoint_takenness['not_taken'].append((np.average(not_taken_impact, weights=not_taken_weight), weight))
         self.instance_takenness = {'taken': [], 'not_taken': []}
+        self.average_checkpoint_length.append((statistics.fmean(self.average_instance_length), weight))
+        self.average_instance_length = []
 
     def finalise_workload(self):
         taken_impact = np.array([i[0] for i in self.checkpoint_takenness['taken']])
@@ -159,6 +165,9 @@ class Pattern:
         if len(not_taken_impact) > 0:
             self.workload_takenness['not_taken'].append(np.average(not_taken_impact, weights=not_taken_weight))
         self.checkpoint_takenness = {'taken': [], 'not_taken': []}
+        #lengths = np.array([i[0] for i in self.average_checkpoint_length])
+        #weights = np.array([i[1] for i in self.average_checkpoint_length])
+        #self.average_checkpoint_length = np.average(lengths, weights=weights)
 
     def find_offset(self, indecies, weight):
 
@@ -191,6 +200,9 @@ class Pattern:
 
         start = indecies[0]
         end = indecies[-1]
+        if start == 0 and end == len(self.series) - 1:
+            self.groups[-1] += weight
+            return
         for i in range(start, end):
             if i not in indecies:
                 self.groups[-1] += weight
@@ -216,12 +228,27 @@ class Pattern:
 
     def print(self):
         print("Patterns for branch "+hex(self.pc)+":")
-        #print("\tAverage series length: ", statistics.fmean(self.average_length))
+        print("\tAverage series length: ", self.average_checkpoint_length)
         print("\tOffsets: ", self.offsets)
         print("\tStrides: ", self.strides)
         print("\tGroups: ", self.groups)
         print("\tTaken impact: ", statistics.fmean(self.workload_takenness['taken']))
         print("\tNot taken impact: ", statistics.fmean(self.workload_takenness['not_taken']))
+
+    def print_instance(self):
+        print("Patterns for branch "+hex(self.pc)+":")
+        print("\tAverage series length: ", statistics.fmean(self.instance_lengths))
+        print("\tOffsets: ", self.offsets)
+        print("\tStrides: ", self.strides)
+        print("\tGroups: ", self.groups)
+        if len(self.instance_takenness['taken']) > 0:
+            taken_impact = np.array([i[0] for i in self.instance_takenness['taken']])
+            taken_weight = np.array([i[1] for i in self.instance_takenness['taken']])
+            print("\tTaken impact: ", np.average(taken_impact, weights=taken_weight))
+        if len(self.instance_takenness['not_taken']) > 0:
+            not_taken_impact = np.array([i[0] for i in self.instance_takenness['not_taken']])
+            not_taken_weight = np.array([i[1] for i in self.instance_takenness['not_taken']])
+            print("\tNot taken impact: ", np.average(not_taken_impact, weights=not_taken_weight))
 
 
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
@@ -314,13 +341,14 @@ def weight_branches(correlated_branches, patterns, stats):
             for pc, impact in correlated_branches[workload][checkpoint]:
                 unique_branches[pc][0].append(impact)
                 unique_branches[pc][1].append(weight)
-                patterns[pc].finalise_checkpoint(weight)
+                #patterns[pc].finalise_checkpoint(weight)
         for pc in unique_branches:
             #unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
+            if sum(unique_branches[pc][1]) == 0: breakpoint()
             unique_branches[pc] = np.average(np.array(unique_branches[pc][0]), weights=np.array(unique_branches[pc][1]))
             patterns[pc].finalise_workload()
-            if pc in [0x2bd, 0x591, 0x131]:
-                patterns[pc].print()
+            if statistics.fmean(patterns[pc].instance_lengths) >= 5:
+                patterns[pc].print_instance()
 
         correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -358,7 +386,7 @@ for branch in good_branches:
     stats = Stats(branch)
 
     # header: workload, checkpoint, label, output, history
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_test_explained_instances.parquet".format(benchmark, branch))
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
     stats.selected_confidence_stddev = explained_instances['output'].std()
