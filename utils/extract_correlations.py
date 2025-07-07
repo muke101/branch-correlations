@@ -104,6 +104,77 @@ class Stats:
         print("\tGini coefficient for benchmark ", self.benchmark_gini_coeff)
         print()
 
+@jit(nopython=True)
+def fast_threshold_impacts(series, threshold_percent):
+    """Optimized threshold_impacts using numba"""
+    if len(series) == 0:
+        return np.array([], dtype=np.int64)
+
+    impacts = np.array(series)
+    sorted_indices = np.argsort(impacts)[::-1]
+    sorted_impacts = impacts[sorted_indices]
+
+    # Fast cumulative sum
+    cumulative = np.cumsum(sorted_impacts)
+    total = cumulative[-1]
+    threshold = threshold_percent * total
+
+    # Find cutoff index
+    cutoff_idx = 0
+    for i in range(len(cumulative)):
+        if cumulative[i] >= threshold:
+            cutoff_idx = i
+            break
+
+    return sorted_indices[:cutoff_idx + 1]
+
+@jit(nopython=True)
+def fast_find_patterns(indices):
+    """Optimized pattern finding that does all three pattern types at once"""
+    n_indices = len(indices)
+
+    # Initialize results
+    offset = np.int64(-1)
+    stride = np.int64(-1)
+    group_start = np.int64(-1)
+    group_end = np.int64(-1)
+
+    if n_indices == 0:
+        return offset, stride, group_start, group_end
+
+    if n_indices == 1:
+        offset = indices[0]
+        return offset, stride, group_start, group_end
+
+    # Check for stride pattern
+    if n_indices >= 3:
+        distances = np.diff(indices)
+        if len(distances) > 0:
+            first_distance = distances[0]
+            all_same = True
+            for i in range(1, len(distances)):
+                if distances[i] != first_distance:
+                    all_same = False
+                    break
+            if all_same:
+                stride = first_distance
+
+    # Check for group pattern
+    start, end = indices[0], indices[-1]
+    expected_size = end - start + 1
+    if n_indices == expected_size:
+        # Check if it's a contiguous range
+        is_contiguous = True
+        for i in range(n_indices - 1):
+            if indices[i+1] - indices[i] != 1:
+                is_contiguous = False
+                break
+        if is_contiguous:
+            group_start = start
+            group_end = end
+
+    return offset, stride, group_start, group_end
+
 class Pattern:
     def __init__(self, pc):
         self.pc = pc
@@ -111,7 +182,8 @@ class Pattern:
         self.instance_takenness = {'taken': [], 'not_taken': []}
         self.checkpoint_takenness = {'taken': [], 'not_taken': []}
         self.workload_takenness = {'taken': [], 'not_taken': []}
-        self.series = []
+        self.series = np.empty(582, dtype=np.float64)
+        self.serise_indx = 0
         self.offsets = defaultdict(int)
         self.strides = defaultdict(int)
         self.groups = defaultdict(int)
@@ -119,25 +191,50 @@ class Pattern:
         self.average_checkpoint_length = []
 
     def add(self, taken, impact):
+
+        self.series[self.serise_indx] = impact
+        self.serise_indx += 1
+
         if taken:
             self.takenness['taken'].append(impact)
         else:
             self.takenness['not_taken'].append(impact)
 
-        self.series.append(impact)
-
     def finalise_instance(self, weight):
         if len(self.takenness['taken']) > 0:
-            self.instance_takenness['taken'].append((statistics.fmean(self.takenness['taken']), weight))
+            taken_average = statistics.fmean(self.takenness['taken'])
+            self.instance_takenness['taken'].append((taken_average, weight))
         if len(self.takenness['not_taken']) > 0:
-            self.instance_takenness['not_taken'].append((statistics.fmean(self.takenness['not_taken']), weight))
+            not_taken_average = statistics.fmean(self.takenness['not_taken'])
+            self.instance_takenness['not_taken'].append((not_taken_average, weight))
         self.takenness = {'taken': [], 'not_taken': []}
-        indecies = self.threshold_impacts()
-        self.find_offset(indecies, weight)
-        self.find_stride(indecies, weight)
-        self.find_group(indecies, weight)
-        self.instance_lengths.append(len(self.series))
-        self.series = []
+
+        if self.serise_indx == 0:
+            self.instance_lengths.append(0)
+            return
+
+        series = self.series[:self.serise_indx]
+        thresholded_indices = fast_threshold_impacts(series, threshold_percent)
+        offset, stride, group_start, group_end = fast_find_patterns(thresholded_indices)
+
+        # Update pattern counters
+        if offset != -1:
+            self.offsets[offset] += weight
+        else:
+            self.offsets[-1] += weight
+
+        if stride != -1:
+            self.strides[stride] += weight
+        else:
+            self.strides[-1] += weight
+
+        if group_start != -1 and group_end != -1:
+            self.groups[(group_start, group_end)] += weight
+        else:
+            self.groups[-1] += weight
+
+        self.instance_lengths.append(self.serise_indx)
+        self.serise_indx = 0
 
     def finalise_checkpoint(self, weight):
         taken_impact = np.array([i[0] for i in self.instance_takenness['taken']])
@@ -165,56 +262,6 @@ class Pattern:
         #lengths = np.array([i[0] for i in self.average_checkpoint_length])
         #weights = np.array([i[1] for i in self.average_checkpoint_length])
         #self.average_checkpoint_length = np.average(lengths, weights=weights)
-
-    def find_offset(self, indecies, weight):
-
-        if len(indecies) == 1:
-            self.offsets[indecies[0]] += weight
-        else:
-            self.offsets[-1] += weight
-
-    def find_stride(self, indecies, weight):
-
-        if len(indecies) == 1:
-            self.strides[-1] += weight
-            return
-
-        if len(indecies) < 3:
-            self.strides[-1] += weight
-            return
-
-        distances = np.diff(indecies)
-        if np.all(distances == distances[0]):
-            self.strides[distances[0]] += weight
-        else:
-            self.strides[-1] += weight
-
-    def find_group(self, indecies, weight):
-
-        if len(indecies) == 1:
-            self.groups[-1] += weight
-            return
-
-        start, end = indecies[0], indecies[-1]
-        expected_indecies = set(range(start, end + 1))
-        if set(indecies) == expected_indecies:
-            self.groups[(start, end)] += weight
-        else:
-            self.groups[-1] += weight
-
-    def threshold_impacts(self):
-
-        if len(self.series) == 0:
-            return np.array([])
-
-        impacts = np.array(self.series)
-        sorted_indices = np.argsort(impacts)[::-1]
-        sorted_impacts = impacts[sorted_indices]
-        cumulative = np.cumsum(sorted_impacts)
-        total = cumulative[-1]
-        threshold = threshold_percent * total
-        cutoff_indx = np.searchsorted(cumulative, threshold)
-        return sorted_indices[:cutoff_indx + 1]
 
     def print(self):
         print("Patterns for branch "+hex(self.pc)+":")
@@ -313,7 +360,7 @@ def coalecse_branches(explained_branches, patterns, stats):
                 taken = features & 1
                 pcs = features >> 1
 
-                correct_direction = ((impacts < 0) and (label == 0)) or ((impacts > 0) and (label == 1))
+                correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
 
                 valid_indices = correct_direction
                 if not np.any(valid_indices):
