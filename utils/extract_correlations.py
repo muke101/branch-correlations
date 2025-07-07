@@ -105,12 +105,11 @@ class Stats:
         print()
 
 @jit(nopython=True)
-def fast_threshold_impacts(series, threshold_percent):
+def fast_threshold_impacts(impacts, threshold_percent):
     """Optimized threshold_impacts using numba"""
-    if len(series) == 0:
-        return np.array([], dtype=np.int64)
+    if len(impacts) == 0:
+        return np.empty(0, dtype=np.int64)
 
-    impacts = np.array(series)
     sorted_indices = np.argsort(impacts)[::-1]
     sorted_impacts = impacts[sorted_indices]
 
@@ -148,16 +147,14 @@ def fast_find_patterns(indices):
 
     # Check for stride pattern
     if n_indices >= 3:
-        distances = np.diff(indices)
-        if len(distances) > 0:
-            first_distance = distances[0]
-            all_same = True
-            for i in range(1, len(distances)):
-                if distances[i] != first_distance:
-                    all_same = False
-                    break
-            if all_same:
-                stride = first_distance
+        first_distance = indices[1] - indices[0]
+        all_same = True
+        for i in range(2, n_indices):
+            if indices[i] - indices[i-1] != first_distance:
+                all_same = False
+                break
+        if all_same:
+            stride = first_distance
 
     # Check for group pattern
     start, end = indices[0], indices[-1]
