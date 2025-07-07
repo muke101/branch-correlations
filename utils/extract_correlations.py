@@ -284,45 +284,77 @@ def coalecse_branches(explained_branches, patterns, stats):
 
     correlated_branches = {}
 
-    for workload in explained_branches['workload'].unique():
+    workloads = explained_branches['workload'].unique()
+
+    for workload in workloads:
         correlated_branches[workload] = {}
-        workload_instances = explained_branches.filter(explained_branches['workload'] == workload)
-        for checkpoint in workload_instances['checkpoint'].unique():
-            correlated_branches[workload][checkpoint] = []
-            checkpoint_instances = workload_instances.filter(workload_instances['checkpoint'] == checkpoint)
+
+        # Filter once per workload
+        workload_mask = explained_branches['workload'] == workload
+        workload_instances = explained_branches.filter(workload_mask)
+
+        checkpoints = workload_instances['checkpoint'].unique()
+
+        for checkpoint in checkpoints:
+
             unique_branches = defaultdict(list)
-            for _, _, label, _, _, weight, explanation in checkpoint_instances.iter_rows():
+            checkpoint_mask = workload_instances['checkpoint'] == checkpoint
+            checkpoint_instances = workload_instances.filter(checkpoint_mask)
+            rows = list(checkpoint_instances.iter_rows())
+
+            for row in rows:
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                impacts = defaultdict(list)
-                all_impacts = []
-                for item in explanation:
-                    feature = int(item['feature'])
-                    impact = float(item['impact'])
-                    taken = feature & 1
-                    pc = feature >> 1
-                    correct_direction = (impact < 0 and label == 0) or (impact > 0 and label == 1)
-                    if not correct_direction: continue
-                    impact = abs(impact)
-                    impacts[pc].append(impact)
-                    all_impacts.append(impact)
+                label, weight, explanation = row[2], row[5], row[6]
+
+                features = np.array([int(item['feature']) for item in explanation])
+                impacts = np.array([float(item['impact']) for item in explanation])
+
+                taken = features & 1
+                pcs = features >> 1
+
+                correct_direction = ((impacts < 0) and (label == 0)) or ((impacts > 0) and (label == 1))
+
+                valid_indices = correct_direction
+                if not np.any(valid_indices):
+                    continue
+
+                valid_pcs = pcs[valid_indices]
+                valid_impacts = np.abs(impacts[valid_indices])
+                valid_taken = taken[valid_indices]
+
+                unique_pcs = np.unique(valid_pcs)
+
+                for pc in unique_pcs:
+                    pc_mask = valid_pcs == pc
+                    pc_impacts_array = valid_impacts[pc_mask]
+                    pc_taken_array = valid_taken[pc_mask]
+
+                    avg_impact = fast_mean(pc_impacts_array)
+                    unique_branches[pc].append((avg_impact, weight))
+
                     if pc not in patterns:
                         patterns[pc] = Pattern(pc)
-                    patterns[pc].add(taken, impact)
-                if len(impacts) == 0: continue #extreme corner case, shouldn't happen if we filter properly
-                for pc in impacts:
-                    unique_branches[pc].append((statistics.fmean(impacts[pc]), weight))
+
+                    for taken_val, impact_val in zip(pc_taken_array, pc_impacts_array):
+                        patterns[pc].add(taken_val, impact_val)
+
                     patterns[pc].finalise_instance(weight)
-                stats.instance_gini_coeff.append(gini(np.array(all_impacts)))
+
+                stats.instance_gini_coeff.append(gini(np.array(valid_impacts)))
+
+                if not unique_branches: continue
 
             for pc in unique_branches:
-                avg_impacts = np.array([i[0] for i in unique_branches[pc]])
-                weights = np.array([i[1] for i in unique_branches[pc]])
+                impacts_weights = np.array(unique_branches[pc])
+                avg_impacts = impacts_weights[:, 0]
+                weights = impacts_weights[:, 1]
                 unique_branches[pc] = fast_weighted_mean(avg_impacts, weights=weights) # weighted average
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
-            stats.checkpoint_gini_coeff.append(gini(np.array([i[1] for i in sorted_features])))
+            impacts_array = np.array([impact for _, impact in sorted_features])
+            stats.checkpoint_gini_coeff.append(gini(impacts_array))
 
             correlated_branches[workload][checkpoint] = sorted_features
 
