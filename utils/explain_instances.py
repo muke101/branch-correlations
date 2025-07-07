@@ -11,8 +11,21 @@ import numpy as np
 import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
+import argparse
 
-benchmark = sys.argv[1]
+parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
+
+parser.add_argument('--benchmark', type=str, required=True)
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--device', type=int, required=True)
+parser.add_argument('--percentile', type=int, required=True)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark.split(',')[0]
+run_type = args.run_type.split(',')[0]
+device = str(args.device)
+percentile = args.percentile
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
@@ -40,11 +53,11 @@ num_features = config['history_lengths'][-1]
 #num_samples = 4000
 num_samples = 500
 batch_size = 2**14
-percentile = 100 - int(sys.argv[2])
+percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda:'+sys.argv[4])
+model.to('cuda:'+device)
 
 lime_explainer = LimeTextExplainer(
     class_names=["not_taken", "taken"],
@@ -120,7 +133,7 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=sys.argv[4])
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=device)
     model.load_state_dict(torch.load(dir_ckpt))
     model.eval()
 
@@ -137,4 +150,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))

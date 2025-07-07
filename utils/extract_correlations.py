@@ -7,11 +7,22 @@ from collections import defaultdict
 import numpy as np
 import polars as pl
 from numba import jit
+import argparse
+
+parser = argparse.ArgumentParser(prog='extract_correlations', description='parse explained instances to find correlating branches for each H2P')
+
+parser.add_argument('--benchmark', type=str, required=True)
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--percentile', type=int, required=True)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark.split(',')[0]
+run_type = args.run_type.split(',')[0]
+percentile = args.percentile
 
 selection_gamma = 2.5
 threshold_percent = 0.7
-
-benchmark = sys.argv[1]
 
 explain_dir = "/mnt/data/results/branch-project/explained-instances/"
 
@@ -462,7 +473,7 @@ for branch in good_branches:
     stats = Stats(branch)
 
     # header: workload, checkpoint, label, output, history
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
     stats.selected_confidence_stddev = explained_instances['output'].std()
