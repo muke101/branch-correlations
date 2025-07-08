@@ -133,9 +133,7 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=device)
-    model.load_state_dict(torch.load(dir_ckpt))
-    model.eval()
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
     # header: workload, checkpoint, label, output, history
     confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_test_confidences_filtered.parquet".format(benchmark, branch))
