@@ -19,6 +19,8 @@ parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
 parser.add_argument('--device', type=int, required=True)
 parser.add_argument('--percentile', type=int, required=True)
+parser.add_argument('--branches', type=str, required=False)
+parser.add_argument('--branch-file', type=str, required=False)
 
 args = parser.parse_args()
 
@@ -26,13 +28,18 @@ benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
 device = str(args.device)
 percentile = args.percentile
+if args.branches:
+    good_branches = args.branches.split(',')
+elif args.branch_file:
+    good_branches = [i.strip() for i in open(args.branch_file[0]).readlines()[0].split(",")]
+else:
+    good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
-#good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
+#good_branches = ['0x40a1ac'] #TODO: actually populate this somehow
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -86,6 +93,9 @@ def filter_instances(df):
 
     df = df.with_columns(pl.col('output').abs().alias('output'))
 
+    print("Average confidence: ", df['output'].mean())
+    print("Std dev: ", df['output'].std())
+
     percentile_value = np.percentile(np.array(df['output']), percentile)
 
     unfiltered_len = df.shape[0]
@@ -95,6 +105,9 @@ def filter_instances(df):
     print("Unfiltered instances: "+str(unfiltered_len))
     print("Filtered instances: "+str(filtered_len))
     print("Filtered " + str(unfiltered_len - filtered_len) + " instances")
+
+    print("Selected confidence: ", filtered['output'].mean())
+    print("Std dev: ", filtered['output'].std())
 
     return filtered
 
@@ -136,7 +149,7 @@ for branch in good_branches:
     eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_test_confidences_filtered.parquet".format(benchmark, branch))
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
     print("Filtering instances")
  
@@ -148,4 +161,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
