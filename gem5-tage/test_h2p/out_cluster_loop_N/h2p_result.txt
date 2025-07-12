@@ -1,0 +1,6 @@
+Results for PC address 0x400964:
+  Commit branch count: 1105
+  pred:1, taken:0: 1
+  pred:1, taken:1: 94
+  pred:0, taken:0: 1004
+  pred:0, taken:1: 6
