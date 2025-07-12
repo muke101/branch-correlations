@@ -7,13 +7,43 @@ from collections import defaultdict
 import numpy as np
 import polars as pl
 from numba import jit
+import argparse
 
 selection_gamma = 2.5
 threshold_percent = 0.7
 
-benchmark = sys.argv[1]
+parser = argparse.ArgumentParser(prog='extract_correlations', description='parse explained instances to find correlating branches for each H2P')
+
+parser.add_argument('--benchmark', type=str, required=True)
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--percentile', type=int, required=True)
+parser.add_argument('--branches', type=str, required=False)
+parser.add_argument('--branch-file', type=str, required=False)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark.split(',')[0]
+run_type = args.run_type.split(',')[0]
+percentile = args.percentile
+if args.branches:
+    good_branches = args.branches.split(',')
+elif args.branch_file:
+    good_branches = [i.strip() for i in open(args.branch_file[0]).readlines()[0].split(",")]
+else:
+    good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 explain_dir = "/mnt/data/results/branch-project/explained-instances/"
+dir_results = '/mnt/data/results/branch-project/results/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets/'+benchmark
+
+sys.path.append(dir_results)
+sys.path.append(os.getcwd())
+
+dir_ckpt = dir_results + '/checkpoints'
+dir_config = dir_results + '/config.yaml'
+
+with open(dir_config, 'r') as f:
+    config = yaml.safe_load(f)
 
 #TODO: if we keep a Pattern class around for everything, need to create a workload -> checkpoint -> instances dictionary.
 # alternatively, can create per-checkpoint classes and average those into new structures
@@ -285,20 +315,6 @@ class Pattern:
             print("\tNot taken impact: ", np.average(not_taken_impact, weights=not_taken_weight))
 
 
-dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
-#good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
-
-sys.path.append(dir_results)
-sys.path.append(os.getcwd())
-
-dir_ckpt = dir_results + '/checkpoints'
-dir_config = dir_results + '/config.yaml'
-
-with open(dir_config, 'r') as f:
-    config = yaml.safe_load(f)
-
 @jit(nopython=True)
 def gini(array):
     array = array.flatten()
@@ -342,6 +358,7 @@ def coalecse_branches(explained_branches, patterns, stats):
         for checkpoint in checkpoints:
 
             unique_branches = defaultdict(list)
+            lengths = defaultdict(list)
             checkpoint_mask = workload_instances['checkpoint'] == checkpoint
             checkpoint_instances = workload_instances.filter(checkpoint_mask)
             rows = list(checkpoint_instances.iter_rows())
@@ -371,19 +388,21 @@ def coalecse_branches(explained_branches, patterns, stats):
 
                 for pc in unique_pcs:
                     pc_mask = valid_pcs == pc
+                    series_length = int(pc_mask.sum())
                     pc_impacts_array = valid_impacts[pc_mask]
                     pc_taken_array = valid_taken[pc_mask]
 
                     avg_impact = fast_mean(pc_impacts_array)
                     unique_branches[pc].append((avg_impact, weight))
+                    lengths[pc].append(series_length)
 
-                    if pc not in patterns:
-                        patterns[pc] = Pattern(pc)
+                    #if pc not in patterns:
+                    #    patterns[pc] = Pattern(pc)
 
-                    for taken_val, impact_val in zip(pc_taken_array, pc_impacts_array):
-                        patterns[pc].add(taken_val, impact_val)
+                    #for taken_val, impact_val in zip(pc_taken_array, pc_impacts_array):
+                    #    patterns[pc].add(taken_val, impact_val)
 
-                    patterns[pc].finalise_instance(weight)
+                    #patterns[pc].finalise_instance(weight)
 
                 stats.instance_gini_coeff.append(gini(np.array(valid_impacts)))
 
@@ -393,9 +412,10 @@ def coalecse_branches(explained_branches, patterns, stats):
                 impacts_weights = np.array(unique_branches[pc])
                 avg_impacts = impacts_weights[:, 0]
                 weights = impacts_weights[:, 1]
-                unique_branches[pc] = fast_weighted_mean(avg_impacts, weights=weights) # weighted average
+                unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+                #lengths[pc] = fast_mean(np.array(lengths[pc]))
 
-            sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+            sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
             impacts_array = np.array([impact for _, impact in sorted_features])
             stats.checkpoint_gini_coeff.append(gini(impacts_array))
@@ -413,18 +433,21 @@ def weight_branches(correlated_branches, patterns, stats):
         unique_branches = defaultdict(lambda: ([],[])) #impact, weight
         for checkpoint in correlated_branches[workload]:
             weight = get_traces.get_simpoint_weight(benchmark, workload, checkpoint)
-            for pc, impact in correlated_branches[workload][checkpoint]:
-                unique_branches[pc][0].append(impact)
+            for pc, items in correlated_branches[workload][checkpoint]:
+                unique_branches[pc][0].append(items)
                 unique_branches[pc][1].append(weight)
                 #patterns[pc].finalise_checkpoint(weight)
         for pc in unique_branches:
             #unique_branches[pc] = np.exp(np.average(np.log(np.array(unique_branches[pc][0])), weights=np.array(unique_branches[pc][1])))
-            impacts = np.array(unique_branches[pc][0])
+            items = np.array(unique_branches[pc][0])
             weights = np.array(unique_branches[pc][1])
+            impacts, lengths = np.split(items,2,axis=1)
             unique_branches[pc] = fast_weighted_mean(impacts, weights)
-            patterns[pc].finalise_workload()
-            if statistics.fmean(patterns[pc].instance_lengths) >= 5:
-                patterns[pc].print_instance()
+            if hex(pc) in ["0xb88", "0xb90", "0xd94"]:
+                print(hex(pc)+": "+str(fast_mean(lengths)))
+            #patterns[pc].finalise_workload()
+            #if statistics.fmean(patterns[pc].instance_lengths) >= 5:
+            #    patterns[pc].print_instance()
 
         correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
 
@@ -462,7 +485,7 @@ for branch in good_branches:
     stats = Stats(branch)
 
     # header: workload, checkpoint, label, output, history
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))
 
     stats.selected_confidence_average = explained_instances['output'].mean()
     stats.selected_confidence_stddev = explained_instances['output'].std()

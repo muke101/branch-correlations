@@ -9,16 +9,35 @@ from dataset_loader import BranchDataset
 import polars as pl
 import numpy as np
 from collections import defaultdict
+import argparse
 
-torch.set_default_device('cuda')
+parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
+
+parser.add_argument('--benchmark', type=str, required=True)
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--device', type=int, required=True)
+parser.add_argument('--percentile', type=int, required=True)
+parser.add_argument('--branches', type=str, required=False)
+parser.add_argument('--branch-file', type=str, required=False)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark.split(',')[0]
+run_type = args.run_type.split(',')[0]
+device = str(args.device)
+if args.branches:
+    good_branches = args.branches.split(',')
+elif args.branch_file:
+    good_branches = [i.strip() for i in open(args.branch_file[0]).readlines()[0].split(",")]
+else:
+    good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
+
+torch.set_default_device('cuda:'+device)
 batch_size = 2**14
 
-benchmark = sys.argv[1]
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark+"/"
-#good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -34,7 +53,7 @@ from model import BranchNetTrainingPhaseKnobs
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda')
+model.to('cuda:'+device)
 
 def filter_instances(loader):
 
@@ -65,6 +84,7 @@ def filter_instances(loader):
     history_list = []
     for batch_x, batch_y, checkpoints, workloads in loader:
         with torch.no_grad():
+            batch_x.to('cuda:'+device)
             outputs = model(batch_x)
         for i in range(len(outputs)):
             workload = workloads[i]
@@ -113,7 +133,8 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    model.load_state_dict(torch.load(dir_ckpt))
+    model.load_state_dict(torch.load(dir_ckpt, map_location=torch.device('cuda:'+device)))
+    model.to('cuda:'+device)
     model.eval()
  
     #train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
@@ -140,7 +161,7 @@ for branch in good_branches:
     print("Running test batches: ", len(test_loader))
     test_confidences = filter_instances(test_loader)
     del test_loader
-    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_test_confidences_filtered.parquet".format(benchmark,branch))
+    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_arm_confidences_filtered.parquet".format(benchmark,branch))
 
     #del train_confidences, eval_confidences
     torch.cuda.empty_cache()

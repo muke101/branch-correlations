@@ -102,7 +102,7 @@ class EvalWrapper:
         )
 
     @staticmethod
-    def from_checkpoint(checkpoint_path, config_path=dir_config, device="0") -> "EvalWrapper":
+    def from_checkpoint(checkpoint_path, device, config_path=dir_config) -> "EvalWrapper":
         """Load a model from a BranchNet checkpoint path and config and return an EvalWrapper instance."""
 
         torch.set_default_device('cuda:'+device)
@@ -112,7 +112,8 @@ class EvalWrapper:
 
         training_phase_knobs = BranchNetTrainingPhaseKnobs()
         model = BranchNet(config, training_phase_knobs)
-        model.load_state_dict(torch.load(checkpoint_path))
+        model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('cuda:'+device)))
+        model.to('cuda:'+device)
         model.eval()
         return EvalWrapper(model, device)
 

@@ -11,15 +11,35 @@ import numpy as np
 import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_text import LimeTextExplainer
+import argparse
 
-benchmark = sys.argv[1]
+parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
+
+parser.add_argument('--benchmark', type=str, required=True)
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--device', type=int, required=True)
+parser.add_argument('--percentile', type=int, required=True)
+parser.add_argument('--branches', type=str, required=False)
+parser.add_argument('--branch-file', type=str, required=False)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark.split(',')[0]
+run_type = args.run_type.split(',')[0]
+device = str(args.device)
+percentile = args.percentile
+if args.branches:
+    good_branches = args.branches.split(',')
+elif args.branch_file:
+    good_branches = [i.strip() for i in open(args.branch_file[0]).readlines()[0].split(",")]
+else:
+    good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
 dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
-#good_branches = ['0x41faa0'] #TODO: actually populate this somehow
-good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
+#good_branches = ['0x40a1ac'] #TODO: actually populate this somehow
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -40,11 +60,11 @@ num_features = config['history_lengths'][-1]
 #num_samples = 4000
 num_samples = 500
 batch_size = 2**14
-percentile = 100 - int(sys.argv[2])
+percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 model = BranchNet(config, training_phase_knobs)
-model.to('cuda:'+sys.argv[4])
+model.to('cuda:'+device)
 
 lime_explainer = LimeTextExplainer(
     class_names=["not_taken", "taken"],
@@ -73,6 +93,9 @@ def filter_instances(df):
 
     df = df.with_columns(pl.col('output').abs().alias('output'))
 
+    print("Average confidence: ", df['output'].mean())
+    print("Std dev: ", df['output'].std())
+
     percentile_value = np.percentile(np.array(df['output']), percentile)
 
     unfiltered_len = df.shape[0]
@@ -82,6 +105,9 @@ def filter_instances(df):
     print("Unfiltered instances: "+str(unfiltered_len))
     print("Filtered instances: "+str(filtered_len))
     print("Filtered " + str(unfiltered_len - filtered_len) + " instances")
+
+    print("Selected confidence: ", filtered['output'].mean())
+    print("Std dev: ", filtered['output'].std())
 
     return filtered
 
@@ -120,12 +146,10 @@ for branch in good_branches:
     # Load the model checkpoint
     dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
     print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, config_path=dir_config, device=sys.argv[4])
-    model.load_state_dict(torch.load(dir_ckpt))
-    model.eval()
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_test_confidences_filtered.parquet".format(benchmark, branch))
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
     print("Filtering instances")
  
@@ -137,4 +161,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, sys.argv[2], sys.argv[3]))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
