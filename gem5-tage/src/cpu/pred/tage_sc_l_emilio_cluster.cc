@@ -13,10 +13,8 @@ namespace gem5
 namespace branch_prediction
 {
 
-//TODO: env file path, one-hot encoding
-
-AddressColourMap TAGE_EMILIO_cluster::globalMap = readFileContents("/home/bj321/Developer/branch-transformer-addon/aggregated_relevancy.txt");
-AddressColourMap TAGE_EMILIO_cluster::h2pMap = readFileContents("/home/bj321/Developer/branch-transformer-addon/h2p_indexes.txt");
+AddressColourMap TAGE_EMILIO_cluster::globalMap = readFileContents(std::string(std::getenv("CORRELATIONS")));
+AddressColourMap TAGE_EMILIO_cluster::h2pMap = readFileContents(std::string(std::getenv("H2PS")));
 
 TAGE_EMILIO_cluster::TAGE_EMILIO_cluster
   (const TAGE_EMILIO_clusterParams &params) : BPredUnit(params),
