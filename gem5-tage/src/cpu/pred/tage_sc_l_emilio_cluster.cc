@@ -13,50 +13,15 @@ namespace gem5
 namespace branch_prediction
 {
 
-// Top 5 most mispredicted branch addresses from HMMER benchmark
-std::unordered_set<uint64_t> H2P_BRANCHES = {
-  0x40ab34,
-  0x40ed24,
-  0x40e8e4,
-  0x40eaf8,
-  0x40e898,
-  0x40eb6c,
-  0x40ed34,
-  0x40a1ac,
-  0x40ed44,
-  0x40ed14
-};
-// constexpr uint64_t TOP_BRANCH_ADDRESSES[] = {
-//     0x2c5280, // Rank 1
-//     0x2adfe4, // Rank 2
-//     0x2addfc, // Rank 3
-//     0x27e4ec, // Rank 4
-//     0x2adea4  // Rank 5
-// };
-constexpr int NUM_TOP_BRANCHES = 5;
+//TODO: env file path, one-hot encoding
 
 AddressColourMap TAGE_EMILIO_cluster::globalMap = readFileContents("/home/bj321/Developer/branch-transformer-addon/aggregated_relevancy.txt");
 AddressColourMap TAGE_EMILIO_cluster::h2pMap = readFileContents("/home/bj321/Developer/branch-transformer-addon/h2p_indexes.txt");
-// AddressColourMap TAGE_EMILIO_cluster::globalMap = {};
-// AddressColourMap TAGE_EMILIO_cluster::h2pMap = {};
-
-// AddressColourMap TAGE_EMILIO_cluster::globalMap = {{0x40091c, 1}, {0x400964, 1}};
-// AddressColourMap TAGE_EMILIO_cluster::h2pMap = {{0x400964, 1}};
-
-
 
 TAGE_EMILIO_cluster::TAGE_EMILIO_cluster
   (const TAGE_EMILIO_clusterParams &params) : BPredUnit(params),
   tage(1024), tage_baseline(1024)
 {
-  // for (const auto& [address, colour] : TAGE_EMILIO_cluster::globalMap) {
-  //   DPRINTF(Tage, "Address: %lx, Colour: %d\n", address, colour);
-  //   Addr addr = static_cast<Addr>(address);
-  //   auto [cluster_id, is_h2p] = getColour(addr);
-  //   if (is_h2p) {
-  //     std::cout << "Address: " << addr << ", Colour: " << cluster_id << ", Is H2P: " << is_h2p << std::endl;
-  //   }
-  // }
 }
 
 std::pair<uint128_t, unsigned>
@@ -103,27 +68,8 @@ TAGE_EMILIO_cluster::update(ThreadID tid, Addr pc, bool taken,
     baseline_br_type.is_conditional = bi->br_type.is_conditional;
     baseline_br_type.is_indirect = bi->br_type.is_indirect;
 
-    if (taken == bi->tage_cluster_prediction) {
-      stats.tageClusterCorrect++;
-    } else {
-      stats.tageClusterIncorrect++;
-    }
-    if (taken == bi->tage_baseline_prediction) {
-      stats.tageBaselineCorrect++;
-    } else {
-      stats.tageBaselineIncorrect++;
-    }
-    if (bi->tage_baseline_prediction != bi->tage_cluster_prediction) {
-      DPRINTF(Tage, "Baseline and cluster made different predictions for %lx, baseline: %d, cluster: %d, taken: %d\n", pc, bi->tage_baseline_prediction, bi->tage_cluster_prediction, taken);
-    }
-
-    if (bi->is_h2p) {
-      stats.tageH2PPredicted++;
-      if (taken == bi->tage_cluster_prediction) {
-        stats.tageH2PCorrect++;
-      } else {
-        stats.tageH2PIncorrect++;
-      }
+    if (taken != bi->tage_cluster_prediction) {
+      h2p_accuracies[pc].second++;
     }
 
     assert(bp_history);
@@ -161,18 +107,22 @@ TAGE_EMILIO_cluster::squash(ThreadID tid, void * &bp_history)
 }
 
 bool
-TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b,
-                    uint32_t cluster_id, bool is_h2p)
+TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
     uint32_t id = tage.get_new_branch_id();
     uint32_t tage_baseline_id = tage_baseline.get_new_branch_id();
     // Get color and h2p status from our function
-    auto [cluster_id_override, is_h2p_override] = getColour(pc);
-    
+    auto [cluster_id, is_h2p] = getColour(pc);
+
+    if (is_h2p) {
+        if (h2p_accuracies.find(pc.instAddr()) == h2p_accuracies.end()) {
+            h2p_accuracies[pc.instAddr()] = std::make_pair(0, 0);
+        }
+        h2p_accuracies[pc.instAddr()].first++;
+    }
+
     TageEmilioBranchInfo *bi = new TageEmilioBranchInfo();
     b = (void*)(bi);
-    // DPRINTF(Tage, "TAGE id: %d predict: %lx bp_history:%p cluster_id: %d is_h2p: %d\n", 
-    //         id, pc, b, cluster_id_override, is_h2p_override);
     bi->id = id;
     bi->id_baseline = tage_baseline_id;
     bi->pc = pc;
@@ -187,9 +137,9 @@ TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b,
 }
 
 bool
-TAGE_EMILIO_cluster::lookup(ThreadID tid, Addr pc, void* &bp_history,
-                    uint32_t cluster_id, bool is_h2p)
+TAGE_EMILIO_cluster::lookup(ThreadID tid, Addr pc, void* &bp_history)
 {
+    auto [cluster_id, is_h2p] = getColour(pc);
     DPRINTF(Tage, "TAGE lookup: %lx %p\n", pc, bp_history);
     bool retval = predict(tid, pc, true, bp_history, cluster_id, is_h2p);
 

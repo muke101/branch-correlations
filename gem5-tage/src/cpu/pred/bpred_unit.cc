@@ -97,20 +97,11 @@ BPredUnit::drainSanityCheck() const
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                   PCStateBase &pc, ThreadID tid, uint32_t cluster_id,
-                   bool is_h2p)
+                   PCStateBase &pc, ThreadID tid)
 {
     /** Perform the prediction. */
     PredictorHistory* bpu_history = nullptr;
-    bool taken  = predict(inst, seqNum, pc, tid, bpu_history, cluster_id,
-                            is_h2p);
-
-    if (is_h2p) {
-        if (h2p_accuracies.find(pc.instAddr()) == h2p_accuracies.end()) {
-            h2p_accuracies[pc.instAddr()] = std::make_pair(0, 0);
-        }
-        h2p_accuracies[pc.instAddr()].first++;
-    }
+    bool taken  = predict(inst, seqNum, pc, tid, bpu_history);
 
     assert(bpu_history!=nullptr);
 
@@ -128,8 +119,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                   PCStateBase &pc, ThreadID tid, PredictorHistory* &hist,
-                   uint32_t cluster_id, bool is_h2p)
+                   PCStateBase &pc, ThreadID tid, PredictorHistory* &hist)
 {
     assert(hist == nullptr);
 
@@ -160,8 +150,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     } else {
         // Conditional branches -------
         ++stats.condPredicted;
-        hist->condPred = lookup(tid, pc.instAddr(), hist->bpHistory,
-        cluster_id, is_h2p);
+        hist->condPred = lookup(tid, pc.instAddr(), hist->bpHistory);
 
         if (hist->condPred) {
             ++stats.condPredictedTaken;
@@ -459,8 +448,7 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
 void
 BPredUnit::squash(const InstSeqNum &squashed_sn,
                   const PCStateBase &corr_target,
-                  bool actually_taken, ThreadID tid, bool from_commit,
-                  bool is_h2p)
+                  bool actually_taken, ThreadID tid, bool from_commit)
 {
     // Now that we know that a branch was mispredicted, we need to undo
     // all the branches that have been seen up until this branch and
@@ -495,10 +483,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     if (!pred_hist.empty()) {
 
         PredictorHistory* const hist = pred_hist.front();
-
-        if (is_h2p) {
-            h2p_accuracies[hist->pc.instAddr()].second++;
-        }
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] Mispredicted: %s, PC:%#x\n",
                     tid, squashed_sn, toString(hist->type), hist->pc);
@@ -701,10 +685,6 @@ BPredUnit::BPredUnitStats::BPredUnitStats(BPredUnit *bp)
                "Number of indirect misses."),
       ADD_STAT(indirectMispredicted, statistics::units::Count::get(),
                "Number of mispredicted indirect branches."),
-      ADD_STAT(tageClusterCorrect, statistics::units::Count::get(),
-               "Number of times the tage cluster was correct."),
-      ADD_STAT(tageClusterIncorrect, statistics::units::Count::get(),
-               "Number of times the tage cluster was incorrect."),
       ADD_STAT(tageBaselineCorrect, statistics::units::Count::get(),
                "Number of times the tage baseline was correct."),
       ADD_STAT(tageBaselineIncorrect, statistics::units::Count::get(),

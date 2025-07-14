@@ -500,13 +500,9 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
         return false;
     }
 
-    // revisit: get cluster_id and is_h2p from inst
-    uint32_t cluster_id = 0;
-    bool is_h2p = false;
-
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        next_pc, tid, cluster_id, is_h2p);
+                                        next_pc, tid);
 
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
@@ -945,8 +941,6 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
                fromCommit->commitInfo[tid].doneSeqNum,
                fromCommit->commitInfo[tid].squashInst, tid);
 
-        bool is_h2p = false;
-
         // If it was a branch mispredict on a control instruction, update the
         // branch predictor with that instruction, otherwise just kill the
         // invalid state we generated in after sequence number
@@ -954,7 +948,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                     *fromCommit->commitInfo[tid].pc,
-                    fromCommit->commitInfo[tid].branchTaken, tid, is_h2p);
+                    fromCommit->commitInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
@@ -976,7 +970,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         if (fromDecode->decodeInfo[tid].branchMispredict) {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                     *fromDecode->decodeInfo[tid].nextPC,
-                    fromDecode->decodeInfo[tid].branchTaken, tid, is_h2p);
+                    fromDecode->decodeInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);

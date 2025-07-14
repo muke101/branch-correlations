@@ -96,8 +96,7 @@ class BPredUnit : public SimObject
      * @return Returns if the branch is taken or not.
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 PCStateBase &pc, ThreadID tid, uint32_t cluster_id = 0,
-                 bool is_h2p = false);
+                 PCStateBase &pc, ThreadID tid);
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -127,14 +126,9 @@ class BPredUnit : public SimObject
      *              or from decode. Its optional and used for statistics.
      */
     void squash(const InstSeqNum &squashed_sn, const PCStateBase &corr_target,
-                bool actually_taken, ThreadID tid, bool from_commit=true, bool is_h2p);
+                bool actually_taken, ThreadID tid, bool from_commit=true);
 
-    void print_h2p_accuracies() {
-        for (const auto &h2p : h2p_accuracies) {
-            cprintf("PC: %lx, Total: %lu, Incorrect: %lu\n",
-                    h2p.first, h2p.second.first, h2p.second.second);
-        }
-    }
+    void print_h2p_accuracies() { print_h2p_accuracies(); };
 
   protected:
 
@@ -151,8 +145,8 @@ class BPredUnit : public SimObject
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history,
-                        uint32_t cluster_id, bool is_h2p) {
+    virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history)
+                         {
       return lookup(tid, pc, bp_history);
     };
 
@@ -259,8 +253,6 @@ class BPredUnit : public SimObject
 
   private:
 
-    std::map<Addr, std::pair<uint64_t, uint64_t>> h2p_accuracies; //num predictions, num incorrect
-
     struct PredictorHistory
     {
         /**
@@ -361,8 +353,7 @@ class BPredUnit : public SimObject
      * Internal prediction function.
     */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-               PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history,
-               uint32_t cluster_id, bool is_h2p);
+               PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history);
 
     /**
      * Squashes a particular branch instance
@@ -451,13 +442,8 @@ class BPredUnit : public SimObject
         statistics::Scalar indirectMispredicted;
 
         /** TAGE stats */
-        statistics::Scalar tageClusterCorrect;
-        statistics::Scalar tageClusterIncorrect;
         statistics::Scalar tageBaselineCorrect;
         statistics::Scalar tageBaselineIncorrect;
-        statistics::Scalar tageH2PPredicted;
-        statistics::Scalar tageH2PCorrect;
-        statistics::Scalar tageH2PIncorrect;
 
     } stats;
 

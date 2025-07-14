@@ -27,16 +27,6 @@ TAGE_EMILIO::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
 
     DPRINTF(Tage, "TAGE id:%d update: %lx squashed:%s bp_history:%p\n", bi ? bi->id : -1, pc, squashed, bp_history);
 
-    if (pc == 0x400964) {
-        stats.tageH2PPredicted++;
-        if (squashed) {
-            stats.tageH2PIncorrect++;
-        } else {
-            stats.tageH2PCorrect++;
-        }
-    }
-
-
     assert(bp_history);
     if (squashed) {
         // This restores the global history, then update it

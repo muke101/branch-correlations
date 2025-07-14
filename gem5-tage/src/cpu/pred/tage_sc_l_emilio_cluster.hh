@@ -86,7 +86,7 @@ class TAGE_EMILIO_cluster: public BPredUnit
 
   protected:
     virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                         void* &b, uint32_t cluster_id, bool is_h2p);
+                         void* &b);
 
     struct TageEmilioBranchInfo
     {
@@ -106,8 +106,7 @@ class TAGE_EMILIO_cluster: public BPredUnit
     TAGE_EMILIO_cluster(const TAGE_EMILIO_clusterParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history, uint32_t cluster_id,
-                bool is_h2p) override;
+    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target,  void * &bp_history) override;
@@ -118,6 +117,14 @@ class TAGE_EMILIO_cluster: public BPredUnit
 
     static AddressColourMap globalMap;
     static AddressColourMap h2pMap;
+    std::map<Addr, std::pair<uint64_t, uint64_t>> h2p_accuracies; //num predictions, num incorrect
+
+    void print_h2p_accuracies() {
+        for (const auto &h2p : h2p_accuracies) {
+            cprintf("PC: %lx, Total: %lu, Incorrect: %lu\n",
+                    h2p.first, h2p.second.first, h2p.second.second);
+        }
+    }
 };
 
 } // namespace branch_prediction
