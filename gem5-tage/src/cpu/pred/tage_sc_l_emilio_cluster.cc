@@ -22,15 +22,6 @@ TAGE_EMILIO_cluster::TAGE_EMILIO_cluster
   (const TAGE_EMILIO_clusterParams &params) : BPredUnit(params),
   tage(1024), tage_baseline(1024)
 {
-for (const auto& pair : globalMap) {
-    std::cout << "Global map\n";
-    std::cout << pair.first << ": " << (uint64_t)pair.second << '\n';
-}
-for (const auto& pair : h2pMap) {
-    std::cout << "H2P map\n";
-    std::cout << pair.first << ": " << (uint64_t)pair.second << '\n';
-}
-
 }
 
 std::pair<uint128_t, unsigned>
@@ -125,7 +116,6 @@ TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 
     if (is_h2p) {
         if (h2p_accuracies.find(pc) == h2p_accuracies.end()) {
-            std::cout << "Found H2P: " << std::hex << pc << std::dec << " with index: " << is_h2p << "\n";
             h2p_accuracies[pc] = std::make_pair(0, 0);
         }
         h2p_accuracies[pc].first++;
