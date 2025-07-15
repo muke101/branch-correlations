@@ -1393,6 +1393,8 @@ CPU::addThreadToExitingList(ThreadID tid)
     // exit trap event is processed in the future. Until then, it'll be still
     // an active thread that is trying to exit.
     exitingThreads.emplace(std::make_pair(tid, false));
+
+    fetch.print_h2p_accuracies();
 }
 
 bool

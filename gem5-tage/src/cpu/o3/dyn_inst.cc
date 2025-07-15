@@ -55,9 +55,8 @@ namespace o3
 
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         const StaticInstPtr &_macroop, InstSeqNum seq_num, CPU *_cpu,
-        uint32_t bcID, bool h2p)
+        uint32_t bcID)
     : seqNum(seq_num), staticInst(static_inst), cpu(_cpu),
-      branchClusterID(bcID), isH2P(h2p),
       _numSrcs(arrays.numSrcs), _numDests(arrays.numDests),
       _flatDestIdx(arrays.flatDestIdx), _destIdx(arrays.destIdx),
       _prevDestIdx(arrays.prevDestIdx), _srcIdx(arrays.srcIdx),
@@ -118,16 +117,16 @@ bool operator==(const BranchHistory a, const BranchHistory b) {
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         const StaticInstPtr &_macroop, const PCStateBase &_pc,
         const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *_cpu,
-        uint32_t bcID, bool h2p)
-    : DynInst(arrays, static_inst, _macroop, seq_num, _cpu, bcID, h2p)
+        uint32_t bcID)
+    : DynInst(arrays, static_inst, _macroop, seq_num, _cpu, bcID)
 {
     set(pc, _pc);
     set(predPC, pred_pc);
 }
 
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &_staticInst,
-        const StaticInstPtr &_macroop, uint32_t bcID, bool h2p)
-    : DynInst(arrays, _staticInst, _macroop, 0, nullptr, bcID, h2p)
+        const StaticInstPtr &_macroop, uint32_t bcID)
+    : DynInst(arrays, _staticInst, _macroop, 0, nullptr, bcID)
 {}
 
 /*

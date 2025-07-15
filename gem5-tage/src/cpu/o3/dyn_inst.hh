@@ -334,9 +334,6 @@ class DynInst : public ExecContext, public RefCounted
     /** How many source registers are ready. */
     uint8_t readyRegs = 0;
 
-    /** Branch cluster identifier */
-    uint32_t branchClusterID = 0;
-
     /** Is history-to-prediction (H2P) mode */
     bool isH2P = false;
 
@@ -1188,17 +1185,6 @@ class DynInst : public ExecContext, public RefCounted
         setResult(reg->regClass(), val);
     }
 
-    /** Gets the branch cluster identifier. */
-    uint32_t getBranchClusterID() const { return branchClusterID; }
-
-    /** Sets the branch cluster identifier. */
-    void setBranchClusterID(uint32_t id) { branchClusterID = id; }
-
-    /** Gets the H2P flag. */
-    bool getIsH2P() const { return isH2P; }
-
-    /** Sets the H2P flag. */
-    void setIsH2P(bool h2p) { isH2P = h2p; }
 };
 
 } // namespace o3

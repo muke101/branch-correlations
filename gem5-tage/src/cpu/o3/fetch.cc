@@ -463,6 +463,7 @@ Fetch::switchToActive()
 void
 Fetch::switchToInactive()
 {
+
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
@@ -475,9 +476,6 @@ Fetch::switchToInactive()
 void
 Fetch::deactivateThread(ThreadID tid)
 {
-
-    branchPred->print_h2p_accuracies();
-
     // Update priority list
     auto thread_it = std::find(priorityList.begin(), priorityList.end(), tid);
     if (thread_it != priorityList.end()) {

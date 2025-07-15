@@ -44,8 +44,7 @@ struct Tage_SC_L_Prediction_Info {
 class Tage_SC_L_Base {
  public:
   virtual uint32_t get_new_branch_id() = 0;
-  virtual bool get_prediction(uint32_t branch_id, uint64_t br_pc,
-                              uint32_t cluster_id, bool is_h2p) = 0;
+  virtual bool get_prediction(uint32_t branch_id, uint64_t br_pc) = 0;
   virtual void update_speculative_state(uint32_t branch_id, uint64_t br_pc,
                                         Branch_Type br_type, bool branch_dir,
                                         uint64_t br_target) = 0;
@@ -98,8 +97,7 @@ class Tage_SC_L : public Tage_SC_L_Base {
 
   // It uses the speculative state of the predictor to generate a prediction.
   // Should be called before update_speculative_state.
-  bool get_prediction(uint32_t branch_id, uint64_t br_pc,
-                      uint32_t cluster_id, bool is_h2p) override;
+  bool get_prediction(uint32_t branch_id, uint64_t br_pc) override;
 
   // It updates the speculative state (e.g. to insert history bits in Tage's
   // global history register). For conditional branches, it should be called
@@ -157,8 +155,7 @@ class Tage_SC_L : public Tage_SC_L_Base {
 };
 
 template <class CONFIG>
-bool Tage_SC_L<CONFIG>::get_prediction(uint32_t branch_id, uint64_t br_pc,
-                                      uint32_t cluster_id, bool is_h2p) {
+bool Tage_SC_L<CONFIG>::get_prediction(uint32_t branch_id, uint64_t br_pc) {
   auto& prediction_info = prediction_info_buffer_[branch_id];
 
   // First, use Tage to make a prediction.

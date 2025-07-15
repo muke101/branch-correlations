@@ -128,7 +128,7 @@ class BPredUnit : public SimObject
     void squash(const InstSeqNum &squashed_sn, const PCStateBase &corr_target,
                 bool actually_taken, ThreadID tid, bool from_commit=true);
 
-    void print_h2p_accuracies() { print_h2p_accuracies(); };
+    virtual void print_h2p_accuracies() {}
 
   protected:
 
@@ -145,10 +145,10 @@ class BPredUnit : public SimObject
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history)
-                         {
-      return lookup(tid, pc, bp_history);
-    };
+    //virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history)
+    //                     {
+    //  return lookup(tid, pc, bp_history);
+    //};
 
     virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history) = 0;
 

@@ -688,13 +688,7 @@ BPredUnit::BPredUnitStats::BPredUnitStats(BPredUnit *bp)
       ADD_STAT(tageBaselineCorrect, statistics::units::Count::get(),
                "Number of times the tage baseline was correct."),
       ADD_STAT(tageBaselineIncorrect, statistics::units::Count::get(),
-               "Number of times the tage baseline was incorrect."),
-      ADD_STAT(tageH2PPredicted, statistics::units::Count::get(),
-               "Number of times the tage h2p was predicted."),
-      ADD_STAT(tageH2PCorrect, statistics::units::Count::get(),
-               "Number of times the tage h2p was correct."),
-      ADD_STAT(tageH2PIncorrect, statistics::units::Count::get(),
-               "Number of times the tage h2p was incorrect.")
+               "Number of times the tage baseline was incorrect.")
 
 {
     using namespace statistics;

@@ -55,8 +55,7 @@ TAGE_EMILIO::squash(ThreadID tid, void * &bp_history)
 }
 
 bool
-TAGE_EMILIO::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b,
-                    uint32_t cluster_id, bool is_h2p)
+TAGE_EMILIO::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
     uint32_t id = tage.get_new_branch_id();
     TageEmilioBranchInfo *bi = new TageEmilioBranchInfo();
@@ -66,26 +65,19 @@ TAGE_EMILIO::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b,
     bi->pc = pc;
     bi->br_type.is_conditional = cond_branch;
     bi->br_type.is_indirect = false;
-    return tage.get_prediction(id, pc, cluster_id, is_h2p);
-}
-
-bool
-TAGE_EMILIO::lookup(ThreadID tid, Addr pc, void* &bp_history,
-                    uint32_t cluster_id, bool is_h2p)
-{
-    DPRINTF(Tage, "TAGE lookup: %lx %p\n", pc, bp_history);
-    bool retval = predict(tid, pc, true, bp_history, cluster_id, is_h2p);
-
-    DPRINTF(Tage, "Lookup branch: %lx; predict:%d; bp_history:%p\n", pc,
-    retval, bp_history);
-
-    return retval;
+    return tage.get_prediction(id, pc);
 }
 
 bool
 TAGE_EMILIO::lookup(ThreadID tid, Addr pc, void* &bp_history)
 {
-    return lookup(tid, pc, bp_history, 0, false);
+    DPRINTF(Tage, "TAGE lookup: %lx %p\n", pc, bp_history);
+    bool retval = predict(tid, pc, true, bp_history);
+
+    DPRINTF(Tage, "Lookup branch: %lx; predict:%d; bp_history:%p\n", pc,
+    retval, bp_history);
+
+    return retval;
 }
 
 void
@@ -99,7 +91,7 @@ TAGE_EMILIO::updateHistories(ThreadID tid, Addr pc, bool uncond,
     assert(uncond || bp_history);
     if (uncond) {
         DPRINTF(Tage, "UnConditionalBranch: %lx\n", pc);
-        predict(tid, pc, false, bp_history, 0, false);
+        predict(tid, pc, false, bp_history);
     }
     //bi->br_type.is_conditional = !uncond;
 

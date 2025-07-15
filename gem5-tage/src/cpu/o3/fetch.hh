@@ -359,6 +359,8 @@ class Fetch
 
     RequestPort &getInstPort() { return icachePort; }
 
+    void print_h2p_accuracies() { branchPred->print_h2p_accuracies(); }
+
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
             StaticInstPtr curMacroop, const PCStateBase &this_pc,

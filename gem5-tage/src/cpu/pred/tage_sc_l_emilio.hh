@@ -22,7 +22,7 @@ class TAGE_EMILIO: public BPredUnit
 
   protected:
     virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                         void* &b, uint32_t cluster_id, bool is_h2p);
+                         void* &b);
 
     struct TageEmilioBranchInfo
     {
@@ -38,8 +38,6 @@ class TAGE_EMILIO: public BPredUnit
     TAGE_EMILIO(const TAGE_EMILIOParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history, uint32_t cluster_id,
-                bool is_h2p) override;
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target,  void * &bp_history) override;

@@ -107,7 +107,6 @@ class TAGE_EMILIO_cluster: public BPredUnit
 
     // Base class methods.
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target,  void * &bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken,
@@ -120,9 +119,9 @@ class TAGE_EMILIO_cluster: public BPredUnit
     std::map<Addr, std::pair<uint64_t, uint64_t>> h2p_accuracies; //num predictions, num incorrect
 
     void print_h2p_accuracies() {
+        std::cout << "H2P accuracies:\n";
         for (const auto &h2p : h2p_accuracies) {
-            cprintf("PC: %lx, Total: %lu, Incorrect: %lu\n",
-                    h2p.first, h2p.second.first, h2p.second.second);
+            std::cout << "PC: " << std::hex << h2p.first << std::dec << ", Total: " << h2p.second.first << ", Incorrect: " << h2p.second.second << "\n";
         }
     }
 };
