@@ -16,7 +16,6 @@ parser = argparse.ArgumentParser(prog='explain_instances', description='run lime
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
 parser.add_argument('--device', type=int, required=True)
-parser.add_argument('--percentile', type=int, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
 
@@ -161,7 +160,7 @@ for branch in good_branches:
     print("Running test batches: ", len(test_loader))
     test_confidences = filter_instances(test_loader)
     del test_loader
-    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_arm_confidences_filtered.parquet".format(benchmark,branch))
+    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark,branch,run_type))
 
     #del train_confidences, eval_confidences
     torch.cuda.empty_cache()

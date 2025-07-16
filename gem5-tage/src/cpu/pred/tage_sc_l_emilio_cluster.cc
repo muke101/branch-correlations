@@ -22,6 +22,7 @@ TAGE_EMILIO_cluster::TAGE_EMILIO_cluster
   (const TAGE_EMILIO_clusterParams &params) : BPredUnit(params),
   tage(1024), tage_baseline(1024)
 {
+    if (globalMap.size() > 0) using_correlations = true;
 }
 
 std::pair<uint128_t, unsigned>
@@ -68,12 +69,18 @@ TAGE_EMILIO_cluster::update(ThreadID tid, Addr pc, bool taken,
     baseline_br_type.is_conditional = bi->br_type.is_conditional;
     baseline_br_type.is_indirect = bi->br_type.is_indirect;
 
-    if (bi->is_h2p && taken != bi->tage_cluster_prediction) {
-      h2p_accuracies[pc].second++;
+    auto [cluster_id, is_h2p] = getColour(pc);
+
+    if (is_h2p) {
+        bool prediction = using_correlations ? bi->tage_cluster_prediction : bi->tage_baseline_prediction;
+        if (taken != prediction) {
+            std::cerr << "MISPREDICT:" << std::hex << pc << std::dec << "\n";
+        }
     }
 
     assert(bp_history);
     if (squashed) {
+
         // This restores the global history, then update it
         // and recomputes the folded histories.
         tage.flush_branch_and_repair_state(bi->id, pc, bi->br_type, taken,
@@ -114,12 +121,9 @@ TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
     // Get color and h2p status from our function
     auto [cluster_id, is_h2p] = getColour(pc);
 
-    if (is_h2p) {
-        if (h2p_accuracies.find(pc) == h2p_accuracies.end()) {
-            h2p_accuracies[pc] = std::make_pair(0, 0);
-        }
-        h2p_accuracies[pc].first++;
-    }
+    if (is_h2p) { std::cerr << "PREDICTION:" << std::hex << pc << std::dec << "\n"; }
+
+    if (!using_correlations) { is_h2p = 0; }
 
     TageEmilioBranchInfo *bi = new TageEmilioBranchInfo();
     b = (void*)(bi);

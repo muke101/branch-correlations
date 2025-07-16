@@ -33,8 +33,8 @@ else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 explain_dir = "/mnt/data/results/branch-project/explained-instances/"
-dir_results = '/mnt/data/results/branch-project/results/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets/'+benchmark
+dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -393,7 +393,8 @@ def coalecse_branches(explained_branches, patterns, stats):
                     pc_taken_array = valid_taken[pc_mask]
 
                     avg_impact = fast_mean(pc_impacts_array)
-                    unique_branches[pc].append((avg_impact, weight))
+                    #unique_branches[pc].append((avg_impact, weight))
+                    unique_branches[pc].append(avg_impact)
                     lengths[pc].append(series_length)
 
                     #if pc not in patterns:
@@ -409,10 +410,12 @@ def coalecse_branches(explained_branches, patterns, stats):
                 if not unique_branches: continue
 
             for pc in unique_branches:
-                impacts_weights = np.array(unique_branches[pc])
-                avg_impacts = impacts_weights[:, 0]
-                weights = impacts_weights[:, 1]
-                unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+                #impacts_weights = np.array(unique_branches[pc])
+                #avg_impacts = impacts_weights[:, 0]
+                #weights = impacts_weights[:, 1]
+                #unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+                avg_impacts = np.array(unique_branches[pc])
+                unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
                 #lengths[pc] = fast_mean(np.array(lengths[pc]))
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
@@ -443,7 +446,7 @@ def weight_branches(correlated_branches, patterns, stats):
             weights = np.array(unique_branches[pc][1])
             impacts, lengths = np.split(items,2,axis=1)
             unique_branches[pc] = fast_weighted_mean(impacts, weights)
-            if hex(pc) in ["0xb88", "0xb90", "0xd94"]:
+            if hex(pc) in ["0xb67", "0xff4", "0xf27"]:
                 print(hex(pc)+": "+str(fast_mean(lengths)))
             #patterns[pc].finalise_workload()
             #if statistics.fmean(patterns[pc].instance_lengths) >= 5:

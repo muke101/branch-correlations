@@ -84,6 +84,8 @@ class TAGE_EMILIO_cluster: public BPredUnit
      */
     inline std::pair<uint128_t, unsigned> getColour(Addr &branch_addr);
 
+    bool using_correlations = false;
+
   protected:
     virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
                          void* &b);
@@ -116,14 +118,6 @@ class TAGE_EMILIO_cluster: public BPredUnit
 
     static AddressColourMap globalMap;
     static AddressColourMap h2pMap;
-    std::map<Addr, std::pair<uint64_t, uint64_t>> h2p_accuracies; //num predictions, num incorrect
-
-    void print_h2p_accuracies() {
-        std::cout << "H2P accuracies:\n";
-        for (const auto &h2p : h2p_accuracies) {
-            std::cout << "PC: " << std::hex << h2p.first << std::dec << ", Total: " << h2p.second.first << ", Incorrect: " << h2p.second.second << "\n";
-        }
-    }
 };
 
 } // namespace branch_prediction
