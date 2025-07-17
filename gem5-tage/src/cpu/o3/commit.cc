@@ -1013,17 +1013,17 @@ Commit::commitInsts()
                         committedBranchHistory.pop_back();
                 }
 
-                if (head_inst->isCondCtrl() && h2p.find(head_inst->pcState().instAddr()) != h2p.end()) {
+                if (head_inst->isCondCtrl() && h2pMap.find(head_inst->pcState().instAddr()) != h2pMap.end()) {
 
-                    std::cerr << "PREDICTION:";
+                    std::cerr << "PREDICTION,";
 
                     // Instruction address
-                    std::cerr << inst->pcState().instAddr() << ',';
+                    std::cerr << head_inst->pcState().instAddr() << ',';
 
-                    bool branching = inst->pcState().branching();
+                    bool branching = head_inst->pcState().branching();
 
                     // Mispredicted
-                    if (branching == inst->readPredTaken()) {
+                    if (branching == head_inst->readPredTaken()) {
                         std::cerr << "0";
                     }
                     else {
