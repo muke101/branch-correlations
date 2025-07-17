@@ -71,12 +71,12 @@ TAGE_EMILIO_cluster::update(ThreadID tid, Addr pc, bool taken,
 
     auto [cluster_id, is_h2p] = getColour(pc);
 
-    if (is_h2p) {
-        bool prediction = using_correlations ? bi->tage_cluster_prediction : bi->tage_baseline_prediction;
-        if (taken != prediction) {
-            std::cerr << "MISPREDICT:" << std::hex << pc << std::dec << "\n";
-        }
-    }
+    //if (is_h2p) {
+    //    bool prediction = using_correlations ? bi->tage_cluster_prediction : bi->tage_baseline_prediction;
+    //    if (taken != prediction) {
+    //        std::cerr << "MISPREDICT:" << std::hex << pc << std::dec << "\n";
+    //    }
+    //}
 
     assert(bp_history);
     if (squashed) {
@@ -121,7 +121,7 @@ TAGE_EMILIO_cluster::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
     // Get color and h2p status from our function
     auto [cluster_id, is_h2p] = getColour(pc);
 
-    if (is_h2p) { std::cerr << "PREDICTION:" << std::hex << pc << std::dec << "\n"; }
+    //if (is_h2p) { std::cerr << "PREDICTION:" << std::hex << pc << std::dec << "\n"; }
 
     if (!using_correlations) { is_h2p = 0; }
 

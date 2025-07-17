@@ -1013,6 +1013,27 @@ Commit::commitInsts()
                         committedBranchHistory.pop_back();
                 }
 
+                if (head_inst->isCondCtrl() && h2p.find(head_inst->pcState().instAddr()) != h2p.end()) {
+
+                    std::cerr << "PREDICTION:";
+
+                    // Instruction address
+                    std::cerr << inst->pcState().instAddr() << ',';
+
+                    bool branching = inst->pcState().branching();
+
+                    // Mispredicted
+                    if (branching == inst->readPredTaken()) {
+                        std::cerr << "0";
+                    }
+                    else {
+                        std::cerr << "1";
+                    }
+
+                    std::cerr << std::endl;
+
+                }
+
                 //update memdep predictor if this load was made to wait on a store by the depPred
                 if (head_inst->isLoad() && head_inst->memDepInfo.predicted) {
                     iewStage->instQueue.memDepUnit[tid].commit(head_inst);
