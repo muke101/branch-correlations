@@ -29,7 +29,7 @@ for line in filtered_stream:
 
 with open(sys.argv[1], "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(["Addr", "Total", "Incorrect"])
+    writer.writerow(["Addr", "Total", "Incorrect", "Accuracy"])
     for addr, (total, incorrect) in accuracies.items():
-        writer.writerow([hex(addr), total, incorrect])
+        writer.writerow([hex(addr), total, incorrect, (total-incorrect)/total])
 

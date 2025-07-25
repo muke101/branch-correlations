@@ -108,7 +108,7 @@ static AddressColourMap readFileContents(const std::string& filename) {
 
         try {
             // Extract the instruction address
-            Addr address = std::stoull(tokens[0]);
+            Addr address = std::stoull(tokens[0], nullptr, 16);
             uint128_t colourNumber = parseUint128(tokens[1]);
             addressColourMap[address] = colourNumber;
         } catch (const std::exception& e) {

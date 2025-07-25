@@ -516,11 +516,11 @@ for branch in good_branches:
     cumulative = 0
     selected_branches = []
     for pc, impact in correlated_branches:
-        cumulative += impact
-        if cumulative / total < selection_threshold:
-            selected_branches.append((pc, impact))
-        else:
-            break
+        #cumulative += impact
+        #if cumulative / total < selection_threshold:
+        selected_branches.append((pc, impact))
+        #else:
+        #    break
 
     print("Selected branches for branch {}:".format(branch), end=' ')
     c = 0
