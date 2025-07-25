@@ -19,17 +19,17 @@ accuracies = {}
 
 for line in filtered_stream:
     if "PREDICTION" in line:
-        addr = int(line.split("PREDICTION:")[1], 16)
+        addr = int(line.split(",")[1])
+        mispredicted = int(line.split(",")[2])
         if addr not in accuracies:
             accuracies[addr] = [0,0] #total, incorrect
         accuracies[addr][0] += 1
-    elif "MISPREDICT" in line:
-        addr = int(line.split("MISPREDICT:")[1], 16)
-        if addr in accuracies: accuracies[addr][1] += 1 #might be a misprediction from a prediction made during warmup, in which case it won't exist in the dictionary yet
+        if mispredicted:
+            accuracies[addr][1] += 1
 
 with open(sys.argv[1], "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(["Addr", "Total", "Incorrect"])
+    writer.writerow(["Addr", "Total", "Incorrect", "Accuracy"])
     for addr, (total, incorrect) in accuracies.items():
-        writer.writerow([hex(addr), total, incorrect])
+        writer.writerow([hex(addr), total, incorrect, (total-incorrect)/total])
 

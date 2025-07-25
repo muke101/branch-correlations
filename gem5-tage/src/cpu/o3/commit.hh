@@ -108,7 +108,7 @@ static AddressColourMap readFileContents(const std::string& filename) {
 
         try {
             // Extract the instruction address
-            Addr address = std::stoull(tokens[0]);
+            Addr address = std::stoull(tokens[0], nullptr, 16);
             uint128_t colourNumber = parseUint128(tokens[1]);
             addressColourMap[address] = colourNumber;
         } catch (const std::exception& e) {
@@ -118,8 +118,6 @@ static AddressColourMap readFileContents(const std::string& filename) {
 
     return addressColourMap;
 }
-
-AddressColourMap TAGE_EMILIO_cluster::h2pMap = readFileContents(std::string(std::getenv("H2PS")));
 
 class ThreadState;
 
@@ -151,6 +149,10 @@ class InstructionQueue;
 class Commit
 {
   public:
+    
+    AddressColourMap h2pMap = readFileContents(std::string(std::getenv("H2PS")));
+
+
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
      */

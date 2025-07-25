@@ -140,7 +140,7 @@ class BaseO3CPU(BaseCPU):
     LQEntries = Param.Unsigned(132, "Number of load queue entries")
     SQEntries = Param.Unsigned(72, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(
-        0, "Number of places to shift addr before check"
+        4, "Number of places to shift addr before check"
     )
     LSQCheckLoads = Param.Bool(
         True,
@@ -152,8 +152,8 @@ class BaseO3CPU(BaseCPU):
         "Number of load/store insts before the dep predictor "
         "should be invalidated",
     )
-    LFSTSize = Param.Unsigned(512, "Last fetched store table size")
-    SSITSize = Param.Unsigned(512, "Store set ID table size")
+    LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
+    SSITSize = Param.Unsigned(1024, "Store set ID table size")
 
     #phast_num_rows = Param.Unsigned(32, "Number of rows per table")
     #phast_associativity = Param.Unsigned(2, "Number of entries per row")
