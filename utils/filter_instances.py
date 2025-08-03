@@ -81,7 +81,8 @@ def filter_instances(loader):
     output_list = []
     label_list = []
     history_list = []
-    for batch_x, batch_y, checkpoints, workloads in loader:
+    full_history_list = []
+    for batch_x, batch_y, full_histories, checkpoints, workloads in loader:
         with torch.no_grad():
             batch_x.to('cuda:'+device)
             outputs = model(batch_x)
@@ -103,6 +104,7 @@ def filter_instances(loader):
                 history_list.append(history)
                 output_list.append(float(output))
                 label_list.append(int(label))
+                full_history_list.append(full_histories[i].cpu().numpy().astype(np.int64))
 
     print("Ran inferences")
 
@@ -120,6 +122,7 @@ def filter_instances(loader):
         "label": np.array(label_list, dtype=np.uint8),
         "output": np.array(output_list),
         "history": np.array(history_list, dtype=np.int16),
+        "full_history": np.array(full_history_list),
         "weight": np.array(weights)
     })
 

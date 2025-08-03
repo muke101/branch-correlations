@@ -216,12 +216,13 @@ class TraceFileAccessor():
       chunk = self.file_ptr['history'][idx - self.history_length : idx + 1]
       chunk = preprocess_history(
           chunk, self.pc_bits, self.pc_hash_bits, np.int64)
+      full_chunk = self.file_ptr['full_history'][idx - self.history_length : idx + 1]
 
       if not self.keep_file_open:
         self.file_ptr.close()
         self.file_ptr = None
 
-    return chunk
+    return chunk, full_chunk
 
   def num_instances(self):
     """Gets the number of instances of the branch in this trace.
@@ -315,12 +316,13 @@ class BranchDataset(Dataset):
 
     if self.use_lock:
       self.locks[file_idx].acquire()
-    history_chunk = self.trace_accessors[file_idx].get_history(internal_idx)
+    history_chunk, full_history_chunk, takenness_chunk = self.trace_accessors[file_idx].get_history(internal_idx)
     checkpoint = self.trace_accessors[file_idx].checkpoint
     workload = self.trace_accessors[file_idx].workload
     if self.use_lock:
       self.locks[file_idx].release()
 
     inputs = history_chunk[:-1] #Last element is the target branch itself.
+    full_inputs = full_history_chunk[:-1]
     label = (history_chunk[-1] & 1).astype(np.float32)
-    return (inputs, label, checkpoint, workload)
+    return (inputs, full_inputs, label, checkpoint, workload)
