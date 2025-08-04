@@ -1316,8 +1316,9 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 
     updateComInstStats(head_inst);
 
-    //if (head_inst->isCondCtrl())
+    //if (head_inst->isControl() && !(head_inst->isDirectCtrl() && head_inst->isUncondCtrl())) {
     //    trace_branch(head_inst);
+    //}
 
     //record committed branch history
     if (head_inst->isControl() && !(head_inst->isDirectCtrl() && head_inst->isUncondCtrl())) {

@@ -360,20 +360,18 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
         stats.mispredicted[tid][hist->type]++;
     }
 
-    if (hist->type == BranchType::DirectCond) {
-        std::cerr << "TRACE: ";
+    std::cerr << "TRACE: ";
 
-        // Instruction address
-        std::cerr << hist->pc << ',';
+    // Instruction address
+    std::cerr << hist->pc << ',';
 
-        // Taken
-        std::cerr << hist->actuallyTaken << ',';
+    // Taken
+    std::cerr << hist->actuallyTaken << ',';
 
-        // Mispredicted
-        std::cerr << hist->mispredict;
+    // Mispredicted
+    std::cerr << hist->mispredict;
 
-        std::cerr << std::endl;
-    }
+    std::cerr << std::endl;
 
     DPRINTF(Branch, "Commit branch: sn:%llu, PC:%#x %s, "
                     "pred:%i, taken:%i, target:%#x\n",
