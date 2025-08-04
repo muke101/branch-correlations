@@ -34,9 +34,9 @@ else:
 torch.set_default_device('cuda:'+device)
 batch_size = 2**14
 
-dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark+"/"
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
-dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark+"/"
+dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark+"/"
+confidence_dir = "/mnt/data/results/branch-project/confidence-scores-indirect/"
+dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark+"/"
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())

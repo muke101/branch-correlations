@@ -355,6 +355,21 @@ void
 BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
 {
 
+    //if (h2pMap.find(hist->pc) == h2pMap.end()) std::cout << "Branch: 0x" << std::hex << hist->pc << std::dec << "\n";
+    if (h2pMap.find(hist->pc) != h2pMap.end()) {
+
+        std::cerr << "PREDICTION,";
+
+        // Instruction address
+        std::cerr << hist->pc << ",";
+
+        // Mispredicted
+        std::cerr << hist->mispredict;
+
+        std::cerr << std::endl;
+
+    }
+
     stats.committed[tid][hist->type]++;
     if (hist->mispredict) {
         stats.mispredicted[tid][hist->type]++;

@@ -43,6 +43,7 @@
 #define __CPU_PRED_BPRED_UNIT_HH__
 
 #include <deque>
+#include <sys/types.h>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -57,11 +58,65 @@
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
+
 namespace gem5
 {
 
 namespace branch_prediction
 {
+
+typedef __uint128_t uint128_t;
+// using AddressColourMap = std::unordered_map<Addr, std::pair<unsigned int, std::string>>;
+using AddressColourMap = std::unordered_map<Addr, uint128_t>;
+
+static uint128_t parseUint128(const std::string& str) {
+    uint128_t result = 0;
+    for (char c : str) {
+        if (c < '0' || c > '9') {
+            throw std::invalid_argument("Invalid character in uint128_t string");
+        }
+        result = result * 10 + (c - '0');
+    }
+    return result;
+}
+
+static AddressColourMap readFileContents(const std::string& filename) {
+    AddressColourMap addressColourMap;
+
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        fatal("Error: Unable to open file with colour labels: %s\n", filename);
+    }
+
+    std::string line;
+    int lineNum = 0;
+    while (std::getline(file, line)) {
+        lineNum++;
+        std::istringstream iss(line);
+        std::string token;
+
+        // Parse the line
+        std::vector<std::string> tokens;
+        while (iss >> token) {
+            tokens.push_back(token);
+        }
+
+        if (tokens.size() < 2) {
+            fatal("Error: Invalid line format at line %d: %s\n", lineNum, line);
+        }
+
+        try {
+            // Extract the instruction address
+            Addr address = std::stoull(tokens[0], nullptr, 16);
+            uint128_t colourNumber = parseUint128(tokens[1]);
+            addressColourMap[address] = colourNumber;
+        } catch (const std::exception& e) {
+            fatal("Error parsing line %d: %s\nError: %s\n", lineNum, line, e.what());
+        }
+    }
+
+    return addressColourMap;
+}
 
 /**
  * Basically a wrapper class to hold both the branch predictor
@@ -75,7 +130,7 @@ class BPredUnit : public SimObject
     /** Branch Predictor Unit (BPU) interface functions */
   public:
 
-
+    AddressColourMap h2pMap = readFileContents(std::string(std::getenv("H2PS")));
 
     /**
      * @param params The params object, that has the size of the BP and BTB.

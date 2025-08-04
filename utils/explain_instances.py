@@ -35,10 +35,10 @@ elif args.branch_file:
 else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
+confidence_dir = "/mnt/data/results/branch-project/confidence-scores-indirect/"
 
-dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
+dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark
 #good_branches = ['0x40a1ac'] #TODO: actually populate this somehow
 
 sys.path.append(dir_results)
@@ -57,8 +57,8 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-#num_samples = 4000
-num_samples = 500
+num_samples = 4000
+#num_samples = 500
 batch_size = 2**14
 percentile = 100 - percentile
 
@@ -161,4 +161,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances-indirect/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))

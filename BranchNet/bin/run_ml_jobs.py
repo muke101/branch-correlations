@@ -12,7 +12,7 @@ from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
 #JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["605.mcf_s", "625.x264_s", "631.deepsjeng_s", "641.leela_s", "648.exchange2_s", "620.omnetpp_s"] ]
-JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["605.mcf_s"] ]
+JOBS = [ Job(i, 'top100', 'test', 'big', 'float') for i in ["641.leela_s"] ]
 
 
 BATCH_SIZE = 2048
@@ -47,8 +47,7 @@ def create_run_command(workdir, training_datasets, evaluation_datasets,
                 gcoeff=LASSO_COEFFICIENT,
                 rcoeff=REGULARIZATION_COEFFICIENT,
                 mode=training_mode,
-                #cuda=c % 2,
-                cuda=0,
+                cuda=c % 2,
             ))
 
 def get_workdir(job):
@@ -98,7 +97,7 @@ def main():
         create_workdirs()
 
     cmds = create_job_commands()
-    common.run_parallel_commands_local(cmds, num_threads=1)
+    common.run_parallel_commands_local(cmds, num_threads=2)
 
 
 if __name__ == '__main__':

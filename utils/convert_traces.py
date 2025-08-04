@@ -5,8 +5,8 @@ import polars as pl
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-stats_dir = "/mnt/data/results/branch-project/stats-x86/tagescl64/"
-trace_dir = "/mnt/data/results/branch-project/traces-x86/"
+stats_dir = "/mnt/data/results/branch-project/stats-indirect/tagescl64/"
+trace_dir = "/mnt/data/results/branch-project/traces-indirect/"
 
 def write_stats(trace):
     print("Processing ", trace)
@@ -68,7 +68,7 @@ def write_stats(trace):
 if __name__ == "__main__":
     all_traces = []
     #for bench in get_traces.benchmarks:
-    for bench in ["605.mcf_s"]:
+    for bench in ["641.leela_s"]:
         if bench in ["657.xz_s", "600.perlbench_s", "602.gcc_s"]: continue
         traces = get_traces.get_trace_set(bench, 'test')
         traces += get_traces.get_trace_set(bench, 'validate')

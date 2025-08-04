@@ -4,8 +4,8 @@ import re
 import sys
 from collections import defaultdict
 import subprocess
-trace_dir = "/mnt/data/results/branch-project/traces-x86/"
-hdf5_dir = "/mnt/data/results/branch-project/datasets-x86/"
+trace_dir = "/mnt/data/results/branch-project/traces-indirect/"
+hdf5_dir = "/mnt/data/results/branch-project/datasets-indirect/"
 simpoint_dir = "/work/muke/simpoints-x86/"
 benchmarks = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
         "625.x264_s", "631.deepsjeng_s",

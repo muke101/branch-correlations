@@ -1,5 +1,5 @@
-branch_traces_dir: /mnt/data/results/branch-project/traces-x86
-experiments_dir: /mnt/data/results/branch-project/results-x86
+branch_traces_dir: /mnt/data/results/branch-project/traces-indirect
+experiments_dir: /mnt/data/results/branch-project/results-indirect
 hard_brs_dir: /mnt/data/results/branch-project/h2ps-x86
-ml_datasets_dir: /mnt/data/results/branch-project/datasets-x86
-tage_stats_dir: /mnt/data/results/branch-project/stats-x86
+ml_datasets_dir: /mnt/data/results/branch-project/datasets-indirect
+tage_stats_dir: /mnt/data/results/branch-project/stats-indirect

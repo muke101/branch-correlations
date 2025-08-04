@@ -1013,26 +1013,26 @@ Commit::commitInsts()
                         committedBranchHistory.pop_back();
                 }
 
-                if (head_inst->isCondCtrl() && h2pMap.find(head_inst->pcState().instAddr()) != h2pMap.end()) {
+                //if (head_inst->isCondCtrl() && h2pMap.find(head_inst->pcState().instAddr()) != h2pMap.end()) {
 
-                    std::cerr << "PREDICTION,";
+                //    std::cerr << "PREDICTION,";
 
-                    // Instruction address
-                    std::cerr << head_inst->pcState().instAddr() << ',';
+                //    // Instruction address
+                //    std::cerr << head_inst->pcState().instAddr() << ',';
 
-                    bool branching = head_inst->pcState().branching();
+                //    bool branching = head_inst->pcState().branching();
 
-                    // Mispredicted
-                    if (branching == head_inst->readPredTaken()) {
-                        std::cerr << "0";
-                    }
-                    else {
-                        std::cerr << "1";
-                    }
+                //    // Mispredicted
+                //    if (branching == head_inst->readPredTaken()) {
+                //        std::cerr << "0";
+                //    }
+                //    else {
+                //        std::cerr << "1";
+                //    }
 
-                    std::cerr << std::endl;
+                //    std::cerr << std::endl;
 
-                }
+                //}
 
                 //update memdep predictor if this load was made to wait on a store by the depPred
                 if (head_inst->isLoad() && head_inst->memDepInfo.predicted) {

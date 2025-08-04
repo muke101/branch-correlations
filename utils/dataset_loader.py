@@ -186,6 +186,7 @@ class TraceFileAccessor():
       self.in_mem_history = preprocess_history(
           self.file_ptr['history'][:], self.pc_bits,
           self.pc_hash_bits, self.hash_dir_with_pc, in_mem_dtype)
+      self.in_mem_full_history = self.file_ptr['full_history'][:]
 
     if not self.keep_file_open:
       self.file_ptr.close()
@@ -209,6 +210,12 @@ class TraceFileAccessor():
       if len(markers):
         closest_marker = markers[-1]
         chunk[0:closest_marker] = 0
+      full_chunk = self.in_mem_full_history[idx - self.history_length : idx + 1]
+      full_chunk = full_chunk.astype(np.int64)
+      markers, = np.nonzero(np.logical_or(chunk == 0x80, chunk == 0x81))
+      if len(markers):
+        closest_marker = markers[-1]
+        full_chunk[0:closest_marker] = 0
     else:
       if not self.keep_file_open:
         self.file_ptr = h5py.File(self.path, 'r')
@@ -316,7 +323,7 @@ class BranchDataset(Dataset):
 
     if self.use_lock:
       self.locks[file_idx].acquire()
-    history_chunk, full_history_chunk, takenness_chunk = self.trace_accessors[file_idx].get_history(internal_idx)
+    history_chunk, full_history_chunk = self.trace_accessors[file_idx].get_history(internal_idx)
     checkpoint = self.trace_accessors[file_idx].checkpoint
     workload = self.trace_accessors[file_idx].workload
     if self.use_lock:
@@ -325,4 +332,4 @@ class BranchDataset(Dataset):
     inputs = history_chunk[:-1] #Last element is the target branch itself.
     full_inputs = full_history_chunk[:-1]
     label = (history_chunk[-1] & 1).astype(np.float32)
-    return (inputs, full_inputs, label, checkpoint, workload)
+    return (inputs, label, full_inputs, checkpoint, workload)

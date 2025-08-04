@@ -3,171 +3,171 @@
   - name: '0'
     simpoints:
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.2.trace
       type: pinball
       weight: 0.10027
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.4.trace
       type: pinball
       weight: 0.286822
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.6.trace
       type: pinball
       weight: 0.120492
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.3.trace
       type: pinball
       weight: 0.0765083
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.7.trace
       type: pinball
       weight: 0.0371587
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.1.trace
       type: pinball
       weight: 0.0668183
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.5.trace
       type: pinball
       weight: 0.183097
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.9.trace
       type: pinball
       weight: 0.124031
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.0.8.trace
       type: pinball
       weight: 0.00480283
   - name: test03
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.1.trace
       type: pinball
       weight: 0.0211961
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.2.trace
       type: pinball
       weight: 0.146101
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.5.trace
       type: pinball
       weight: 0.0461771
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.3.trace
       type: pinball
       weight: 0.268547
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.7.trace
       type: pinball
       weight: 0.0543149
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.6.trace
       type: pinball
       weight: 0.422407
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test03.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test03.4.trace
       type: pinball
       weight: 0.0412566
   - name: test02
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.1.trace
       type: pinball
       weight: 0.138462
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.2.trace
       type: pinball
       weight: 0.034188
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.3.trace
       type: pinball
       weight: 0.0461538
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.4.trace
       type: pinball
       weight: 0.4
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.7.trace
       type: pinball
       weight: 0.0512821
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.5.trace
       type: pinball
       weight: 0.208547
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.8.trace
       type: pinball
       weight: 0.0307692
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test02.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test02.6.trace
       type: pinball
       weight: 0.0905983
   - name: test01
     simpoints:
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.2.trace
       type: pinball
       weight: 0.0182763
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.1.trace
       type: pinball
       weight: 0.156065
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.4.trace
       type: pinball
       weight: 0.515499
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.5.trace
       type: pinball
       weight: 0.0555456
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.6.trace
       type: pinball
       weight: 0.063967
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.7.trace
       type: pinball
       weight: 0.03494
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.3.trace
       type: pinball
       weight: 0.112704
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.test01.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.test01.8.trace
       type: pinball
       weight: 0.043003
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.1.trace
       type: pinball
       weight: 0.357918
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.2.trace
       type: pinball
       weight: 0.0422993
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.4.trace
       type: pinball
       weight: 0.0813449
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.3.trace
       type: pinball
       weight: 0.0433839
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.8.trace
       type: pinball
       weight: 0.139913
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.6.trace
       type: pinball
       weight: 0.24295
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.5.trace
       type: pinball
       weight: 0.0260304
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/605.mcf_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/605.mcf_s.train.0.7.trace
       type: pinball
       weight: 0.0661605
 623.xalancbmk_s:
@@ -175,157 +175,157 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.1.trace
       type: pinball
       weight: 0.0260227
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.2.trace
       type: pinball
       weight: 0.0715383
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.4.trace
       type: pinball
       weight: 0.000864221
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.3.trace
       type: pinball
       weight: 0.157384
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.5.trace
       type: pinball
       weight: 0.270213
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.6.trace
       type: pinball
       weight: 0.264548
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.7.trace
       type: pinball
       weight: 0.156136
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.0.8.trace
       type: pinball
       weight: 0.0532936
   - name: xsltm-short
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xsltm-short.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xsltm-short.1.trace
       type: pinball
       weight: 0.136209
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xsltm-short.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xsltm-short.2.trace
       type: pinball
       weight: 0.860386
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xsltm-short.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xsltm-short.3.trace
       type: pinball
       weight: 0.00340522
   - name: functions
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.1.trace
       type: pinball
       weight: 0.01625
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.2.trace
       type: pinball
       weight: 0.045
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.3.trace
       type: pinball
       weight: 0.08875
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.4.trace
       type: pinball
       weight: 0.154167
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.5.trace
       type: pinball
       weight: 0.203333
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.6.trace
       type: pinball
       weight: 0.07375
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.7.trace
       type: pinball
       weight: 0.335
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.8.trace
       type: pinball
       weight: 0.0483333
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.functions.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.functions.9.trace
       type: pinball
       weight: 0.0354167
   - name: decoy
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.1.trace
       type: pinball
       weight: 0.00622877
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.2.trace
       type: pinball
       weight: 0.241789
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.3.trace
       type: pinball
       weight: 0.212344
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.4.trace
       type: pinball
       weight: 0.202718
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.5.trace
       type: pinball
       weight: 0.177237
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.decoy.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.decoy.6.trace
       type: pinball
       weight: 0.159683
   - name: xmark
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.1.trace
       type: pinball
       weight: 0.0097012
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.2.trace
       type: pinball
       weight: 0.00194024
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.3.trace
       type: pinball
       weight: 0.297245
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.4.trace
       type: pinball
       weight: 0.329453
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.6.trace
       type: pinball
       weight: 0.00620877
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.xmark.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.xmark.5.trace
       type: pinball
       weight: 0.355452
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.train.0.1.trace
       type: pinball
       weight: 0.0241692
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.train.0.2.trace
       type: pinball
       weight: 0.601208
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.train.0.3.trace
       type: pinball
       weight: 0.374245
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/623.xalancbmk_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/623.xalancbmk_s.train.0.4.trace
       type: pinball
       weight: 0.000377644
 625.x264_s:
@@ -333,473 +333,473 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.1.trace
       type: pinball
       weight: 0.145403
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.2.trace
       type: pinball
       weight: 0.245902
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.3.trace
       type: pinball
       weight: 0.109408
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.4.trace
       type: pinball
       weight: 0.147541
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.5.trace
       type: pinball
       weight: 0.194939
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.6.trace
       type: pinball
       weight: 0.0784034
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.0.7.trace
       type: pinball
       weight: 0.0784034
   - name: '1'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.1.trace
       type: pinball
       weight: 0.0527151
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.2.trace
       type: pinball
       weight: 0.00841977
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.3.trace
       type: pinball
       weight: 0.142282
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.4.trace
       type: pinball
       weight: 0.129957
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.5.trace
       type: pinball
       weight: 0.033313
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.6.trace
       type: pinball
       weight: 0.112752
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.7.trace
       type: pinball
       weight: 0.168395
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.8.trace
       type: pinball
       weight: 0.189018
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.1.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.1.9.trace
       type: pinball
       weight: 0.163148
   - name: '2'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.1.trace
       type: pinball
       weight: 0.112951
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.2.trace
       type: pinball
       weight: 0.0811319
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.3.trace
       type: pinball
       weight: 0.0231302
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.4.trace
       type: pinball
       weight: 0.119878
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.5.trace
       type: pinball
       weight: 0.184102
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.6.trace
       type: pinball
       weight: 0.286016
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.7.trace
       type: pinball
       weight: 0.132676
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.2.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.2.8.trace
       type: pinball
       weight: 0.0601151
   - name: notld-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.1.trace
       type: pinball
       weight: 0.0879524
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.2.trace
       type: pinball
       weight: 0.0784987
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.3.trace
       type: pinball
       weight: 0.0980881
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.4.trace
       type: pinball
       weight: 0.0435059
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.5.trace
       type: pinball
       weight: 0.568022
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.6.trace
       type: pinball
       weight: 0.115443
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld-2.7.trace
       type: pinball
       weight: 0.00848952
   - name: burma-gray-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.1.trace
       type: pinball
       weight: 0.307978
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.2.trace
       type: pinball
       weight: 0.164179
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.3.trace
       type: pinball
       weight: 0.0963556
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.4.trace
       type: pinball
       weight: 0.0149853
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.5.trace
       type: pinball
       weight: 0.100851
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.6.trace
       type: pinball
       weight: 0.0648564
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.7.trace
       type: pinball
       weight: 0.177726
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray-2.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray-2.8.trace
       type: pinball
       weight: 0.0730684
   - name: disco
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.1.trace
       type: pinball
       weight: 0.0155682
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.2.trace
       type: pinball
       weight: 0.196835
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.3.trace
       type: pinball
       weight: 0.392139
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.4.trace
       type: pinball
       weight: 0.0329229
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.5.trace
       type: pinball
       weight: 0.0371339
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.6.trace
       type: pinball
       weight: 0.00842213
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.7.trace
       type: pinball
       weight: 0.00657181
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.8.trace
       type: pinball
       weight: 0.148472
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco.9.trace
       type: pinball
       weight: 0.161935
   - name: disco-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.1.trace
       type: pinball
       weight: 0.0155682
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.2.trace
       type: pinball
       weight: 0.196899
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.3.trace
       type: pinball
       weight: 0.392076
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.4.trace
       type: pinball
       weight: 0.0329229
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.5.trace
       type: pinball
       weight: 0.0371339
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.6.trace
       type: pinball
       weight: 0.00842213
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.7.trace
       type: pinball
       weight: 0.00657181
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.8.trace
       type: pinball
       weight: 0.148472
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-2.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-2.9.trace
       type: pinball
       weight: 0.161935
   - name: burma
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.1.trace
       type: pinball
       weight: 0.148505
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.2.trace
       type: pinball
       weight: 0.014901
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.3.trace
       type: pinball
       weight: 0.062512
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.4.trace
       type: pinball
       weight: 0.0232167
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.5.trace
       type: pinball
       weight: 0.276389
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.6.trace
       type: pinball
       weight: 0.105869
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.7.trace
       type: pinball
       weight: 0.0863776
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.8.trace
       type: pinball
       weight: 0.122068
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma.9.trace
       type: pinball
       weight: 0.160162
   - name: notld
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.1.trace
       type: pinball
       weight: 0.0879524
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.2.trace
       type: pinball
       weight: 0.0785222
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.3.trace
       type: pinball
       weight: 0.0980646
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.4.trace
       type: pinball
       weight: 0.0435059
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.5.trace
       type: pinball
       weight: 0.568046
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.6.trace
       type: pinball
       weight: 0.11542
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.notld.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.notld.7.trace
       type: pinball
       weight: 0.00848952
   - name: burma-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.1.trace
       type: pinball
       weight: 0.167083
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.2.trace
       type: pinball
       weight: 0.0867381
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.3.trace
       type: pinball
       weight: 0.0151413
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.4.trace
       type: pinball
       weight: 0.276413
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.5.trace
       type: pinball
       weight: 0.0843588
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.6.trace
       type: pinball
       weight: 0.123029
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-2.7.trace
       type: pinball
       weight: 0.247236
   - name: burma-gray
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.1.trace
       type: pinball
       weight: 0.307978
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.2.trace
       type: pinball
       weight: 0.164179
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.3.trace
       type: pinball
       weight: 0.0963556
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.4.trace
       type: pinball
       weight: 0.0149853
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.5.trace
       type: pinball
       weight: 0.100851
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.6.trace
       type: pinball
       weight: 0.0648564
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.7.trace
       type: pinball
       weight: 0.177726
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.burma-gray.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.burma-gray.8.trace
       type: pinball
       weight: 0.0730684
   - name: disco-gray-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.1.trace
       type: pinball
       weight: 0.0051986
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.2.trace
       type: pinball
       weight: 0.710746
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.3.trace
       type: pinball
       weight: 0.0360653
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.4.trace
       type: pinball
       weight: 0.0229063
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.5.trace
       type: pinball
       weight: 0.16863
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.6.trace
       type: pinball
       weight: 0.0479246
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray-2.7.trace
       type: pinball
       weight: 0.00852896
   - name: disco-gray
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.1.trace
       type: pinball
       weight: 0.0051986
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.2.trace
       type: pinball
       weight: 0.710746
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.3.trace
       type: pinball
       weight: 0.0360653
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.4.trace
       type: pinball
       weight: 0.0229063
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.5.trace
       type: pinball
       weight: 0.16863
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.6.trace
       type: pinball
       weight: 0.0479246
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.disco-gray.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.disco-gray.7.trace
       type: pinball
       weight: 0.00852896
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.1.trace
       type: pinball
       weight: 0.00593472
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.2.trace
       type: pinball
       weight: 0.0866469
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.3.trace
       type: pinball
       weight: 0.0237389
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.4.trace
       type: pinball
       weight: 0.170326
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.5.trace
       type: pinball
       weight: 0.140653
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.6.trace
       type: pinball
       weight: 0.0581602
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.7.trace
       type: pinball
       weight: 0.169733
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.8.trace
       type: pinball
       weight: 0.316914
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/625.x264_s.train.0.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/625.x264_s.train.0.9.trace
       type: pinball
       weight: 0.0278932
 631.deepsjeng_s:
@@ -807,383 +807,383 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.1.trace
       type: pinball
       weight: 0.143544
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.2.trace
       type: pinball
       weight: 0.174011
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.3.trace
       type: pinball
       weight: 0.312125
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.4.trace
       type: pinball
       weight: 0.0408477
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.5.trace
       type: pinball
       weight: 0.0429622
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.6.trace
       type: pinball
       weight: 0.104714
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.7.trace
       type: pinball
       weight: 0.0466144
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.0.8.trace
       type: pinball
       weight: 0.135182
   - name: medium-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.1.trace
       type: pinball
       weight: 0.162108
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.2.trace
       type: pinball
       weight: 0.0897265
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.3.trace
       type: pinball
       weight: 0.0770514
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.4.trace
       type: pinball
       weight: 0.0963976
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.5.trace
       type: pinball
       weight: 0.226151
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.6.trace
       type: pinball
       weight: 0.205804
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.7.trace
       type: pinball
       weight: 0.118746
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-2.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-2.8.trace
       type: pinball
       weight: 0.024016
   - name: short-1
     simpoints:
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.2.trace
       type: pinball
       weight: 0.303901
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.3.trace
       type: pinball
       weight: 0.0308008
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.5.trace
       type: pinball
       weight: 0.12115
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.6.trace
       type: pinball
       weight: 0.106776
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.1.trace
       type: pinball
       weight: 0.0677618
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.7.trace
       type: pinball
       weight: 0.0718686
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.8.trace
       type: pinball
       weight: 0.238193
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-1.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-1.4.trace
       type: pinball
       weight: 0.0595483
   - name: long-1
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.1.trace
       type: pinball
       weight: 0.128901
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.2.trace
       type: pinball
       weight: 0.0915109
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.3.trace
       type: pinball
       weight: 0.206227
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.4.trace
       type: pinball
       weight: 0.178512
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.5.trace
       type: pinball
       weight: 0.133847
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.6.trace
       type: pinball
       weight: 0.0696152
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.7.trace
       type: pinball
       weight: 0.0733978
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-1.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-1.8.trace
       type: pinball
       weight: 0.117989
   - name: short-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.1.trace
       type: pinball
       weight: 0.0141538
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.2.trace
       type: pinball
       weight: 0.140308
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.3.trace
       type: pinball
       weight: 0.173538
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.4.trace
       type: pinball
       weight: 0.217846
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.5.trace
       type: pinball
       weight: 0.139692
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.6.trace
       type: pinball
       weight: 0.0166154
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-2.7.trace
       type: pinball
       weight: 0.297846
   - name: medium-3
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.1.trace
       type: pinball
       weight: 0.190075
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.2.trace
       type: pinball
       weight: 0.0119628
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.3.trace
       type: pinball
       weight: 0.0988037
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.4.trace
       type: pinball
       weight: 0.0593708
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.5.trace
       type: pinball
       weight: 0.179442
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.6.trace
       type: pinball
       weight: 0.0398759
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.7.trace
       type: pinball
       weight: 0.233939
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.8.trace
       type: pinball
       weight: 0.13868
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-3.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-3.9.trace
       type: pinball
       weight: 0.0478511
   - name: medium-1
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.1.trace
       type: pinball
       weight: 0.0385714
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.3.trace
       type: pinball
       weight: 0.0171429
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.5.trace
       type: pinball
       weight: 0.201429
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.6.trace
       type: pinball
       weight: 0.318571
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.7.trace
       type: pinball
       weight: 0.124286
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.8.trace
       type: pinball
       weight: 0.0371429
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.2.trace
       type: pinball
       weight: 0.145714
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.medium-1.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.medium-1.4.trace
       type: pinball
       weight: 0.117143
   - name: long-2
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.1.trace
       type: pinball
       weight: 0.0570452
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.2.trace
       type: pinball
       weight: 0.0835962
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.3.trace
       type: pinball
       weight: 0.0764984
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.4.trace
       type: pinball
       weight: 0.183754
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.5.trace
       type: pinball
       weight: 0.110936
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.6.trace
       type: pinball
       weight: 0.185857
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.7.trace
       type: pinball
       weight: 0.204259
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.8.trace
       type: pinball
       weight: 0.0601998
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-2.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-2.9.trace
       type: pinball
       weight: 0.0378549
   - name: short-3
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.1.trace
       type: pinball
       weight: 0.0513699
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.2.trace
       type: pinball
       weight: 0.195205
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.3.trace
       type: pinball
       weight: 0.0582192
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.4.trace
       type: pinball
       weight: 0.15411
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.5.trace
       type: pinball
       weight: 0.181507
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.6.trace
       type: pinball
       weight: 0.229452
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.short-3.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.short-3.7.trace
       type: pinball
       weight: 0.130137
   - name: long-3
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.1.trace
       type: pinball
       weight: 0.209052
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.2.trace
       type: pinball
       weight: 0.0841239
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.3.trace
       type: pinball
       weight: 0.0966968
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.4.trace
       type: pinball
       weight: 0.152246
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.5.trace
       type: pinball
       weight: 0.123786
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.6.trace
       type: pinball
       weight: 0.217625
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.7.trace
       type: pinball
       weight: 0.034061
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.9.trace
       type: pinball
       weight: 0.0213739
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.long-3.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.long-3.8.trace
       type: pinball
       weight: 0.0610355
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.1.trace
       type: pinball
       weight: 0.0485584
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.2.trace
       type: pinball
       weight: 0.12868
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.3.trace
       type: pinball
       weight: 0.120789
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.4.trace
       type: pinball
       weight: 0.0540212
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.5.trace
       type: pinball
       weight: 0.127466
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.6.trace
       type: pinball
       weight: 0.313505
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.7.trace
       type: pinball
       weight: 0.0494689
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.8.trace
       type: pinball
       weight: 0.0482549
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/631.deepsjeng_s.train.0.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/631.deepsjeng_s.train.0.9.trace
       type: pinball
       weight: 0.109256
 641.leela_s:
@@ -1191,371 +1191,371 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.1.trace
       type: pinball
       weight: 0.000406752
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.2.trace
       type: pinball
       weight: 0.0659955
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.3.trace
       type: pinball
       weight: 0.0354383
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.4.trace
       type: pinball
       weight: 0.0679276
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.5.trace
       type: pinball
       weight: 0.0750458
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.6.trace
       type: pinball
       weight: 0.154667
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.7.trace
       type: pinball
       weight: 0.143278
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.8.trace
       type: pinball
       weight: 0.228035
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.9.trace
       type: pinball
       weight: 0.188021
     - id: 9
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.0.10.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.0.10.trace
       type: pinball
       weight: 0.0411836
   - name: long-13
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.1.trace
       type: pinball
       weight: 0.00140622
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.2.trace
       type: pinball
       weight: 0.128142
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.3.trace
       type: pinball
       weight: 0.130251
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.4.trace
       type: pinball
       weight: 0.108982
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.5.trace
       type: pinball
       weight: 0.157321
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.6.trace
       type: pinball
       weight: 0.15363
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.7.trace
       type: pinball
       weight: 0.196344
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-13.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-13.8.trace
       type: pinball
       weight: 0.123923
   - name: long-19
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.1.trace
       type: pinball
       weight: 0.000421053
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.2.trace
       type: pinball
       weight: 0.173421
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.3.trace
       type: pinball
       weight: 0.106105
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.4.trace
       type: pinball
       weight: 0.143316
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.5.trace
       type: pinball
       weight: 0.127684
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.6.trace
       type: pinball
       weight: 0.0966316
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.7.trace
       type: pinball
       weight: 0.0869474
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.8.trace
       type: pinball
       weight: 0.0484737
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.9.trace
       type: pinball
       weight: 0.131
     - id: 9
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-19.10.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-19.10.trace
       type: pinball
       weight: 0.086
   - name: short-9
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-9.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-9.1.trace
       type: pinball
       weight: 0.0540541
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-9.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-9.2.trace
       type: pinball
       weight: 0.155405
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-9.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-9.3.trace
       type: pinball
       weight: 0.351351
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-9.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-9.4.trace
       type: pinball
       weight: 0.439189
   - name: medium-13
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.1.trace
       type: pinball
       weight: 0.00446678
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.2.trace
       type: pinball
       weight: 0.136795
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.3.trace
       type: pinball
       weight: 0.155221
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.4.trace
       type: pinball
       weight: 0.0993858
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.5.trace
       type: pinball
       weight: 0.304299
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.6.trace
       type: pinball
       weight: 0.0831937
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-13.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-13.7.trace
       type: pinball
       weight: 0.216639
   - name: medium-19
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.1.trace
       type: pinball
       weight: 0.000773171
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.2.trace
       type: pinball
       weight: 0.166232
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.3.trace
       type: pinball
       weight: 0.0800232
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.4.trace
       type: pinball
       weight: 0.205374
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.5.trace
       type: pinball
       weight: 0.202088
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.6.trace
       type: pinball
       weight: 0.204504
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-19.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-19.7.trace
       type: pinball
       weight: 0.141007
   - name: medium-9
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.1.trace
       type: pinball
       weight: 0.00495663
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.2.trace
       type: pinball
       weight: 0.253408
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.3.trace
       type: pinball
       weight: 0.173482
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.4.trace
       type: pinball
       weight: 0.10347
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.5.trace
       type: pinball
       weight: 0.0619579
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.6.trace
       type: pinball
       weight: 0.0799257
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.7.trace
       type: pinball
       weight: 0.205081
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.medium-9.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.medium-9.8.trace
       type: pinball
       weight: 0.11772
   - name: short-19
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.1.trace
       type: pinball
       weight: 0.00139082
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.2.trace
       type: pinball
       weight: 0.178894
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.3.trace
       type: pinball
       weight: 0.142211
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.4.trace
       type: pinball
       weight: 0.112309
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.5.trace
       type: pinball
       weight: 0.100834
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.6.trace
       type: pinball
       weight: 0.127434
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.7.trace
       type: pinball
       weight: 0.0215577
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.8.trace
       type: pinball
       weight: 0.110049
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.9.trace
       type: pinball
       weight: 0.104485
     - id: 9
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-19.10.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-19.10.trace
       type: pinball
       weight: 0.100834
   - name: short-13
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.1.trace
       type: pinball
       weight: 0.00379687
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.2.trace
       type: pinball
       weight: 0.187945
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.3.trace
       type: pinball
       weight: 0.146654
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.4.trace
       type: pinball
       weight: 0.117703
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.5.trace
       type: pinball
       weight: 0.0740389
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.6.trace
       type: pinball
       weight: 0.125771
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.7.trace
       type: pinball
       weight: 0.206929
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.short-13.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.short-13.8.trace
       type: pinball
       weight: 0.137162
   - name: long-9
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.1.trace
       type: pinball
       weight: 0.00379507
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.2.trace
       type: pinball
       weight: 0.159867
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.3.trace
       type: pinball
       weight: 0.1537
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.4.trace
       type: pinball
       weight: 0.111954
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.5.trace
       type: pinball
       weight: 0.20019
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.6.trace
       type: pinball
       weight: 0.0602467
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.7.trace
       type: pinball
       weight: 0.202562
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.long-9.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.long-9.8.trace
       type: pinball
       weight: 0.107685
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.1.trace
       type: pinball
       weight: 0.00246837
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.2.trace
       type: pinball
       weight: 0.161061
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.3.trace
       type: pinball
       weight: 0.109534
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.4.trace
       type: pinball
       weight: 0.201481
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.5.trace
       type: pinball
       weight: 0.152731
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.6.trace
       type: pinball
       weight: 0.166307
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/641.leela_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/641.leela_s.train.0.7.trace
       type: pinball
       weight: 0.206418
 620.omnetpp_s:
@@ -1563,235 +1563,235 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.0.1.trace
       type: pinball
       weight: 0.152285
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.0.2.trace
       type: pinball
       weight: 0.842507
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.0.3.trace
       type: pinball
       weight: 0.00520787
   - name: rand9
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.1.trace
       type: pinball
       weight: 0.011976
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.2.trace
       type: pinball
       weight: 0.197144
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.3.trace
       type: pinball
       weight: 0.247812
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.4.trace
       type: pinball
       weight: 0.281898
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.5.trace
       type: pinball
       weight: 0.24597
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.6.trace
       type: pinball
       weight: 0.0110548
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.7.trace
       type: pinball
       weight: 0.00368494
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand9.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand9.8.trace
       type: pinball
       weight: 0.000460617
   - name: line
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.line.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.line.1.trace
       type: pinball
       weight: 0.0155367
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.line.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.line.2.trace
       type: pinball
       weight: 0.973164
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.line.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.line.3.trace
       type: pinball
       weight: 0.0112994
   - name: star
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.1.trace
       type: pinball
       weight: 0.0135796
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.2.trace
       type: pinball
       weight: 0.0130364
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.3.trace
       type: pinball
       weight: 0.386203
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.4.trace
       type: pinball
       weight: 0.0852797
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.5.trace
       type: pinball
       weight: 0.140684
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.6.trace
       type: pinball
       weight: 0.190114
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.7.trace
       type: pinball
       weight: 0.153721
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.8.trace
       type: pinball
       weight: 0.0135796
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.9.trace
       type: pinball
       weight: 0.0032591
     - id: 9
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.star.10.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.star.10.trace
       type: pinball
       weight: 0.000543183
   - name: rand27
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand27.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand27.1.trace
       type: pinball
       weight: 0.0221675
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand27.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand27.2.trace
       type: pinball
       weight: 0.3633
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand27.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand27.3.trace
       type: pinball
       weight: 0.604269
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand27.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand27.4.trace
       type: pinball
       weight: 0.00738916
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand27.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand27.5.trace
       type: pinball
       weight: 0.00287356
   - name: ring
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.ring.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.ring.1.trace
       type: pinball
       weight: 0.659844
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.ring.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.ring.2.trace
       type: pinball
       weight: 0.310916
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.ring.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.ring.3.trace
       type: pinball
       weight: 0.0282651
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.ring.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.ring.4.trace
       type: pinball
       weight: 0.000974659
   - name: tree
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.tree.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.tree.1.trace
       type: pinball
       weight: 0.00989632
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.tree.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.tree.2.trace
       type: pinball
       weight: 0.545712
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.tree.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.tree.3.trace
       type: pinball
       weight: 0.416588
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.tree.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.tree.4.trace
       type: pinball
       weight: 0.0268615
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.tree.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.tree.5.trace
       type: pinball
       weight: 0.000942507
   - name: rand18
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.1.trace
       type: pinball
       weight: 0.182312
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.2.trace
       type: pinball
       weight: 0.394104
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.3.trace
       type: pinball
       weight: 0.396431
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.4.trace
       type: pinball
       weight: 0.019007
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.5.trace
       type: pinball
       weight: 0.00620636
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.rand18.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.rand18.6.trace
       type: pinball
       weight: 0.00193949
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.1.trace
       type: pinball
       weight: 0.0189125
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.2.trace
       type: pinball
       weight: 0.0189125
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.3.trace
       type: pinball
       weight: 0.0630418
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.4.trace
       type: pinball
       weight: 0.240347
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.5.trace
       type: pinball
       weight: 0.301812
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.6.trace
       type: pinball
       weight: 0.197006
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.7.trace
       type: pinball
       weight: 0.134752
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.8.trace
       type: pinball
       weight: 0.0189125
     - id: 8
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.9.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.9.trace
       type: pinball
       weight: 0.00472813
     - id: 9
-      path: /mnt/data/results/branch-project/traces-x86/620.omnetpp_s.train.0.10.trace
+      path: /mnt/data/results/branch-project/traces-indirect/620.omnetpp_s.train.0.10.trace
       type: pinball
       weight: 0.00157604
 648.exchange2_s:
@@ -1799,392 +1799,392 @@
   - name: '0'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.1.trace
       type: pinball
       weight: 0.0544347
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.2.trace
       type: pinball
       weight: 0.206513
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.3.trace
       type: pinball
       weight: 0.086153
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.4.trace
       type: pinball
       weight: 0.141011
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.5.trace
       type: pinball
       weight: 0.0837702
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.6.trace
       type: pinball
       weight: 0.235584
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.0.7.trace
       type: pinball
       weight: 0.192534
   - name: '009'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.1.trace
       type: pinball
       weight: 0.248549
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.2.trace
       type: pinball
       weight: 0.060084
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.3.trace
       type: pinball
       weight: 0.151476
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.4.trace
       type: pinball
       weight: 0.218846
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.5.trace
       type: pinball
       weight: 0.12869
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.6.trace
       type: pinball
       weight: 0.147586
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.009.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.009.7.trace
       type: pinball
       weight: 0.0447697
   - name: '003'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.1.trace
       type: pinball
       weight: 0.114472
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.2.trace
       type: pinball
       weight: 0.0984558
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.3.trace
       type: pinball
       weight: 0.0685299
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.4.trace
       type: pinball
       weight: 0.162009
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.5.trace
       type: pinball
       weight: 0.196593
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.6.trace
       type: pinball
       weight: 0.212034
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.7.trace
       type: pinball
       weight: 0.0943721
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.003.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.003.8.trace
       type: pinball
       weight: 0.053535
   - name: '004'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.1.trace
       type: pinball
       weight: 0.17843
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.2.trace
       type: pinball
       weight: 0.111014
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.3.trace
       type: pinball
       weight: 0.195996
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.4.trace
       type: pinball
       weight: 0.0943978
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.5.trace
       type: pinball
       weight: 0.0645672
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.6.trace
       type: pinball
       weight: 0.0822124
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.7.trace
       type: pinball
       weight: 0.0584744
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.004.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.004.8.trace
       type: pinball
       weight: 0.214907
   - name: '002'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.1.trace
       type: pinball
       weight: 0.0357604
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.2.trace
       type: pinball
       weight: 0.124628
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.3.trace
       type: pinball
       weight: 0.186325
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.4.trace
       type: pinball
       weight: 0.197777
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.5.trace
       type: pinball
       weight: 0.184697
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.6.trace
       type: pinball
       weight: 0.133723
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.7.trace
       type: pinball
       weight: 0.0843204
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.002.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.002.8.trace
       type: pinball
       weight: 0.0527704
   - name: '008'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.1.trace
       type: pinball
       weight: 0.0771036
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.2.trace
       type: pinball
       weight: 0.123183
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.3.trace
       type: pinball
       weight: 0.0925587
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.4.trace
       type: pinball
       weight: 0.208071
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.5.trace
       type: pinball
       weight: 0.192616
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.6.trace
       type: pinball
       weight: 0.206926
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.7.trace
       type: pinball
       weight: 0.068174
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.008.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.008.8.trace
       type: pinball
       weight: 0.0313681
   - name: '000'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.1.trace
       type: pinball
       weight: 0.156668
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.2.trace
       type: pinball
       weight: 0.100535
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.3.trace
       type: pinball
       weight: 0.039204
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.4.trace
       type: pinball
       weight: 0.173003
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.5.trace
       type: pinball
       weight: 0.143228
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.6.trace
       type: pinball
       weight: 0.0575438
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.7.trace
       type: pinball
       weight: 0.146124
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.000.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.000.8.trace
       type: pinball
       weight: 0.183695
   - name: '007'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.1.trace
       type: pinball
       weight: 0.0446446
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.2.trace
       type: pinball
       weight: 0.0622623
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.3.trace
       type: pinball
       weight: 0.0852186
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.4.trace
       type: pinball
       weight: 0.0950951
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.5.trace
       type: pinball
       weight: 0.188856
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.6.trace
       type: pinball
       weight: 0.173907
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.7.trace
       type: pinball
       weight: 0.213814
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.007.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.007.8.trace
       type: pinball
       weight: 0.136203
   - name: '006'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.1.trace
       type: pinball
       weight: 0.178604
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.2.trace
       type: pinball
       weight: 0.141169
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.3.trace
       type: pinball
       weight: 0.200771
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.4.trace
       type: pinball
       weight: 0.037131
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.5.trace
       type: pinball
       weight: 0.0688343
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.6.trace
       type: pinball
       weight: 0.0929796
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.7.trace
       type: pinball
       weight: 0.193213
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.006.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.006.8.trace
       type: pinball
       weight: 0.0872984
   - name: '001'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.1.trace
       type: pinball
       weight: 0.301262
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.2.trace
       type: pinball
       weight: 0.211168
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.3.trace
       type: pinball
       weight: 0.0695512
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.4.trace
       type: pinball
       weight: 0.126245
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.5.trace
       type: pinball
       weight: 0.210599
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.6.trace
       type: pinball
       weight: 0.0317867
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.001.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.001.7.trace
       type: pinball
       weight: 0.049388
   - name: '005'
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.1.trace
       type: pinball
       weight: 0.143597
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.2.trace
       type: pinball
       weight: 0.197481
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.3.trace
       type: pinball
       weight: 0.221973
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.4.trace
       type: pinball
       weight: 0.110847
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.5.trace
       type: pinball
       weight: 0.117565
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.7.trace
       type: pinball
       weight: 0.105808
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.6.trace
       type: pinball
       weight: 0.0522043
     - id: 7
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.005.8.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.005.8.trace
       type: pinball
       weight: 0.0505248
   - name: train.0
     simpoints:
     - id: 0
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.1.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.1.trace
       type: pinball
       weight: 0.0778258
     - id: 1
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.2.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.2.trace
       type: pinball
       weight: 0.101297
     - id: 2
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.3.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.3.trace
       type: pinball
       weight: 0.135269
     - id: 3
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.4.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.4.trace
       type: pinball
       weight: 0.138975
     - id: 4
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.5.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.5.trace
       type: pinball
       weight: 0.158122
     - id: 5
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.6.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.6.trace
       type: pinball
       weight: 0.209389
     - id: 6
-      path: /mnt/data/results/branch-project/traces-x86/648.exchange2_s.train.0.7.trace
+      path: /mnt/data/results/branch-project/traces-indirect/648.exchange2_s.train.0.7.trace
       type: pinball
       weight: 0.179123

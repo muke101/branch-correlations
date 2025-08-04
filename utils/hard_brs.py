@@ -8,8 +8,8 @@ import pickle
 import polars as pl
 from utils.get_traces import benchmarks
 
-hard_branches_dir = "/mnt/data/results/branch-project/h2ps-x86/"
-stats_dir = "/work/muke/Branch-Correlations/stats-x86/"
+hard_branches_dir = "/mnt/data/results/branch-project/h2ps-indirect/"
+stats_dir = "/work/muke/Branch-Correlations/stats/"
 
 NUM_BRS_TO_PRINT = 100
 
@@ -45,7 +45,7 @@ def greedy_select_top_brs(list_inputs, mpki_dicts, sorted_brs, num_brs):
 
 if __name__ == "__main__":
     #for benchmark in [b for b in benchmarks if b not in ["600.perlbench_s", "602.gcc_s", "657.xz_s"]]:
-    for benchmark in ["605.mcf_s"]:
+    for benchmark in ["641.leela_s"]:
         with open("{}mispred_dicts_{}.pkl".format(stats_dir, benchmark), 'rb') as f:
             mispred_dicts = pickle.load(f)
         with open("{}sorted_brs_{}.pkl".format(stats_dir, benchmark), 'rb') as f:

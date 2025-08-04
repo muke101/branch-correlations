@@ -25,7 +25,7 @@ TARGET_BENCHMARKS = ["605.mcf_s", "623.xalancbmk_s",
  "625.x264_s", "631.deepsjeng_s",
  "641.leela_s", 
  "620.omnetpp_s", "648.exchange2_s"]
-TARGET_BENCHMARKS = ["605.mcf_s"]
+TARGET_BENCHMARKS = ["641.leela_s"]
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30
@@ -66,6 +66,14 @@ def create_new_dataset(dataset_path, pcs, directions):
     fptr.create_dataset(
         "history",
         data=processed_history,
+        compression='gzip',
+        compression_opts=9,
+    )
+    full_history = (pcs << 1) | directions
+    full_history = full_history.astype(np.uint64)
+    fptr.create_dataset(
+        "full_history",
+        data=full_history,
         compression='gzip',
         compression_opts=9,
     )

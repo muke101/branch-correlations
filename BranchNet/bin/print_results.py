@@ -17,11 +17,15 @@ SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
 SUITE += [ # list of (benchmark, input name, weight, validation_br_name) tuples
   (i, '2', 1.0, 'top100') for i in ["625.x264_s"] 
 ]
-#SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-#  (i, '0', 1.0, 'top100') for i in ["625.x264_s"]
-#]
+SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
+  (i, '0', 1.0, 'top100') for i in ["641.leela_s"]
+]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
+  #('mini250', 0.25),
+  #('mini500', 0.5),
+  #('mini1k', 1),
+  #('mini2k', 2),
   ('test', 1),
 ]
 
@@ -31,7 +35,7 @@ CSV = False
 DUMP_PER_BR_STATS = False
 PRODUCE_HARD_BRS = False
 HARD_BRS_TAG = None
-BUDGET = 50
+BUDGET = 100
 
 State = namedtuple('State', ['selected_brs_set', 'selected_brs_breakdown',
                              'total_size', 'total_mpki_reduction'])

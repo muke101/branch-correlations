@@ -11,7 +11,7 @@ base_run = False
 spec_path = "/work/muke/spec2017-x86/"
 expanded_spec_path = "/work/muke/spec2017-expanded-x86/"
 gem5 = "/work/muke/Branch-Correlations/trace-gem5/"
-results_dir = "/mnt/data/results/branch-project/traces-sorted/"
+results_dir = "/mnt/data/results/branch-project/traces-indirect/"
 label_file_dir = "/work/muke/Branch-Correlations/label_files/"
 workloads = "/work/muke/alberta-workloads/"
 benchmark = base_dir.split("/")[4]
@@ -79,15 +79,10 @@ for out_dir in os.listdir(base_dir):
             run = gem5+"build/X86/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 2> >(grep -e 'TRACE:' -e 'Warmed up!' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
             os.chdir(run_dir)
             while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60)
-            #try:
-            p = subprocess.run(run, shell=True, executable='/bin/bash', check=True)
-            #procs.append(p)
-            #time.sleep(60)
-            #except ChildProcessError:
-            #    subprocess.run("rm -f "+trace_file, shell=True)
-            #    exit(1)
+            p = subprocess.Popen(run, shell=True, executable='/bin/bash')
+            procs.append(p)
+            time.sleep(60)
             os.chdir(base_dir)
-            break
 
 for p in procs:
     code = p.wait()

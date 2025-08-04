@@ -49,8 +49,7 @@ def process_benchmark(benchmark):
 if __name__ == "__main__":
     num_threads = os.cpu_count()
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        #futures = {executor.submit(process_benchmark, bench): bench for bench in [b for b in benchmarks if b not in ["657.xz_s", "602.gcc_s", "600.perlbench_s"]]}
-        futures = {executor.submit(process_benchmark, bench): bench for bench in ["605.mcf_s"]}
+        futures = {executor.submit(process_benchmark, bench): bench for bench in ["641.leela_s"]}
 
         for future in as_completed(futures):
             trace = futures[future]

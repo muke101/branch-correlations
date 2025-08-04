@@ -32,9 +32,9 @@ elif args.branch_file:
 else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
-explain_dir = "/mnt/data/results/branch-project/explained-instances/"
-dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
+explain_dir = "/mnt/data/results/branch-project/explained-instances-indirect/"
+dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())

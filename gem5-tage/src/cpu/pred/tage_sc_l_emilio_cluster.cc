@@ -23,6 +23,7 @@ TAGE_EMILIO_cluster::TAGE_EMILIO_cluster
   tage(1024), tage_baseline(1024)
 {
     if (globalMap.size() > 0) using_correlations = true;
+    std::unordered_set<Addr> seen_branches;
 }
 
 std::pair<uint128_t, unsigned>
