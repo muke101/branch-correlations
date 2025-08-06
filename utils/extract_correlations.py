@@ -366,7 +366,7 @@ def coalecse_branches(explained_branches, patterns, stats):
             for row in rows:
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                label, weight, explanation = row[2], row[5], row[6]
+                label, weight, explanation = row[2], row[6], row[7]
 
                 features = np.array([int(item['feature']) for item in explanation])
                 impacts = np.array([float(item['impact']) for item in explanation])
@@ -393,8 +393,8 @@ def coalecse_branches(explained_branches, patterns, stats):
                     pc_taken_array = valid_taken[pc_mask]
 
                     avg_impact = fast_mean(pc_impacts_array)
-                    #unique_branches[pc].append((avg_impact, weight))
-                    unique_branches[pc].append(avg_impact)
+                    unique_branches[pc].append((avg_impact, weight))
+                    #unique_branches[pc].append(avg_impact)
                     lengths[pc].append(series_length)
 
                     #if pc not in patterns:
@@ -410,12 +410,12 @@ def coalecse_branches(explained_branches, patterns, stats):
                 if not unique_branches: continue
 
             for pc in unique_branches:
-                #impacts_weights = np.array(unique_branches[pc])
-                #avg_impacts = impacts_weights[:, 0]
-                #weights = impacts_weights[:, 1]
-                #unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
-                avg_impacts = np.array(unique_branches[pc])
-                unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
+                impacts_weights = np.array(unique_branches[pc])
+                avg_impacts = impacts_weights[:, 0]
+                weights = impacts_weights[:, 1]
+                unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+                #avg_impacts = np.array(unique_branches[pc])
+                #unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
                 #lengths[pc] = fast_mean(np.array(lengths[pc]))
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
@@ -445,16 +445,14 @@ def weight_branches(correlated_branches, patterns, stats):
             items = np.array(unique_branches[pc][0])
             weights = np.array(unique_branches[pc][1])
             impacts, lengths = np.split(items,2,axis=1)
-            unique_branches[pc] = fast_weighted_mean(impacts, weights)
-            if hex(pc) in ["0xb67", "0xff4", "0xf27"]:
-                print(hex(pc)+": "+str(fast_mean(lengths)))
+            unique_branches[pc] = (fast_weighted_mean(impacts, weights), fast_weighted_mean(lengths, weights))
             #patterns[pc].finalise_workload()
             #if statistics.fmean(patterns[pc].instance_lengths) >= 5:
             #    patterns[pc].print_instance()
 
-        correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+        correlated_branches[workload] = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
-        stats.workload_gini_coeff.append(gini(np.array([i[1] for i in correlated_branches[workload]])))
+        stats.workload_gini_coeff.append(gini(np.array([i[1][0] for i in correlated_branches[workload]])))
 
     return correlated_branches
 
@@ -465,15 +463,17 @@ def average_branches(correlated_branches, stats, use_train = True):
     unique_branches = defaultdict(list)
     for workload in correlated_branches:
         if not use_train and 'train' not in workload: continue #eval workloads are actually called 'train'
-        for pc, impact in correlated_branches[workload]:
-            unique_branches[pc].append(impact)
+        for pc, item in correlated_branches[workload]:
+            unique_branches[pc].append(item)
 
     for pc in unique_branches:
-        unique_branches[pc] = statistics.fmean(unique_branches[pc])
+        items = np.array(unique_branches[pc])
+        impacts, lengths = np.split(items,2,axis=1)
+        unique_branches[pc] = (fast_mean(impacts), fast_mean(lengths))
 
-    sorted_features = sorted(unique_branches.items(), key=lambda i: i[1], reverse=True)
+    sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
-    gini_coeff = gini(np.array([i[1] for i in sorted_features]))
+    gini_coeff = gini(np.array([i[1][0] for i in sorted_features]))
 
     stats.benchmark_gini_coeff = gini_coeff
 
@@ -512,20 +512,21 @@ for branch in good_branches:
     correlated_branches, gini_coeff = average_branches(correlated_branches, stats)
 
     selection_threshold = 1.0 - selection_gamma * gini_coeff
-    total = sum([i[1] for i in correlated_branches])
+    total = sum([i[1][0] for i in correlated_branches])
     cumulative = 0
     selected_branches = []
-    for pc, impact in correlated_branches:
+    for pc, item in correlated_branches:
         #cumulative += impact
         #if cumulative / total < selection_threshold:
-        selected_branches.append((pc, impact))
+        selected_branches.append((pc, item))
         #else:
         #    break
 
     print("Selected branches for branch {}:".format(branch), end=' ')
     c = 0
-    for pc, impact in selected_branches:
-        print("{}: {}".format(hex(pc), impact), end=', ' if c < len(selected_branches) - 1 else '\n')
+    for pc, item in selected_branches:
+        impact, length = item
+        print("{}: {}".format(hex(pc), impact, length))#, end=', ' if c < len(selected_branches) - 1 else '\n')
         c += 1
 
     stats.finalise()
