@@ -68,8 +68,7 @@ def write_stats(trace):
 if __name__ == "__main__":
     all_traces = []
     #for bench in get_traces.benchmarks:
-    for bench in ["641.leela_s"]:
-        if bench in ["657.xz_s", "600.perlbench_s", "602.gcc_s"]: continue
+    for bench in get_traces.branchnet_benchmarks:
         traces = get_traces.get_trace_set(bench, 'test')
         traces += get_traces.get_trace_set(bench, 'validate')
         for trace, _ in traces:

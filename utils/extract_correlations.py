@@ -366,23 +366,32 @@ def coalecse_branches(explained_branches, patterns, stats):
             for row in rows:
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                label, weight, explanation = row[2], row[6], row[7]
+                label, features, history, impacts = row[2], row[4], row[5], row[6]
 
-                features = np.array([int(item['feature']) for item in explanation])
-                impacts = np.array([float(item['impact']) for item in explanation])
+                features = np.array([int(i[0]) for i in features])
+                history = np.array([int(i[0]) for i in history])
+                impacts = np.array([float(i[0]) for i in impacts])
+                label = label[0]
 
-                taken = features & 1
-                pcs = features >> 1
+                #features = np.array([int(item['feature']) for item in explanation])
+                #impacts = np.array([float(item['impact']) for item in explanation])
 
-                correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
+                taken = history & 1
+                pcs = history >> 1
 
-                valid_indices = correct_direction
-                if not np.any(valid_indices):
-                    continue
+                #correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
 
-                valid_pcs = pcs[valid_indices]
-                valid_impacts = np.abs(impacts[valid_indices])
-                valid_taken = taken[valid_indices]
+                #valid_indices = correct_direction
+                #if not np.any(valid_indices):
+                #    continue
+
+                #valid_pcs = pcs[valid_indices]
+                #valid_impacts = np.abs(impacts[valid_indices])
+                #valid_taken = taken[valid_indices]
+
+                valid_pcs = pcs
+                valid_impacts = impacts
+                valid_taken = taken
 
                 unique_pcs = np.unique(valid_pcs)
 
@@ -393,8 +402,8 @@ def coalecse_branches(explained_branches, patterns, stats):
                     pc_taken_array = valid_taken[pc_mask]
 
                     avg_impact = fast_mean(pc_impacts_array)
-                    unique_branches[pc].append((avg_impact, weight))
-                    #unique_branches[pc].append(avg_impact)
+                    #unique_branches[pc].append((avg_impact, weight))
+                    unique_branches[pc].append(avg_impact)
                     lengths[pc].append(series_length)
 
                     #if pc not in patterns:
@@ -410,13 +419,13 @@ def coalecse_branches(explained_branches, patterns, stats):
                 if not unique_branches: continue
 
             for pc in unique_branches:
-                impacts_weights = np.array(unique_branches[pc])
-                avg_impacts = impacts_weights[:, 0]
-                weights = impacts_weights[:, 1]
-                unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
-                #avg_impacts = np.array(unique_branches[pc])
-                #unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
-                #lengths[pc] = fast_mean(np.array(lengths[pc]))
+                #impacts_weights = np.array(unique_branches[pc])
+                #avg_impacts = impacts_weights[:, 0]
+                #weights = impacts_weights[:, 1]
+                #unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+                avg_impacts = np.array(unique_branches[pc])
+                unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
+                lengths[pc] = fast_mean(np.array(lengths[pc]))
 
             sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
@@ -488,10 +497,11 @@ for branch in good_branches:
     stats = Stats(branch)
 
     # header: workload, checkpoint, label, output, history
-    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))
+    #explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(percentile)))
+    explained_instances = pl.read_parquet("/work/muke/Branch-Correlations/boyuan_transformer/0x417544/relevance.parquet")
 
-    stats.selected_confidence_average = explained_instances['output'].mean()
-    stats.selected_confidence_stddev = explained_instances['output'].std()
+    #stats.selected_confidence_average = explained_instances['output'].mean()
+    #stats.selected_confidence_stddev = explained_instances['output'].std()
 
     print("Averaging instances")
 

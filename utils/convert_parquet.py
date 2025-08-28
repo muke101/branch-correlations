@@ -6,7 +6,7 @@ import io
 import itertools
 
 #header = "tick,inst_addr,pred_addr,jump_addr,taken,mispredicted,warmed_up\n"
-header = "inst_addr,taken,mispredicted,warmed_up\n"
+header = "inst_addr,taken,mispredicted,direct_cond,warmed_up\n"
 header_io = io.StringIO(header)
 
 buffer = io.StringIO()
@@ -39,12 +39,10 @@ for line in sys.stdin:
 #df = df.with_columns([pl.col(col).cast(pl.Int64, strict=False) for col in df.columns])
 buffer.seek(0)
 df = pl.read_csv(buffer, schema_overrides={
-    #"tick": pl.Int64,
     "inst_addr": pl.Int64,
-    #"pred_addr": pl.Int64,
-    #"jump_addr": pl.Int64,
     "taken": pl.Int64,
     "mispredicted": pl.Int64,
+    "direct_cond": pl.Int64,
     "warmed_up": pl.Int64,
 })
 df.write_parquet(sys.argv[1])

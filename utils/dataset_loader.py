@@ -11,6 +11,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 import h5py
+import get_traces
 
 def get_pos_weight(traces, br_pc):
   num_taken = 0
@@ -222,7 +223,7 @@ class TraceFileAccessor():
 
       chunk = self.file_ptr['history'][idx - self.history_length : idx + 1]
       chunk = preprocess_history(
-          chunk, self.pc_bits, self.pc_hash_bits, np.int64)
+          chunk, self.pc_bits, self.pc_hash_bits, self.hash_dir_with_pc, np.int64)
       full_chunk = self.file_ptr['full_history'][idx - self.history_length : idx + 1]
 
       if not self.keep_file_open:
@@ -266,7 +267,7 @@ class BranchDataset(Dataset):
   """
 
   def __init__(self, trace_paths, br_pc, history_length, pc_bits, pc_hash_bits, hash_dir_with_pc,
-               in_mem=True, use_lock=False):
+               in_mem=True, use_lock=False, return_weights=False, benchmark=None):
     """Creates a TraceFileAccessor for each trace_path and sets
     trace_end_instances to provide a unified global view to all traces.
 
@@ -289,6 +290,8 @@ class BranchDataset(Dataset):
     self.locks = [None]
     self.trace_end_instances = np.array([-1])
     self.use_lock = use_lock
+    self.benchmark = benchmark
+    self.return_weights = return_weights
 
     for i, trace_path in enumerate(trace_paths):
       checkpoint = int(trace_path.split(".")[-2])
@@ -332,4 +335,7 @@ class BranchDataset(Dataset):
     inputs = history_chunk[:-1] #Last element is the target branch itself.
     full_inputs = full_history_chunk[:-1]
     label = (history_chunk[-1] & 1).astype(np.float32)
+    if self.return_weights:
+        weight = get_traces.get_simpoint_weight(self.benchmark, workload, checkpoint)
+        return (inputs, label, full_inputs, checkpoint, workload, weight)
     return (inputs, label, full_inputs, checkpoint, workload)

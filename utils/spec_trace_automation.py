@@ -21,7 +21,7 @@ procs = []
 def get_bench_flags(run_name):
     #test
     if run_name.isdigit() and len(run_name) == 1:
-        if benchmark in ["602.gcc_s", "657.xs_s", "648.exchange2_s"]:
+        if benchmark in ["602.gcc_s", "657.xz_s", "648.exchange2_s"]:
             run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/modified/run_peak_refspeed_mytest-64.0000/"
         else:
             run_dir = spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"

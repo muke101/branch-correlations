@@ -9,13 +9,14 @@ import polars as pl
 import pickle
 from collections import defaultdict
 from typing import List, Tuple, Optional
-from utils.get_traces import get_by_workload, trace_dir, benchmarks
+from utils.get_traces import get_by_workload, trace_dir, branchnet_benchmarks
 
 def make_mispred_dict(files_weights: Optional[List[Tuple[str, float]]]):    
     mispred_dict = defaultdict(int)
     denom_dict = defaultdict(int)
     for file, weight in files_weights:
         df = pl.read_parquet(trace_dir+file)
+        df = df.filter(df['direct_cond'] == 1)
         for inst_addr in df['inst_addr'].unique():
             filtered = df.filter((df['inst_addr'] == inst_addr) & (df['warmed_up'] == 1))
             total = filtered.shape[0]
@@ -49,7 +50,7 @@ def process_benchmark(benchmark):
 if __name__ == "__main__":
     num_threads = os.cpu_count()
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = {executor.submit(process_benchmark, bench): bench for bench in ["641.leela_s"]}
+        futures = {executor.submit(process_benchmark, bench): bench for bench in branchnet_benchmarks}
 
         for future in as_completed(futures):
             trace = futures[future]

@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import os
 import sys
@@ -5,49 +6,47 @@ import matplotlib.pyplot as plt
 import numpy as np
 import psutil
 import time
+import get_traces
+from scipy.stats import gmean
 
-run_type = sys.argv[1]
-label_file_type = sys.argv[2]
-cpu_model = sys.argv[3]
-run_labelled = True
-run_base = True if sys.argv[4] == 'with_base' else False
-if label_file_type == "base":
-    run_base = True
-    run_labelled = False
-if run_base: print("Running with base model")
-label_file_dir = "/work/muke/Branch-Correlations/label_files/"
-chkpt_dir = "/mnt/data/checkpoints-expanded/"
-results_dir = "/mnt/data/results/branch-project/"+run_type+"/"+label_file_type+"/"+cpu_model+"/"
-base_results_dir = "/mnt/data/results/branch-project/"+run_type+"/base/"+cpu_model+"/"
-benches = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
-           "625.x264_s", "631.deepsjeng_s",
-           "641.leela_s", "657.xz_s", "602.gcc_s",
-           "620.omnetpp_s", "648.exchange2_s"]
+parser = argparse.ArgumentParser()
 
-if len(sys.argv) > 5:
-    sub_benches = []
-    for bench in sys.argv[5:]:
-        if bench in benches:
-            sub_benches.append(bench)
-        else:
-            print("Unknown benchmark: ", bench)
-            exit(1)
-    benches = sub_benches
+parser.add_argument('--run-type', type=str, required=True)
+parser.add_argument('--cpu-model', type=str, required=True)
+parser.add_argument('--correlations-type', type=str, required=True)
+parser.add_argument('--with-base', action="store_true", required=False)
+parser.set_defaults(with_base=False)
 
+args = parser.parse_args()
+
+run_type = args.run_type.split(',')[0]
+cpu_model = args.cpu_model.split(',')[0]
+correlations_type = args.correlations_type.split(',')[0]
+
+if args.with_base: print("Running with base model")
+if correlations_type == "base": run_labelled = False
+else: run_labelled = True
+label_file_dir = "/work/muke/Branch-Correlations/correlations/"
+checkpoint_dir = "/mnt/data/checkpoints-expanded-x86/"
+results_dir = "/mnt/data/results/branch-project/gem5-results/"+run_type+"/"+correlations_type+"/"+cpu_model+"/"
+base_results_dir = "/mnt/data/results/branch-project/gem5-results/base/base/"+cpu_model+"/"
+correlations_dir = "/work/muke/Branch-Correlations/correlations/"
 
 #run checkpoints
 processes = []
-for bench in benches:
-    os.chdir(chkpt_dir+bench)
+for bench in get_traces.benchmarks:
+
+    os.chdir(checkpoint_dir+bench)
+    run_dir = "/work/muke/spec2017-x86/benchspec/CPU/"+bench+"/run/run_peak_refspeed_mytest-64.0000/"
 
     if run_labelled:
-        while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" " +label_file_type+" "+cpu_model, shell=True)
+        while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60*5)
+        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_h2p_automation.py --run-type "+run_type+" --correlations-type " +correlations_type+" --cpu-model "+cpu_model, shell=True)
         processes.append(p)
 
-    if run_base:
-        while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
-        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_automation.py "+run_type+" base "+cpu_model, shell=True)
+    if args.with_base or not run_labelled:
+        while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60*5)
+        p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/spec_h2p_automation.py --run-type "+run_type+" --correlations-type base --cpu-model "+cpu_model, shell=True)
         processes.append(p)
 
 for p in processes:
@@ -55,37 +54,33 @@ for p in processes:
     if code is not None and code != 0: print(p.args); exit(1)
 
 #aggregate stats
-for bench in benches:
-    name = bench.split(".")[1].split("_")[0]
-    
-    for i in (0,1,2):
-        if os.path.exists(results_dir+name+'.'+str(i)):
-            raw_results_dir = results_dir+name+'.'+str(i)+"/raw/"
+for bench in get_traces.benchmarks:
+    bench_name = bench.split(".")[1].split("_")[0]
+    os.chdir(checkpoint_dir+bench)
+    for chkpt_dir in os.listdir(os.getcwd()):
+        if "bbvs" in chkpt_dir: continue
+        run_name = chkpt_dir.split("checkpoints.")[1]
+        if len(run_name) != 1 or not run_name.isdigit(): continue #only care about test set
+        name = bench_name+"."+run_name
+        raw_results_dir = results_dir+"/"+name+"/raw/"
+        os.chdir(raw_results_dir)
+        p = subprocess.run("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+run_name, shell=True, check=True)
+        subprocess.run("cp results.txt ../", shell=True, check=True)
+        subprocess.run("cp accuracies.txt ../", shell=True, check=True)
+        if args.with_base:
+            raw_results_dir = base_results_dir+"/"+name+"/raw/"
             os.chdir(raw_results_dir)
-            p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
-            p.wait()
-            subprocess.Popen("cp results.txt ../", shell=True)
-            raw_results_dir = base_results_dir+name+'.'+str(i)+"/raw/"
-            os.chdir(raw_results_dir)
-            p = subprocess.Popen("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+str(i), shell=True)
-            p.wait()
-            subprocess.Popen("cp results.txt ../", shell=True)
+            p = subprocess.run("python3 /work/muke/Branch-Correlations/utils/aggregate_stats.py "+bench+" "+run_name, shell=True, check=True)
+            subprocess.run("cp results.txt ../", shell=True, check=True)
+            subprocess.run("cp accuracies.txt ../", shell=True, check=True)
 
 #generate differences between labelled and base
-if label_file_type == "base": exit(0) #nothing to compare to
+if not run_labelled: exit(0) #nothing to compare to
 
 prefix = "system.switch_cpus."
 
-#FIXME: new stats for new project
-
 stats = {
-    "CPI", prefix+"iew.memOrderViolationEvents",
-    prefix+"MemDepUnit__0.MDPLookups", prefix+"executeStats0.numInsts",
-    prefix+"MemDepUnit__0.SSITCollisions"
-}
-stats_to_diff = {
-    "CPI", prefix+"iew.memOrderViolationEvents",
-    prefix+"MemDepUnit__0.MDPLookups",
+    "CPI"
 }
 
 def get_values(results):
@@ -98,11 +93,31 @@ def get_values(results):
             values[name] = float(value)
     return values
 
+def get_mpki(accuracy_file):
+    simpoint_length = 100e6
+    total_mpki = 0
+    all_accuracies = []
+    stats = {}
+    accuracies = open(accuracy_file, "r").read().splitlines()
+    for line in accuracies:
+        addr, total, incorrect, _ = line.split()
+        correct = float(total) - float(incorrect)
+        mpki = (float(incorrect) / simpoint_length) * 1000
+        accuracy = (correct / float(total)) * 100
+        stats[addr+"_mpki"] = mpki
+        stats[addr+"_accuracy"] = accuracy
+        total_mpki += mpki
+        all_accuracies.append(accuracy)
+    stats["total_mpki"] = total_mpki
+    stats["average_accuracy"] = gmean(all_accuracies)
+    return stats
+
 os.chdir(base_results_dir)
 base_results = {}
 for f in os.listdir(os.getcwd()):
     if os.path.isdir(f) and os.path.exists(f+"/results.txt"):
         base_results[f] = get_values(f+"/results.txt")
+        base_results[f].update(get_mpki(f+"/accuracies.txt"))
 
 os.chdir(results_dir)
 differences = open("differences", "w")
@@ -110,20 +125,18 @@ for f in os.listdir(os.getcwd()):
     if os.path.isdir(f) and os.path.exists(f+"/results.txt"):
         differences.write(f+":\n")
         base_result = base_results[f]
-        pnd_result = get_values(f+"/results.txt")
+        label_result = get_values(f+"/results.txt")
+        label_result.update(get_mpki(f+"/accuracies.txt"))
         differences.write("\tBase CPI: "+str(base_result['CPI'])+"\n")
-        differences.write("\tPND CPI: "+str(pnd_result['CPI'])+"\n")
-        differences.write("\tBase Lookups Per KInst: "+str(1024*base_result[prefix+'MemDepUnit__0.MDPLookups']/base_result[prefix+'executeStats0.numInsts'])+"\n")
-        differences.write("\tPND Lookups Per KInst: "+str(1024*pnd_result[prefix+'MemDepUnit__0.MDPLookups']/pnd_result[prefix+'executeStats0.numInsts'])+"\n")
-        differences.write("\tBase Violations Per MInst: "+str(1024*1024*base_result[prefix+'iew.memOrderViolationEvents']/base_result[prefix+'executeStats0.numInsts'])+"\n")
-        differences.write("\tPND Violations Per MInst: "+str(1024*1024*pnd_result[prefix+'iew.memOrderViolationEvents']/pnd_result[prefix+'executeStats0.numInsts'])+"\n")
-        differences.write("\tBase Collisions Per KInst: "+str(1024*base_result[prefix+'MemDepUnit__0.SSITCollisions']/base_result[prefix+'executeStats0.numInsts'])+"\n")
-        differences.write("\tPND Collisions Per KInst: "+str(1024*pnd_result[prefix+'MemDepUnit__0.SSITCollisions']/pnd_result[prefix+'executeStats0.numInsts'])+"\n")
-        for field in pnd_result:
-            if field not in stats_to_diff: continue
+        differences.write("\tLabel CPI: "+str(label_result['CPI'])+"\n")
+        differences.write("\tBase H2P MPKI: "+str(base_result['total_mpki'])+"\n")
+        differences.write("\tLabel H2P MPKI: "+str(label_result['total_mpki'])+"\n")
+        differences.write("\tBase H2P Accuracy: "+str(base_result['average_accuracy'])+"\n")
+        differences.write("\tLabel H2P Accuracy: "+str(label_result['average_accuracy'])+"\n")
+        for field in label_result:
             base_value = base_result[field]
-            pnd_value = pnd_result[field]
-            difference = ((pnd_value - base_value) / base_value) * 100
+            label_value = label_result[field]
+            difference = ((label_value - base_value) / base_value) * 100
             if "." in field: field = field.split(".")[-1]
             differences.write("\t"+field+": "+str(difference)+"\n")
         differences.write("\n")

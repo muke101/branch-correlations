@@ -16,7 +16,7 @@ procs = []
 bench_names = []
 
 def run_test():
-    sub_spec = ["602.gcc_s", "657.xs_s", "648.exchange2_s"]
+    sub_spec = ["602.gcc_s", "657.xz_s", "648.exchange2_s"]
     for bench in sub_spec:
         os.chdir(spec_path+"benchspec/CPU/"+bench+"/run/modified/run_peak_refspeed_mytest-64.0000")
         specinvoke = subprocess.run([spec_path+"bin/specinvoke", "-n"], stdout=subprocess.PIPE)

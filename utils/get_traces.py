@@ -6,11 +6,14 @@ from collections import defaultdict
 import subprocess
 trace_dir = "/mnt/data/results/branch-project/traces-indirect/"
 hdf5_dir = "/mnt/data/results/branch-project/datasets-indirect/"
+h2p_dir = "/mnt/data/resukts/branch-project/h2ps-x86/"
 simpoint_dir = "/work/muke/simpoints-x86/"
-benchmarks = ["600.perlbench_s", "605.mcf_s", "623.xalancbmk_s",
+checkpoint_dir = "/mnt/data/checkpoints-expanded-x86/"
+benchmarks = ["605.mcf_s", "657.xz_s",
         "625.x264_s", "631.deepsjeng_s",
-        "641.leela_s", "657.xz_s", "602.gcc_s",
+        "641.leela_s", "657.xz_s",
         "620.omnetpp_s", "648.exchange2_s"]
+branchnet_benchmarks = ["657.xz_s"]
 
 
 def get_simpoint_weight(benchmark, workload, checkpoint):
