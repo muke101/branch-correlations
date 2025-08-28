@@ -369,7 +369,10 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
     std::cerr << hist->actuallyTaken << ',';
 
     // Mispredicted
-    std::cerr << hist->mispredict;
+    std::cerr << hist->mispredict << ',';
+
+    if (hist->inst->isDirectCtrl()) std::cerr << "1";
+    else std::cerr << "0";
 
     std::cerr << std::endl;
 
