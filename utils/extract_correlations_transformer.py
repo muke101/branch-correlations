@@ -366,43 +366,25 @@ def coalecse_branches(explained_branches, patterns, stats):
             for row in rows:
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                label, features, history, impacts = row[2], row[4], row[5], row[6]
+                label, history, impacts = row[2], row[5], row[6]
 
-                features = np.array([int(i[0]) for i in features])
-                history = np.array([int(i[0]) for i in history])
-                impacts = np.array([float(i[0]) for i in impacts])
-                label = label[0]
-
-                #features = np.array([int(item['feature']) for item in explanation])
-                #impacts = np.array([float(item['impact']) for item in explanation])
+                #the most annoying unpacking in the world
+                history = np.array([i[0] for i in history.to_list()[0]])
+                impacts = np.array([i[0] for i in impacts.to_list()[0]])
+                label = label[0][0]
 
                 taken = history & 1
                 pcs = history >> 1
 
-                #correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
-
-                #valid_indices = correct_direction
-                #if not np.any(valid_indices):
-                #    continue
-
-                #valid_pcs = pcs[valid_indices]
-                #valid_impacts = np.abs(impacts[valid_indices])
-                #valid_taken = taken[valid_indices]
-
-                valid_pcs = pcs
-                valid_impacts = impacts
-                valid_taken = taken
-
-                unique_pcs = np.unique(valid_pcs)
+                unique_pcs = np.unique(pcs)
 
                 for pc in unique_pcs:
-                    pc_mask = valid_pcs == pc
+                    pc_mask = pcs == pc
                     series_length = int(pc_mask.sum())
-                    pc_impacts_array = valid_impacts[pc_mask]
-                    pc_taken_array = valid_taken[pc_mask]
+                    pc_impacts_array = impacts[pc_mask]
+                    pc_taken_array = taken[pc_mask]
 
                     avg_impact = fast_mean(pc_impacts_array)
-                    #unique_branches[pc].append((avg_impact, weight))
                     unique_branches[pc].append(avg_impact)
                     lengths[pc].append(series_length)
 
@@ -414,7 +396,7 @@ def coalecse_branches(explained_branches, patterns, stats):
 
                     #patterns[pc].finalise_instance(weight)
 
-                stats.instance_gini_coeff.append(gini(np.array(valid_impacts)))
+                stats.instance_gini_coeff.append(gini(np.array(impacts)))
 
                 if not unique_branches: continue
 
