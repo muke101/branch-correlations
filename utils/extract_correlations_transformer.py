@@ -369,9 +369,9 @@ def coalecse_branches(explained_branches, patterns, stats):
                 label, history, impacts = row[2], row[5], row[6]
 
                 #the most annoying unpacking in the world
-                history = np.array([i[0] for i in history.to_list()[0]])
-                impacts = np.array([i[0] for i in impacts.to_list()[0]])
-                label = label[0][0]
+                history = np.array([i[0] for i in history])
+                impacts = np.array([i[0] for i in impacts])
+                label = label[0]
 
                 taken = history & 1
                 pcs = history >> 1
