@@ -10,7 +10,7 @@ from scipy.special import logit
 import numpy as np
 import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
-from lime.lime_text import LimeTextExplainer
+from lime.lime_eval import LimePerturber
 import argparse
 
 parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
@@ -70,9 +70,9 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-num_samples = 4000
-#num_samples = 500
-batch_size = 2**14
+total_memory = torch.cuda.get_device_properties('cuda:'+device).total_memory
+mem_per_instance = 0.6*1e6
+batch_size = int(total_memory//mem_per_instance)
 percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
@@ -101,26 +101,23 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
         histories.append(history)
 
         if len(histories) == interval:
-            perturbed_instances, data, perturbed_labels = lime_explainer.perturb_instances(histories,
-                                                                        eval_wrapper.probs_from_list_of_strings,
-                                                                        num_features=num_features, num_samples=num_samples,
-                                                                        batch_size=batch_size)
-            all_perturbed_instances.append(perturbed_instances)
+            data, perturbed_labels = lime_explainer.perturb_instances(histories,
+                                                                      eval_wrapper.probs_from_list_of_strings,
+                                                                      num_features=num_features, num_samples=num_samples,
+                                                                      batch_size=batch_size)
             datas.append(data)
             all_perturbed_labels.append(perturbed_labels)
             histories = []
 
     if len(histories) > 0: #clean up remainder
-        perturbed_instances, data, perturbed_labels = lime_explainer.perturb_instances(histories,
-                                                                    eval_wrapper.probs_from_list_of_strings,
-                                                                    num_features=num_features, num_samples=num_samples,
-                                                                    batch_size=batch_size)
-        all_perturbed_instances.append(perturbed_instances)
+        data, perturbed_labels = lime_explainer.perturb_instances(histories,
+                                                                  eval_wrapper.probs_from_list_of_strings,
+                                                                  num_features=num_features, num_samples=num_samples,
+                                                                  batch_size=batch_size)
         datas.append(data)
         all_perturbed_labels.append(perturbed_labels)
 
     return instances.hstack(pl.DataFrame({
-        "perturbed_instances": all_perturbed_instances,
         "datas": datas,
         "perturbed_labels": all_perturbed_labels
     }))
