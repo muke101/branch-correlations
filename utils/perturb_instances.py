@@ -143,4 +143,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet(workdir+"perturbed-instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
+    correlated_branches.write_parquet(workdir+"perturbed_instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
