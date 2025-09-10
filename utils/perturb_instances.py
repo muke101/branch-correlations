@@ -101,25 +101,25 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
         histories.append(history)
 
         if len(histories) == interval:
-            data, perturbed_labels = lime_explainer.perturb_instances(histories,
+            for data, perturbed_labels in lime_explainer.perturb_instances(histories,
                                                                       eval_wrapper.probs_from_list_of_strings,
                                                                       num_features=num_features, num_samples=num_samples,
-                                                                      batch_size=batch_size)
-            datas.append(data)
-            all_perturbed_labels.append(perturbed_labels)
+                                                                      batch_size=batch_size):
+                datas.append(np.array(data))
+                all_perturbed_labels.append(np.array(perturbed_labels))
             histories = []
 
     if len(histories) > 0: #clean up remainder
-        data, perturbed_labels = lime_explainer.perturb_instances(histories,
+        for data, perturbed_labels in lime_explainer.perturb_instances(histories,
                                                                   eval_wrapper.probs_from_list_of_strings,
                                                                   num_features=num_features, num_samples=num_samples,
-                                                                  batch_size=batch_size)
-        datas.append(data)
-        all_perturbed_labels.append(perturbed_labels)
+                                                                  batch_size=batch_size):
+            datas.append(np.array(data))
+            all_perturbed_labels.append(np.array(perturbed_labels))
 
     return instances.hstack(pl.DataFrame({
-        "datas": datas,
-        "perturbed_labels": all_perturbed_labels
+        "datas": np.stack(datas),
+        "perturbed_labels": np.stack(all_perturbed_labels)
     }))
 
 for branch in good_branches:
