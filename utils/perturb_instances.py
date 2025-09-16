@@ -12,6 +12,8 @@ import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_eval import LimePerturber
 import argparse
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
 
@@ -47,7 +49,7 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = os.getenv("PBS_O_WORKDIR")+"/"
+workdir = os.getenv("PBS_WORKDIR")
 confidence_dir = workdir+"confidence-scores/"
 
 dir_results = workdir+"results/test/"+benchmark
@@ -90,37 +92,56 @@ lime_explainer = LimePerturber(
 
 def run_lime(instances, eval_wrapper, num_features, num_samples):
 
-    all_perturbed_instances = []
-    datas = []
-    all_perturbed_labels = []
+    histories = []
     interval = batch_size // num_samples
-    histories = [np.array(instances['full_history'][0], dtype=np.int64)]
-
-    for i in range(1, len(instances)):
-        history = np.array(instances['full_history'][i], dtype=np.int64)
-        histories.append(history)
-
-        if len(histories) == interval:
-            for data, perturbed_labels in lime_explainer.perturb_instances(histories,
-                                                                      eval_wrapper.probs_from_list_of_strings,
-                                                                      num_features=num_features, num_samples=num_samples,
-                                                                      batch_size=batch_size):
-                datas.append(np.array(data))
-                all_perturbed_labels.append(np.array(perturbed_labels))
-            histories = []
-
-    if len(histories) > 0: #clean up remainder
-        for data, perturbed_labels in lime_explainer.perturb_instances(histories,
-                                                                  eval_wrapper.probs_from_list_of_strings,
-                                                                  num_features=num_features, num_samples=num_samples,
-                                                                  batch_size=batch_size):
-            datas.append(np.array(data))
-            all_perturbed_labels.append(np.array(perturbed_labels))
-
-    return instances.hstack(pl.DataFrame({
-        "datas": np.stack(datas),
-        "perturbed_labels": np.stack(all_perturbed_labels)
-    }))
+    writer = None
+    schema = None
+    
+    try:
+        for i, row in enumerate(instances.iter_rows()):
+            history = np.array(row[-2], dtype=np.int64)
+            histories.append(history)
+            
+            if len(histories) == interval:
+                for data, perturbed_labels in lime_explainer.perturb_instances(
+                    histories, eval_wrapper.probs_from_list_of_strings,
+                    num_features=num_features, num_samples=num_samples,
+                    batch_size=batch_size
+                ):
+                    # Convert to Arrow table
+                    table = pa.table({
+                        "datas": [data.tobytes()],
+                        "perturbed_labels": [perturbed_labels.tobytes()]
+                    })
+                    
+                    # Initialize writer with schema from first batch
+                    if writer is None:
+                        schema = table.schema
+                        output_path = workdir+"perturbed_instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile))
+                        writer = pq.ParquetWriter(output_path, schema)
+                    
+                    # Write batch
+                    writer.write_table(table)
+                
+                histories = []  # Clear memory immediately
+        
+        # Handle remainder
+        if len(histories) > 0:
+                for data, perturbed_labels in lime_explainer.perturb_instances(
+                    histories, eval_wrapper.probs_from_list_of_strings,
+                    num_features=num_features, num_samples=num_samples,
+                    batch_size=batch_size
+                ):
+                    table = pa.table({
+                        "datas": [data.tobytes()],
+                        "perturbed_labels": [perturbed_labels.tobytes()]
+                    })
+                    
+                    writer.write_table(table)
+            
+    finally:
+        if writer:
+            writer.close()
 
 for branch in good_branches:
 
@@ -134,10 +155,11 @@ for branch in good_branches:
     # header: workload, checkpoint, label, output, history
     confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
+    #confidence_scores = confidence_scores.slice(0,400)
+
     print("Running lime")
 
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet(workdir+"perturbed_instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
