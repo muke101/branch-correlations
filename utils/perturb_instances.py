@@ -14,6 +14,7 @@ from lime.lime_eval import LimePerturber
 import argparse
 import pyarrow as pa
 import pyarrow.parquet as pq
+import subprocess
 
 parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
 
@@ -25,7 +26,6 @@ parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
 parser.add_argument('--sample-method', type=str, required=False)
 parser.add_argument('--num-samples', type=int, required=False)
-
 
 args = parser.parse_args()
 
@@ -49,12 +49,12 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = os.getenv("PBS_WORKDIR")
-confidence_dir = workdir+"confidence-scores/"
+workdir = os.getenv("PBS_O_WORKDIR")+"/"
+tmpdir = os.getenv("TMPDIR")+"/"
+confidence_dir = workdir+"/confidence-scores/"
 
-dir_results = workdir+"results/test/"+benchmark
-dir_h5 = workdir+"datasets/"+benchmark
-#good_branches = ['0x40a1ac'] #TODO: actually populate this somehow
+dir_results = workdir+"/results/test/"+benchmark
+dir_h5 = workdir+"/datasets/"+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -88,6 +88,7 @@ lime_explainer = LimePerturber(
     bow=False,
     feature_selection="lasso_path",
     mask_string="0x000:not_taken",  # Mask string for unknown addresses
+    sample_method=sample_method
 )
 
 def run_lime(instances, eval_wrapper, num_features, num_samples):
@@ -96,6 +97,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
     interval = batch_size // num_samples
     writer = None
     schema = None
+    file_name = "{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
     
     try:
         for i, row in enumerate(instances.iter_rows()):
@@ -117,7 +119,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                     # Initialize writer with schema from first batch
                     if writer is None:
                         schema = table.schema
-                        output_path = workdir+"perturbed_instances/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile))
+                        output_path = tmpdir+file_name
                         writer = pq.ParquetWriter(output_path, schema)
                     
                     # Write batch
@@ -142,6 +144,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
     finally:
         if writer:
             writer.close()
+            subprocess.run("cp "+tmpdir+file_name+" "+workdir+"perturbed_instances/", shell=True, check=True)
 
 for branch in good_branches:
 
@@ -155,11 +158,8 @@ for branch in good_branches:
     # header: workload, checkpoint, label, output, history
     confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    #confidence_scores = confidence_scores.slice(0,400)
+    #confidence_scores = confidence_scores.slice(0,100)
 
     print("Running lime")
 
-    # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
-
-    # Save the results
