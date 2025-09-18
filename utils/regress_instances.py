@@ -12,13 +12,14 @@ import polars as pl
 from lime_functions import EvalWrapper, dir_config, tensor_to_string
 from lime.lime_regress import LimeTextExplainer
 import argparse
+import pyarrow as pa
+import pyarrow.parquet as pq
+import gc
 
 parser = argparse.ArgumentParser(prog='regress_instances', description='run lime forever and ever')
 
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
-parser.add_argument('--device', type=int, required=True)
-parser.add_argument('--percentile', type=int, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
 parser.add_argument('--sample-method', type=str, required=False)
@@ -28,8 +29,6 @@ args = parser.parse_args()
 
 benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
-device = str(args.device)
-percentile = args.percentile
 if args.branches:
     good_branches = args.branches.split(',')
 elif args.branch_file:
@@ -47,8 +46,8 @@ else:
 if args.num_samples: num_samples = num_samples
 
 workdir = "/mnt/data/results/branch-project/"
-confidence_dir = workdir+"/confidence-scores-indirect/"
-perturbed_dir = workdir+"/perturbed-instances/"
+confidence_dir = workdir+"/confidence-scores/"
+perturbed_dir = workdir+"/perturbed_instances/"
 
 dir_results = workdir+"/results-indirect/test/"+benchmark
 dir_h5 = workdir+"/datasets-indirect/"+benchmark
@@ -69,7 +68,6 @@ with open(dir_config, 'r') as f:
 #parameters
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 
@@ -83,16 +81,16 @@ lime_explainer = LimeTextExplainer(
     sample_method=sample_method
 )
 
-instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type), columns=["full_history"])
-
 def run_lime(row):
 
     exps = []
 
-    i = row['row_nr']
-    instance = instances['full_history'][i]
+    i = row['index']
+    instance = np.array(instances['full_history'][i])
     data = np.frombuffer(row['datas'], dtype=np.uint8).reshape(num_samples, num_features)
     labels = np.frombuffer(row['perturbed_labels'], dtype=np.float32).reshape(num_samples)
+    zeros = np.zeros(labels.shape)
+    labels = np.stack((zeros, labels), axis=1) #dumb but makes using lime easier
 
     exp = lime_explainer.explain_instance(instance,
                                           data, labels,
@@ -103,13 +101,50 @@ def run_lime(row):
 
 for branch in good_branches:
 
+    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type), columns=["full_history"])
+
     print('Branch:', branch)
 
-    explanations = pl.scan_parquet(perturbed_instances_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method)).select(
-        pl.struct(["row_nr", "datas", "perturbed_labels"]).map_elements(
+    input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method)
+    output_file = workdir+"explanations/{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
+    chunk_size=5000
+
+    first_explanations = pl.scan_parquet(input_file).limit(1).with_row_index("index").collect()
+    sample = first_explanations.select(
+        pl.struct(["index", "datas", "perturbed_labels"]).map_elements(
             run_lime,
             return_dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float32)]))
         ).alias("explanations")
     )
+    
+    schema = sample.to_arrow().schema
+    
+    # Process in chunks and write to single file
+    with pq.ParquetWriter(output_file, schema, compression='zstd') as writer:
+        offset = 0
+        while True:
+            # Read chunk lazily
+            chunk_lazy = pl.scan_parquet(input_file).slice(offset, chunk_size).with_row_index("index")
+            
+            try:
+                chunk = chunk_lazy.collect()
+                if chunk.height == 0:
+                    break
+            except:
+                break
+            
+            # Process chunk
+            processed = chunk.select(
+                pl.struct(["index", "datas", "perturbed_labels"]).map_elements(
+                    run_lime,
+                    return_dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float32)]))
+                ).alias("explanations")
+            )
+            
+            # Write chunk to file immediately
+            writer.write_table(processed.to_arrow())
+            
+            offset += chunk_size
+            
+            gc.collect()
 
-    explanations.sink_parquet(workdir+"explanations/{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method), compression="zstd")
