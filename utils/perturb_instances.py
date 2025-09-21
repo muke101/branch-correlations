@@ -112,15 +112,15 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                 ):
                     # Convert to Arrow table
                     table = pa.table({
-                        "datas": [data.tobytes()],
-                        "perturbed_labels": [perturbed_labels.tobytes()]
+                        "datas": [pa.array(np.packbits(data.flatten()))],
+                        "perturbed_labels": [pa.array(perturbed_labels)]
                     })
                     
                     # Initialize writer with schema from first batch
                     if writer is None:
                         schema = table.schema
                         output_path = tmpdir+file_name
-                        writer = pq.ParquetWriter(output_path, schema)
+                        writer = pq.ParquetWriter(output_path, schema, compression="zstd")
                     
                     # Write batch
                     writer.write_table(table)
