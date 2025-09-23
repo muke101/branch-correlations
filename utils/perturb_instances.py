@@ -112,8 +112,8 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                 ):
                     # Convert to Arrow table
                     table = pa.table({
-                        "datas": [pa.array(np.packbits(data.flatten()))],
-                        "perturbed_labels": [pa.array(perturbed_labels)]
+                        "datas": [np.packbits(row) for row in datas],
+                        "perturbed_labels": perturbed_labels
                     })
                     
                     # Initialize writer with schema from first batch
@@ -135,8 +135,8 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                     batch_size=batch_size
                 ):
                     table = pa.table({
-                        "datas": [data.tobytes()],
-                        "perturbed_labels": [perturbed_labels.tobytes()]
+                        "datas": [np.packbits(row) for row in datas],
+                        "perturbed_labels": perturbed_labels
                     })
                     
                     writer.write_table(table)
