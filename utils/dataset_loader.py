@@ -205,6 +205,7 @@ class TraceFileAccessor():
 
     idx = self.br_indices[occurance_idx]
     if self.in_mem_history is not None:
+      breakpoint()
       chunk = self.in_mem_history[idx - self.history_length : idx + 1]
       chunk = chunk.astype(np.int64)
       markers, = np.nonzero(np.logical_or(chunk == 0x80, chunk == 0x81))
