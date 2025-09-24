@@ -112,7 +112,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                 ):
                     # Convert to Arrow table
                     table = pa.table({
-                        "datas": [np.packbits(row) for row in datas],
+                        "datas": [np.packbits(row) for row in data],
                         "perturbed_labels": perturbed_labels
                     })
                     
@@ -135,7 +135,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                     batch_size=batch_size
                 ):
                     table = pa.table({
-                        "datas": [np.packbits(row) for row in datas],
+                        "datas": [np.packbits(row) for row in data],
                         "perturbed_labels": perturbed_labels
                     })
                     
