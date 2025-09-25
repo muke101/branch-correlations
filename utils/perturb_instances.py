@@ -15,12 +15,14 @@ import argparse
 import pyarrow as pa
 import pyarrow.parquet as pq
 import subprocess
+import multiprocessing as mp
+import queue
 
 parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
 
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
-parser.add_argument('--device', type=int, required=True)
+parser.add_argument('--ngpus', type=int, required=True)
 parser.add_argument('--percentile', type=int, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
@@ -33,6 +35,7 @@ benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
 device = str(args.device)
 percentile = args.percentile
+ngpus = int(args.ngpus)
 if args.branches:
     good_branches = args.branches.split(',')
 elif args.branch_file:
@@ -91,75 +94,101 @@ lime_explainer = LimePerturber(
     sample_method=sample_method
 )
 
-def run_lime(instances, eval_wrapper, num_features, num_samples):
+def writer(result_queue, output_path):
 
-    histories = []
-    interval = batch_size // num_samples
     writer = None
-    schema = None
-    file_name = "{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
-    
+
     try:
-        for i, row in enumerate(instances.iter_rows()):
-            history = np.array(row[-2], dtype=np.int64)
-            histories.append(history)
-            
-            if len(histories) == interval:
-                for data, perturbed_labels in lime_explainer.perturb_instances(
-                    histories, eval_wrapper.probs_from_list_of_strings,
-                    num_features=num_features, num_samples=num_samples,
-                    batch_size=batch_size
-                ):
-                    # Convert to Arrow table
-                    table = pa.table({
-                        "datas": [np.packbits(row) for row in data],
-                        "perturbed_labels": perturbed_labels
-                    })
-                    
-                    # Initialize writer with schema from first batch
-                    if writer is None:
-                        schema = table.schema
-                        output_path = tmpdir+file_name
-                        writer = pq.ParquetWriter(output_path, schema, compression="zstd")
-                    
-                    # Write batch
-                    writer.write_table(table)
-                
-                histories = []  # Clear memory immediately
-        
-        # Handle remainder
-        if len(histories) > 0:
-                for data, perturbed_labels in lime_explainer.perturb_instances(
-                    histories, eval_wrapper.probs_from_list_of_strings,
-                    num_features=num_features, num_samples=num_samples,
-                    batch_size=batch_size
-                ):
-                    table = pa.table({
-                        "datas": [np.packbits(row) for row in data],
-                        "perturbed_labels": perturbed_labels
-                    })
-                    
-                    writer.write_table(table)
-            
+        while True:
+            try:
+                table = result_queue.get(timeout=30)  # Timeout to detect completion
+                if table is None:  # Sentinel value
+                    break
+                if writer is None:
+                    writer = pq.ParquetWriter(output_path, table.schema, compression="zstd")
+                writer.write_table(table)
+
+            except queue.Empty:
+                continue  # Keep waiting
+
     finally:
         if writer:
             writer.close()
-            subprocess.run("cp "+tmpdir+file_name+" "+workdir+"perturbed_instances/", shell=True, check=True)
+            subprocess.run("cp "+output_path+" "+workdir+"perturbed-instances/", shell=True, check=True)
+
+def run_lime(instances, result_queue, eval_wrapper, num_features, num_samples):
+
+    histories = []
+    interval = batch_size // num_samples
+    for i, row in enumerate(instances.iter_rows()):
+        history = np.array(row[-2], dtype=np.int64)
+        histories.append(history)
+
+        if len(histories) == interval:
+            for data, perturbed_labels in lime_explainer.perturb_instances(
+                histories, eval_wrapper.probs_from_list_of_strings,
+                num_features=num_features, num_samples=num_samples,
+                batch_size=batch_size
+            ):
+                table = pa.table({
+                    "datas": [np.packbits(data)],
+                    "perturbed_labels": [perturbed_labels]
+                })
+                result_queue.put(table)
+
+            histories = []
+
+    # Handle remainder
+    if len(histories) > 0:
+            for data, perturbed_labels in lime_explainer.perturb_instances(
+                histories, eval_wrapper.probs_from_list_of_strings,
+                num_features=num_features, num_samples=num_samples,
+                batch_size=batch_size
+            ):
+                table = pa.table({
+                    "datas": [np.packbits(data)],
+                    "perturbed_labels": [perturbed_labels]
+                })
+                result_queue.put(table)
 
 for branch in good_branches:
 
     print('Branch:', branch)
 
-    # Load the model checkpoint
-    dir_ckpt = dir_results + '/checkpoints/' + 'base_{}_checkpoint.pt'.format(branch)
-    print('Loading model from:', dir_ckpt)
-    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
-
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    #confidence_scores = confidence_scores.slice(0,100)
+    #instances = confidence_scores.slice(0,100)
 
-    print("Running lime")
+    slice_size = len(instances) // ngpus
 
-    correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
+    if ngpus > 1:
+        result_queue = mp.Queue(maxsize=50)
+
+        output_path = tmpdir+"/{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
+
+        writer_proc = mp.Process(target=single_writer_process,
+                              args=(result_queue, output_path))
+        writer_proc.start()
+
+    processes = []
+    for device in range(ngpus):
+        dir_ckpt = dir_results + '/checkpoints/base_{}_checkpoint.pt'.format(branch)
+        eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
+
+        if device < ngpus-1:
+            instances_slice = instance.slice(device*slice_size, (device+1)*slice_size)
+        else: #allocate remainder
+            instances_slice = instance.slice(device*slice_size, len(instances))
+
+        proc = mp.Process(target=run_lime,
+                         args=(instances_slice, result_queue, eval_wrapper, num_features, num_samples))
+        proc.start()
+        processes.append(proc)
+
+    for proc in processes:
+        proc.join()
+
+    if ngpus > 1:
+        result_queue.put(None)
+        writer_proc.join()
