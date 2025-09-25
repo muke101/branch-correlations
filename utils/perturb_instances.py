@@ -61,6 +61,8 @@ dir_h5 = workdir+"/datasets/"+benchmark
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
 
+mp.set_start_method('spawn', force=True)
+
 from model import BranchNet
 from model import BranchNetTrainingPhaseKnobs
 from benchmark_branch_loader import BenchmarkBranchLoader
@@ -77,16 +79,6 @@ num_features = config['history_lengths'][-1]
 percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
-
-lime_explainer = LimePerturber(
-    class_names=["not_taken", "taken"],
-    char_level=False,
-    split_expression=lambda x: x.split(" "),
-    bow=False,
-    feature_selection="lasso_path",
-    mask_string="0x000:not_taken",  # Mask string for unknown addresses
-    sample_method=sample_method
-)
 
 def writer(result_queue, output_path):
 
@@ -110,10 +102,21 @@ def writer(result_queue, output_path):
             writer.close()
             subprocess.run("cp "+output_path+" "+workdir+"perturbed-instances/", shell=True, check=True)
 
-def run_lime(instances, result_queue, eval_wrapper, num_features, num_samples):
+def run_lime(instances, result_queue, device, num_features, num_samples):
 
     histories = []
-    total_memory = torch.cuda.get_device_properties('cuda:'+eval_wrapper.device).total_memory
+    torch.cuda.set_device(device)
+    lime_explainer = LimePerturber(
+        class_names=["not_taken", "taken"],
+        char_level=False,
+        split_expression=lambda x: x.split(" "),
+        bow=False,
+        feature_selection="lasso_path",
+        mask_string="0x000:not_taken",  # Mask string for unknown addresses
+        sample_method=sample_method
+    )
+    eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, str(device), config_path=dir_config)
+    total_memory = torch.cuda.get_device_properties('cuda:'+str(device)).total_memory
     mem_per_instance = 0.6*1e6 #inference size
     batch_size = int(total_memory//mem_per_instance)
     interval = batch_size // num_samples
@@ -153,10 +156,11 @@ for branch in good_branches:
 
     print('Branch:', branch)
 
+
     # header: workload, checkpoint, label, output, history
     instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    #instances = confidence_scores.slice(0,100)
+    #instances = instances.slice(0,100)
 
     slice_size = len(instances) // ngpus
 
@@ -165,22 +169,21 @@ for branch in good_branches:
 
         output_path = tmpdir+"/{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
 
-        writer_proc = mp.Process(target=single_writer_process,
+        writer_proc = mp.Process(target=writer,
                               args=(result_queue, output_path))
         writer_proc.start()
 
     processes = []
     for device in range(ngpus):
         dir_ckpt = dir_results + '/checkpoints/base_{}_checkpoint.pt'.format(branch)
-        eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
         if device < ngpus-1:
-            instances_slice = instance.slice(device*slice_size, (device+1)*slice_size)
+            instances_slice = instances.slice(device*slice_size, (device+1)*slice_size)
         else: #allocate remainder
-            instances_slice = instance.slice(device*slice_size, len(instances))
+            instances_slice = instances.slice(device*slice_size, len(instances))
 
         proc = mp.Process(target=run_lime,
-                         args=(instances_slice, result_queue, eval_wrapper, num_features, num_samples))
+                         args=(instances_slice, result_queue, device, num_features, num_samples))
         proc.start()
         processes.append(proc)
 
