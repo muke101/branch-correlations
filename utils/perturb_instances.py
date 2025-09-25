@@ -61,8 +61,6 @@ dir_h5 = workdir+"/datasets/"+benchmark
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
 
-mp.set_start_method('spawn', force=True)
-
 from model import BranchNet
 from model import BranchNetTrainingPhaseKnobs
 from benchmark_branch_loader import BenchmarkBranchLoader
@@ -102,7 +100,7 @@ def writer(result_queue, output_path):
             writer.close()
             subprocess.run("cp "+output_path+" "+workdir+"perturbed-instances/", shell=True, check=True)
 
-def run_lime(instances, result_queue, device, num_features, num_samples):
+def run_lime(instances, branch, result_queue, device, num_features, num_samples):
 
     histories = []
     torch.cuda.set_device(device)
@@ -115,6 +113,7 @@ def run_lime(instances, result_queue, device, num_features, num_samples):
         mask_string="0x000:not_taken",  # Mask string for unknown addresses
         sample_method=sample_method
     )
+    dir_ckpt = dir_results + '/checkpoints/base_{}_checkpoint.pt'.format(branch)
     eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, str(device), config_path=dir_config)
     total_memory = torch.cuda.get_device_properties('cuda:'+str(device)).total_memory
     mem_per_instance = 0.6*1e6 #inference size
@@ -152,44 +151,45 @@ def run_lime(instances, result_queue, device, num_features, num_samples):
                 })
                 result_queue.put(table)
 
-for branch in good_branches:
+if __name__ == "__main"
+    mp.set_start_method('spawn', force=True)
 
-    print('Branch:', branch)
+    for branch in good_branches:
 
+        print('Branch:', branch)
 
-    # header: workload, checkpoint, label, output, history
-    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+        # header: workload, checkpoint, label, output, history
+        instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    #instances = instances.slice(0,100)
+        #instances = instances.slice(0,100)
 
-    slice_size = len(instances) // ngpus
+        slice_size = len(instances) // ngpus
 
-    if ngpus > 1:
-        result_queue = mp.Queue(maxsize=50)
+        if ngpus > 1:
+            result_queue = mp.Queue(maxsize=50)
 
-        output_path = tmpdir+"/{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
+            output_path = tmpdir+"/{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
 
-        writer_proc = mp.Process(target=writer,
-                              args=(result_queue, output_path))
-        writer_proc.start()
+            writer_proc = mp.Process(target=writer,
+                                     args=(result_queue, output_path))
+            writer_proc.start()
 
-    processes = []
-    for device in range(ngpus):
-        dir_ckpt = dir_results + '/checkpoints/base_{}_checkpoint.pt'.format(branch)
+            processes = []
+            for device in range(ngpus):
 
-        if device < ngpus-1:
-            instances_slice = instances.slice(device*slice_size, (device+1)*slice_size)
-        else: #allocate remainder
-            instances_slice = instances.slice(device*slice_size, len(instances))
+                if device < ngpus-1:
+                    instances_slice = instances.slice(device*slice_size, (device+1)*slice_size)
+                else: #allocate remainder
+                    instances_slice = instances.slice(device*slice_size, len(instances))
 
-        proc = mp.Process(target=run_lime,
-                         args=(instances_slice, result_queue, device, num_features, num_samples))
-        proc.start()
-        processes.append(proc)
+                    proc = mp.Process(target=run_lime,
+                                      args=(instances_slice, branch, result_queue, device, num_features, num_samples))
+                    proc.start()
+                    processes.append(proc)
 
-    for proc in processes:
-        proc.join()
+                    for proc in processes:
+                        proc.join()
 
-    if ngpus > 1:
-        result_queue.put(None)
-        writer_proc.join()
+                        if ngpus > 1:
+                            result_queue.put(None)
+                            writer_proc.join()
