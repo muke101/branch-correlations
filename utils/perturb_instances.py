@@ -151,7 +151,7 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
                 })
                 result_queue.put(table)
 
-if __name__ == "__main"
+if __name__ == "__main__":
     mp.set_start_method('spawn', force=True)
 
     for branch in good_branches:
