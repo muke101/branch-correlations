@@ -33,7 +33,6 @@ args = parser.parse_args()
 
 benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
-device = str(args.device)
 percentile = args.percentile
 ngpus = int(args.ngpus)
 if args.branches:
@@ -75,14 +74,9 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-total_memory = torch.cuda.get_device_properties('cuda:'+device).total_memory
-mem_per_instance = 0.6*1e6
-batch_size = int(total_memory//mem_per_instance)
 percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
-model = BranchNet(config, training_phase_knobs)
-model.to('cuda:'+device)
 
 lime_explainer = LimePerturber(
     class_names=["not_taken", "taken"],
@@ -119,7 +113,11 @@ def writer(result_queue, output_path):
 def run_lime(instances, result_queue, eval_wrapper, num_features, num_samples):
 
     histories = []
+    total_memory = torch.cuda.get_device_properties('cuda:'+eval_wrapper.device).total_memory
+    mem_per_instance = 0.6*1e6 #inference size
+    batch_size = int(total_memory//mem_per_instance)
     interval = batch_size // num_samples
+
     for i, row in enumerate(instances.iter_rows()):
         history = np.array(row[-2], dtype=np.int64)
         histories.append(history)
