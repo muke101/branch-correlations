@@ -11,7 +11,7 @@ import numpy as np
 from collections import defaultdict
 import argparse
 
-parser = argparse.ArgumentParser(prog='explain_instances', description='run lime forever and ever')
+parser = argparse.ArgumentParser(prog='filter_instances', description='run lime forever and ever')
 
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
@@ -27,16 +27,17 @@ device = str(args.device)
 if args.branches:
     good_branches = args.branches.split(',')
 elif args.branch_file:
-    good_branches = [i.strip() for i in open(args.branch_file[0]).readlines()[0].split(",")]
+    good_branches = [i.strip() for i in open(args.branch_file).readlines()[0].split(",")]
 else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 torch.set_default_device('cuda:'+device)
 batch_size = 2**14
 
-dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark+"/"
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
-dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark+"/"
+workdir = os.getenv("PBS_O_WORKDIR")+"/"
+dir_results = workdir+"/results/test/"+benchmark+"/"
+confidence_dir = workdir+"/confidence-scores/"
+dir_h5 = workdir+"datasets/"+benchmark+"/"
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -139,31 +140,31 @@ for branch in good_branches:
     model.to('cuda:'+device)
     model.eval()
  
-    train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    print("Num train instances: ", len(train_loader))
-    print("Num eval instances: ", len(eval_loader))
-    train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
-    eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
+    #train_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'train')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    #eval_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'validate')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    #print("Num train instances: ", len(train_loader))
+    #print("Num eval instances: ", len(eval_loader))
+    #train_loader = torch.utils.data.DataLoader(train_loader, batch_size=batch_size, shuffle=False)
+    #eval_loader = torch.utils.data.DataLoader(eval_loader, batch_size=batch_size, shuffle=False)
 
     #print("Running train batches: ", len(train_loader))
     #train_confidences = filter_instances(train_loader)
-    del train_loader
-    print("Running eval batches: ", len(eval_loader))
-    eval_confidences = filter_instances(eval_loader)
-    del eval_loader
+    #del train_loader
+    #print("Running eval batches: ", len(eval_loader))
+    #eval_confidences = filter_instances(eval_loader)
+    #del eval_loader
 
     #pl.concat([train_confidences, eval_confidences])
     #pl.concat([train_histories, eval_histories])
 
-    eval_confidences.write_parquet(confidence_dir+"{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark,branch,run_type))
+    #eval_confidences.write_parquet(confidence_dir+"{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark,branch,run_type))
 
-    #test_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'test')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
-    #test_loader = torch.utils.data.DataLoader(test_loader, batch_size=batch_size, shuffle=False)
-    #print("Running test batches: ", len(test_loader))
-    #test_confidences = filter_instances(test_loader)
-    #del test_loader
-    #test_confidences.write_parquet(confidence_dir+"{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark,branch,run_type))
+    test_loader = BranchDataset([dir_h5+p for p in get_traces.get_hdf5_set(benchmark, 'test')], int(branch,16), config['history_lengths'][-1], config['pc_bits'], config['pc_hash_bits'], config['hash_dir_with_pc'])
+    test_loader = torch.utils.data.DataLoader(test_loader, batch_size=batch_size, shuffle=False)
+    print("Running test batches: ", len(test_loader))
+    test_confidences = filter_instances(test_loader)
+    del test_loader
+    test_confidences.write_parquet(confidence_dir+"{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark,branch,run_type))
 
-    del train_confidences, eval_confidences
+    #del train_confidences, eval_confidences
     torch.cuda.empty_cache()
