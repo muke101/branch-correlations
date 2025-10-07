@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <vector>
 #include <limits>
+#include <fstream>
 
 enum class BR_TYPE : int8_t {
   NOT_BR          = 0,
@@ -27,6 +28,7 @@ struct HistElt {
   BR_TYPE  type;
 } __attribute__((packed));
 
-std::vector<HistElt> read_trace(char* input_trace);
+FILE* open_trace(char* input_trace);
+std::vector<HistElt> read_trace(FILE* input_trace);
 
 #endif  // TRACE_INTERFACE_H

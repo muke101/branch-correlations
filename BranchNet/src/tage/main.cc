@@ -97,22 +97,26 @@ Args parse_args(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   const auto args     = parse_args(argc, argv);
-  const auto br_trace = read_trace(args.input_trace_path);
-
-  auto  predictor = std::make_unique<PREDICTOR>(args.hard_br_file_path);
+  const auto trace_file = open_trace(args.input_trace_path);
+  auto predictor = std::make_unique<PREDICTOR>(args.hard_br_file_path);
   Stats stats;
+  size_t trace_chunk_size = 10000;
 
-  for(const auto& br : br_trace) {
-    if(br.type == BR_TYPE::COND_DIRECT || br.type == BR_TYPE::COND_INDIRECT) {
-      const bool pred = predictor->GetPrediction(br.pc);
-      predictor->UpdatePredictor(br.pc, convert_brtype_to_optype(br.type),
-                                 br.direction, pred, br.target);
-      stats.update(br.pc, pred, br.direction);
-    } else {
-      predictor->TrackOtherInst(br.pc, convert_brtype_to_optype(br.type),
-                                br.direction, br.target);
+  std::vector<HistElt> br_trace = read_trace(trace_file, trace_chunk_size);
+  for (; br_trace.size() > 0; br_trace = read_trace(trace_file, trace_chunk_size)) {
+    for(const auto& br : br_trace) {
+      if(br.type == BR_TYPE::COND_DIRECT || br.type == BR_TYPE::COND_INDIRECT) {
+        const bool pred = predictor->GetPrediction(br.pc);
+        predictor->UpdatePredictor(br.pc, convert_brtype_to_optype(br.type),
+                                  br.direction, pred, br.target);
+        stats.update(br.pc, pred, br.direction);
+      } else {
+        predictor->TrackOtherInst(br.pc, convert_brtype_to_optype(br.type),
+                                  br.direction, br.target);
+      }
     }
   }
 
+  pclose(trace_file);
   stats.dump(args.output_file_path);
 }
