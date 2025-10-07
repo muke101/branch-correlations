@@ -29,6 +29,6 @@ struct HistElt {
 } __attribute__((packed));
 
 FILE* open_trace(char* input_trace);
-std::vector<HistElt> read_trace(FILE* input_trace);
+std::vector<HistElt> read_trace(FILE* input_trace, size_t chunk_size);
 
 #endif  // TRACE_INTERFACE_H

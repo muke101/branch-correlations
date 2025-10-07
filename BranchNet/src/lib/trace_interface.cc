@@ -14,7 +14,7 @@ FILE* open_trace(char* input_trace) {
 
   FILE* fptr = popen(cmd, "r");
 
-  return fptr
+  return fptr;
 }
 
 std::vector<HistElt> read_trace(FILE* input_trace, size_t chunk_size) {
