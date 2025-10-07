@@ -21,6 +21,8 @@ parser.add_argument('--device', type=int, required=True)
 parser.add_argument('--percentile', type=int, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
+parser.add_argument('--sample-method', type=str, required=True)
+parser.add_argument('--num-samples', type=str, required=False)
 
 args = parser.parse_args()
 
@@ -35,7 +37,16 @@ elif args.branch_file:
 else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores-indirect/"
+sample_method = "slice"
+if args.sample_method: sample_method = args.sample_method.split(',')[0]
+if sample_method == "random": num_samples = 4000
+elif sample_method == "slice": num_samples = 1000
+else:
+    print("Invalid sample method");
+    exit(1)
+if args.num_samples: num_samples = num_samples
+
+confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
 dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark
@@ -57,8 +68,6 @@ with open(dir_config, 'r') as f:
 #parameters 
 threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-num_samples = 4000
-#num_samples = 500
 batch_size = 2**14
 percentile = 100 - percentile
 
@@ -72,7 +81,8 @@ lime_explainer = LimeTextExplainer(
     split_expression=lambda x: x.split(" "),
     bow=False,
     feature_selection="lasso_path",
-    mask_string="0x000:not_taken",  # Mask string for unknown addresses
+    mask_string="0x000:not_taken",  # Mask string for disabled addresses
+    sample_method=sample_method
 )
 
 def gini(array):
@@ -87,29 +97,6 @@ def gini(array):
     n = array.shape[0]
     # Gini coefficient:
     return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
-
-def filter_instances(df):
-    # remove rows where the confidence is below a threshold
-
-    df = df.with_columns(pl.col('output').abs().alias('output'))
-
-    print("Average confidence: ", df['output'].mean())
-    print("Std dev: ", df['output'].std())
-
-    percentile_value = np.percentile(np.array(df['output']), percentile)
-
-    unfiltered_len = df.shape[0]
-    filtered = df.filter(df['output'] > percentile_value)
-    filtered_len = filtered.shape[0]
-
-    print("Unfiltered instances: "+str(unfiltered_len))
-    print("Filtered instances: "+str(filtered_len))
-    print("Filtered " + str(unfiltered_len - filtered_len) + " instances")
-
-    print("Selected confidence: ", filtered['output'].mean())
-    print("Std dev: ", filtered['output'].std())
-
-    return filtered
 
 def run_lime(instances, eval_wrapper, num_features, num_samples):
 
@@ -126,7 +113,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
 
         if len(histories) == interval:
             batch_exps = lime_explainer.explain_instances(histories,
-                                        eval_wrapper.probs_from_list_of_strings,
+                                        eval_wrapper.probs_from_list_of_strings, device,
                                         num_features=num_features, num_samples=num_samples)
             for c, exp in enumerate(batch_exps):
                 exp = exp.as_list()
@@ -151,9 +138,7 @@ for branch in good_branches:
     # header: workload, checkpoint, label, output, history
     confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    print("Filtering instances")
- 
-    confidence_scores = filter_instances(confidence_scores)
+    #confidence_scores = confidence_scores.slice(0,100)
 
     print("Running lime")
 
@@ -161,4 +146,4 @@ for branch in good_branches:
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances-indirect/{}_branch_{}_{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, str(100 - percentile)))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}-{}_{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method))

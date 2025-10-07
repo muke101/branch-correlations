@@ -371,6 +371,9 @@ def coalecse_branches(explained_branches, patterns, stats):
                 #the most annoying unpacking in the world
                 history = np.array([i[0] for i in history])
                 impacts = np.array([i[0] for i in impacts])
+                mask = impacts >= np.percentile(impacts, 80)
+                impacts = impacts[mask]
+                history = history[mask]
                 label = label[0]
 
                 taken = history & 1

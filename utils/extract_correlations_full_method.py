@@ -17,16 +17,16 @@ parser = argparse.ArgumentParser(prog='extract_correlations', description='parse
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
 parser.add_argument('--percentile', type=int, required=True)
-parser.add_argument('--sample-method', type=str, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
+parser.add_argument('--sample-method', type=str, required=False)
 
 args = parser.parse_args()
 
 benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
+sample_method = args.sample_method.split(',')[0]
 percentile = args.percentile
-sample_method = args.sample_method
 if args.branches:
     good_branches = args.branches.split(',')
 elif args.branch_file:
@@ -34,11 +34,10 @@ elif args.branch_file:
 else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
-confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
-explain_dir = "/mnt/data/results/branch-project/explanations/"
+explain_dir = "/mnt/data/results/branch-project/explained-instances/"
 correlations_dir = "/work/muke/Branch-Correlations/correlations/"+benchmark+"/"
-dir_results = '/mnt/data/results/branch-project/results-nomarker/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-nomarker/'+benchmark
+dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -389,12 +388,12 @@ def coalecse_branches(explained_branches, patterns, stats):
             lengths = defaultdict(list)
             checkpoint_mask = workload_instances['checkpoint'] == checkpoint
             checkpoint_instances = workload_instances.filter(checkpoint_mask)
-            rows = list(checkpoint_instances.iter_rows(named=True))
+            rows = list(checkpoint_instances.iter_rows())
 
             for row in rows:
                 # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
                 # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                label, weight, explanation = row['label'], row['weight'], row['explanations']
+                label, weight, explanation = row[2], row[6], row[7]
 
                 features = np.array([int(item['feature']) for item in explanation])
                 impacts = np.array([float(item['impact']) for item in explanation])
@@ -515,25 +514,22 @@ for branch in good_branches:
 
     stats = Stats(branch)
 
-    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    # header: workload, checkpoint, label, output, history
+    explained_instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method))
 
-    explanations = pl.read_parquet(explain_dir + "{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method))
+    #explained_instances = filter_instances(explained_instances)
 
-    instances = instances.hstack(explanations)
-
-    instances = filter_instances(instances)
-
-    stats.selected_confidence_average = instances['output'].mean()
-    stats.selected_confidence_stddev = instances['output'].std()
+    stats.selected_confidence_average = explained_instances['output'].mean()
+    stats.selected_confidence_stddev = explained_instances['output'].std()
 
     print("Averaging instances")
 
     patterns = {}
 
     # combines results per-instances to select most impactful branches per checkpoint
-    correlated_branches = coalecse_branches(instances, patterns, stats)
+    correlated_branches = coalecse_branches(explained_instances, patterns, stats)
 
-    del instances
+    del explained_instances
 
     print("Weighting checkpoints")
 
@@ -557,7 +553,7 @@ for branch in good_branches:
 
     print("Selected branches for branch {}:".format(branch))
     c = 0
-    results_file = correlations_dir+"lime_"+str(percentile)+"_"+run_type+"-"+sample_method+"/"
+    results_file = correlations_dir+"lime_"+str(percentile)+"_"+run_type+"/"
     if not os.path.exists(results_file): os.makedirs(results_file)
     results_file += "full"
     results_file = open(results_file, "w")
