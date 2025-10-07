@@ -20,7 +20,6 @@ random.seed(sum(ord(c) for c in base_dir))
 procs = []
 
 def get_bench_flags(run_name):
-    commands = []
     #test
     if run_name.isdigit() and len(run_name) == 1:
         if benchmark in ["602.gcc_s", "657.xz_s"]:
@@ -33,7 +32,6 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = runs[int(run_name)]
         command = command.split('>')[0]
-        commands.append(command)
     #train
     elif len(run_name.split('train.')) > 1 and run_name.split('train.')[1].isdigit():
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_train_mytest-64.0000/"
@@ -43,56 +41,57 @@ def get_bench_flags(run_name):
         os.chdir(base_dir)
         command = runs[int(run_name.split('train.')[1])]
         command = command.split('>')[0]
-        commands.append(command)
     #alberta
     else:
         run_dir = expanded_spec_path+"benchspec/CPU/"+benchmark+"/run/run_peak_refspeed_mytest-64.0000/"
         os.chdir(run_dir)
         stripped_name = benchmark.split('.')[1].split('_')[0]
-        if run_name[-2] == '-' and run_name[-1].isdigit():
-            run_name = run_name[:-2]
-        subprocess.run("cp -r "+workloads+stripped_name+"/"+run_name+"/input/* .", shell=True)
+        if run_name[-2] == '-' and run_name[-1].isdigit(): stripped_run_name = run_name[:-2]
+        else: stripped_run_name = run_name
+        subprocess.run("cp -r "+workloads+stripped_name+"/"+stripped_run_name+"/input/* .", shell=True)
         if benchmark == "602.gcc_s": binary = "sgcc_peak.mytest-64"
         else: binary = benchmark.split('.')[1]+"_peak.mytest-64"
         control = open("control", "r")
-        for line in control.readlines():
-            flags = line.strip()
-            command = binary+" "+flags
-            commands.append(command)
+        lines = control.readlines()
+        if len(lines) > 1:
+            n = int(run_name[-1])
+            flags = lines[n].strip()
+        else:
+            flags = lines[0].strip()
+        command = binary+" "+flags
         control.close()
         os.chdir(base_dir)
-    return (run_dir,commands)
+    return (run_dir,command)
 
 #iterate over all checkpoint.n dirs
 for chkpt_dir in os.listdir(base_dir):
     if "bbvs" in chkpt_dir: continue
     run_name = chkpt_dir.split("checkpoints.")[1]
 
-    run_dir, commands = get_bench_flags(run_name)
-    for c, command in enumerate(commands):
-        cpt_number = 0
-        out_dir = os.path.join(base_dir,chkpt_dir)
-        #iterate over checkpoint.n
-        for cpt_dir in sorted(os.listdir(out_dir)):
-            #find cpt.m dir
-            if os.path.isdir(os.path.join(out_dir, cpt_dir)) and cpt_dir.startswith('cpt.'):
-                waited = 0
-                finished = False
-                cpt_number += 1
-                binary = "./"+command.split()[0]
-                benchmark_name = benchmark.split("_")[0].split(".")[1]
-                outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
-                if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
-                outdir += str(cpt_number)+".out"
-                trace_file = results_dir+benchmark+"."+run_name+"."+str(cpt_number)+".trace"
-                #if os.path.exists(trace_file): continue #already ran this checkpoint
-                run = gem5+"build/X86/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 1>&2 2> >(grep -e 'TRACE:' -e 'Warmed up!' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
-                os.chdir(run_dir)
-                while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60)
-                p = subprocess.Popen(run, shell=True, executable='/bin/bash')
-                procs.append(p)
-                time.sleep(60)
-                os.chdir(base_dir)
+    run_dir, command = get_bench_flags(run_name)
+    cpt_number = 0
+    out_dir = os.path.join(base_dir,chkpt_dir)
+    #iterate over checkpoint.n
+    for cpt_dir in sorted(os.listdir(out_dir)):
+        #find cpt.m dir
+        if os.path.isdir(os.path.join(out_dir, cpt_dir)) and cpt_dir.startswith('cpt.'):
+            waited = 0
+            finished = False
+            cpt_number += 1
+            binary = "./"+command.split()[0]
+            benchmark_name = benchmark.split("_")[0].split(".")[1]
+            outdir = results_dir+benchmark_name+"."+run_name+"/raw/"
+            if not os.path.exists(outdir): os.makedirs(outdir) #create the parent directories for gem5 stats dir if needed
+            outdir += str(cpt_number)+".out"
+            trace_file = results_dir+benchmark+"."+run_name+"."+str(cpt_number)+".trace"
+            #if os.path.exists(trace_file): continue
+            run = gem5+"build/X86/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\" --l1d_size=128KiB --l1i_size=256KiB --l2_size=16MB 1>&2 2> >(grep -e 'TRACE:' -e 'Warmed up!' | cut -d ' ' -f 2 | python3 /work/muke/Branch-Correlations/utils/convert_parquet.py "+trace_file+")"
+            os.chdir(run_dir)
+            while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60)
+            p = subprocess.Popen(run, shell=True, executable='/bin/bash')#, check=True)
+            procs.append(p)
+            time.sleep(60)
+            os.chdir(base_dir)
 
 for p in procs:
     code = p.wait()
