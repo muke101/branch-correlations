@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
   const auto trace_file = open_trace(args.input_trace_path);
   auto predictor = std::make_unique<PREDICTOR>(args.hard_br_file_path);
   Stats stats;
-  size_t trace_chunk_size = 10000;
+  size_t trace_chunk_size = 1ULL<<30;
 
   std::vector<HistElt> br_trace = read_trace(trace_file, trace_chunk_size);
   for (; br_trace.size() > 0; br_trace = read_trace(trace_file, trace_chunk_size)) {
