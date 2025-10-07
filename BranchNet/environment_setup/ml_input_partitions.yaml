@@ -6,17 +6,12 @@
   - test03
   - test02
   - test01
-  validation_set:
-  - train.0
-623.xalancbmk_s:
-  spec_name: 623.xalancbmk_s
-  test_set:
-  - '0'
-  train_set:
-  - xsltm-short
-  - functions
-  - decoy
-  - xmark
+  - sparse02
+  - sparse01
+  - dense02
+  - dense01
+  - random01
+  - random02
   validation_set:
   - train.0
 625.x264_s:
@@ -26,16 +21,21 @@
   - '1'
   - '2'
   train_set:
-  - notld-2
-  - burma-gray-2
-  - disco
-  - disco-2
-  - burma
-  - notld
-  - burma-2
   - burma-gray
-  - disco-gray-2
+  - disco-gray-2-0
+  - disco-gray-2-1
   - disco-gray
+  - notld
+  - burma-2-0
+  - burma-2-1
+  - burma
+  - notld-2-0
+  - notld-2-1
+  - burma-gray-2-0
+  - burma-gray-2-1
+  - disco
+  - disco-2-0
+  - disco-2-1
   validation_set:
   - train.0
 631.deepsjeng_s:
@@ -70,6 +70,48 @@
   - long-9
   validation_set:
   - train.0
+657.xz_s:
+  spec_name: 657.xz_s
+  test_set:
+  - '0'
+  - '1'
+  - '2'
+  train_set:
+  - xcomp-big-3
+  - xcomp-big-2
+  - xcomp-big-rep-3
+  - xcomp-small-0
+  - xcomp-small-3
+  - comp-big-0
+  - comp-big-3
+  - xcomp-big-0
+  - xcomp-big-1
+  - xcomp-small-2
+  - comp-big-1
+  - comp-big-2
+  - xcomp-big-rep-2
+  - xcomp-small-1
+  - comp-small-rep-3
+  - xcomp-big-rep-0
+  - xcomp-small-rep-2
+  - xcomp-small-rep-3
+  - comp-small-rep-1
+  - comp-small-rep-2
+  - xcomp-big-rep-1
+  - comp-small-rep-0
+  - xcomp-small-rep-1
+  - xcomp-small-rep-0
+  - comp-big-rep-3
+  - comp-big-rep-2
+  - comp-big-rep-1
+  - comp-small-0
+  - comp-small-1
+  - comp-small-2
+  - comp-small-3
+  - comp-big-rep-0
+  validation_set:
+  - train.0
+  - train.1
 620.omnetpp_s:
   spec_name: 620.omnetpp_s
   test_set:
