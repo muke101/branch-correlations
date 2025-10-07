@@ -47,7 +47,7 @@ if args.num_samples: num_samples = num_samples
 
 workdir = "/mnt/data/results/branch-project/"
 confidence_dir = workdir+"/confidence-scores/"
-perturbed_dir = workdir+"/perturbed_instances/"
+perturbed_dir = workdir+"/perturbed-instances/"
 
 dir_results = workdir+"/results-indirect/test/"+benchmark
 dir_h5 = workdir+"/datasets-indirect/"+benchmark
@@ -87,8 +87,8 @@ def run_lime(row):
 
     i = row['index']
     instance = np.array(instances['full_history'][i])
-    data = np.frombuffer(row['datas'], dtype=np.uint8).reshape(num_samples, num_features)
-    labels = np.frombuffer(row['perturbed_labels'], dtype=np.float32).reshape(num_samples)
+    data = np.unpackbits(np.array(row['datas'], dtype=np.uint8)).reshape(num_samples, num_features)
+    labels = np.array(row['perturbed_labels'], dtype=np.float32)
     zeros = np.zeros(labels.shape)
     labels = np.stack((zeros, labels), axis=1) #dumb but makes using lime easier
 
@@ -102,10 +102,11 @@ def run_lime(row):
 for branch in good_branches:
 
     instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type), columns=["full_history"])
+    instances = instances.slice(0,100)
 
     print('Branch:', branch)
 
-    input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method)
+    input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100-sample.parquet".format(benchmark, branch, run_type, sample_method)
     output_file = workdir+"explanations/{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
     chunk_size=5000
 
