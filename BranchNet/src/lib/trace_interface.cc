@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 
-std::vector<HistElt> read_trace(char* input_trace, int max_brs) {
+std::vector<HistElt> read_trace(char* input_trace) {
   std::vector<HistElt> history;
 
   const int BUFFER_SIZE = 4096;
@@ -16,16 +16,10 @@ std::vector<HistElt> read_trace(char* input_trace, int max_brs) {
 
   FILE*   fptr = popen(cmd, "r");
   HistElt history_elt_buffer;
-  for(int i = 0; i < max_brs && fread(&history_elt_buffer,
-                                      sizeof(history_elt_buffer), 1, fptr) == 1;
-      ++i) {
+  while (fread(&history_elt_buffer, sizeof(history_elt_buffer), 1, fptr) == 1) {
     history.push_back(history_elt_buffer);
   }
 
-  if(max_brs == std::numeric_limits<int>::max() && !feof(fptr)) {
-    std::cerr << "Error while reading the input trace file\n";
-    std::exit(1);
-  }
   pclose(fptr);
 
   return history;

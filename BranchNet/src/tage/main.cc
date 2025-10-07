@@ -97,7 +97,7 @@ Args parse_args(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   const auto args     = parse_args(argc, argv);
-  const auto br_trace = read_trace(args.input_trace_path, args.max_brs);
+  const auto br_trace = read_trace(args.input_trace_path);
 
   auto  predictor = std::make_unique<PREDICTOR>(args.hard_br_file_path);
   Stats stats;

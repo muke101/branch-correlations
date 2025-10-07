@@ -203,10 +203,10 @@ class TraceFileAccessor():
     if self.in_mem_history is not None:
       chunk = self.in_mem_history[idx - self.history_length : idx + 1]
       chunk = chunk.astype(np.int64)
-      markers, = np.nonzero(np.logical_or(chunk == 0x80, chunk == 0x81))
-      if len(markers):
-        closest_marker = markers[-1]
-        chunk[0:closest_marker] = 0
+      #markers, = np.nonzero(np.logical_or(chunk == 0x80, chunk == 0x81))
+      #if len(markers):
+      #  closest_marker = markers[-1]
+      #  chunk[0:closest_marker] = 0
     else:
       if not self.keep_file_open:
         self.file_ptr = h5py.File(self.path, 'r')

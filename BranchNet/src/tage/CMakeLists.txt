@@ -16,3 +16,6 @@ target_compile_definitions(mtagesc PRIVATE PREDICTOR_CONFIG=MTAGE_SC)
 target_compile_definitions(gtagesc PRIVATE PREDICTOR_CONFIG=GTAGE_SC)
 target_compile_definitions(gtagesc_nolocal PRIVATE PREDICTOR_CONFIG=GTAGE_SC_NOLOCAL)
 target_compile_definitions(gtage PRIVATE PREDICTOR_CONFIG=GTAGE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -flto -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -flto -march=native")
+
