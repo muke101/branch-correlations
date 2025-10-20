@@ -45,7 +45,7 @@ else:
 sample_method = "slice"
 if args.sample_method: sample_method = args.sample_method.split(',')[0]
 if sample_method == "random": num_samples = 4000
-elif sample_method == "slice": num_samples = 1000
+elif sample_method == "slice": num_samples = 4000
 else:
     print("Invalid sample method");
     exit(1)
@@ -164,6 +164,7 @@ if __name__ == "__main__":
         #instances = instances.slice(0,100)
 
         slice_size = len(instances) // ngpus
+        remainder = len(instances) % ngpus
 
         result_queue = mp.Queue(maxsize=50)
 
@@ -174,20 +175,20 @@ if __name__ == "__main__":
         writer_proc.start()
 
         processes = []
+        start = 0
         for device in range(ngpus):
 
-            if device < ngpus-1:
-                instances_slice = instances.slice(device*slice_size, (device+1)*slice_size)
-            else: #allocate remainder
-                instances_slice = instances.slice(device*slice_size, len(instances))
+            end = start + slice_size + (1 if device < remainder else 0)
+            instances_slice = instances[start:end]
+            start = end
 
-                proc = mp.Process(target=run_lime,
-                                    args=(instances_slice, branch, result_queue, device, num_features, num_samples))
-                proc.start()
-                processes.append(proc)
+            proc = mp.Process(target=run_lime,
+                                args=(instances_slice, branch, result_queue, device, num_features, num_samples))
+            proc.start()
+            processes.append(proc)
 
-                for proc in processes:
-                    proc.join()
+        for proc in processes:
+            proc.join()
 
         result_queue.put(None)
         writer_proc.join()
