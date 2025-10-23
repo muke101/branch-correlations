@@ -49,7 +49,7 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = "/mnt/dataset/lp721/"
+workdir = "/mnt/datasets/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 
 dir_results = workdir+"/results/test/"+benchmark
