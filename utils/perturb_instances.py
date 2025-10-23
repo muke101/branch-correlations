@@ -23,7 +23,6 @@ parser = argparse.ArgumentParser(prog='explain_instances', description='run lime
 parser.add_argument('--benchmark', type=str, required=True)
 parser.add_argument('--run-type', type=str, required=True)
 parser.add_argument('--ngpus', type=int, required=True)
-parser.add_argument('--percentile', type=int, required=True)
 parser.add_argument('--branches', type=str, required=False)
 parser.add_argument('--branch-file', type=str, required=False)
 parser.add_argument('--sample-method', type=str, required=False)
@@ -33,7 +32,6 @@ args = parser.parse_args()
 
 benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
-percentile = args.percentile
 ngpus = int(args.ngpus)
 if args.branches:
     good_branches = args.branches.split(',')
@@ -51,8 +49,7 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = os.getenv("PBS_O_WORKDIR")+"/"
-tmpdir = os.getenv("TMPDIR")+"/"
+workdir = "/mnt/dataset/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 
 dir_results = workdir+"/results/test/"+benchmark
@@ -72,9 +69,7 @@ with open(dir_config, 'r') as f:
     config = yaml.safe_load(f)
 
 #parameters 
-threshold = logit(0.8)
 num_features = config['history_lengths'][-1]
-percentile = 100 - percentile
 
 training_phase_knobs = BranchNetTrainingPhaseKnobs()
 
@@ -98,7 +93,7 @@ def writer(result_queue, output_path):
     finally:
         if writer:
             writer.close()
-            subprocess.run("cp "+output_path+" "+workdir+"perturbed-instances/", shell=True, check=True)
+            #subprocess.run("cp "+output_path+" "+workdir+"perturbed-instances/", shell=True, check=True)
 
 def run_lime(instances, branch, result_queue, device, num_features, num_samples):
 
@@ -168,7 +163,7 @@ if __name__ == "__main__":
 
         result_queue = mp.Queue(maxsize=50)
 
-        output_path = tmpdir+"/{}_branch_{}_{}-{}_explained_instances_top{}.parquet".format(benchmark, branch, run_type, sample_method, str(100 - percentile))
+        output_path = workdir+"/{}_branch_{}_{}_{}_perturbed_instances.parquet".format(benchmark, branch, run_type, sample_method)
 
         writer_proc = mp.Process(target=writer,
                                     args=(result_queue, output_path))
