@@ -101,14 +101,15 @@ def run_lime(row):
 
 for branch in good_branches:
 
+    input_file = perturbed_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
+    output_file = workdir+"explanations/{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
+    chunk_size=5000
+
     instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type), columns=["full_history"])
-    instances = instances.slice(0,100)
+
+    #instances = instances.slice(0,100)
 
     print('Branch:', branch)
-
-    input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100-sample.parquet".format(benchmark, branch, run_type, sample_method)
-    output_file = workdir+"explanations/{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
-    chunk_size=5000
 
     first_explanations = pl.scan_parquet(input_file).limit(1).with_row_index("index").collect()
     sample = first_explanations.select(
@@ -125,7 +126,7 @@ for branch in good_branches:
         offset = 0
         while True:
             # Read chunk lazily
-            chunk_lazy = pl.scan_parquet(input_file).slice(offset, chunk_size).with_row_index("index")
+            chunk_lazy = pl.scan_parquet(input_file).slice(offset, chunk_size).with_row_index("index")#.limit(100)
             
             try:
                 chunk = chunk_lazy.collect()
@@ -148,4 +149,4 @@ for branch in good_branches:
             offset += chunk_size
             
             gc.collect()
-
+            #break #for sampling
