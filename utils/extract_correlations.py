@@ -25,7 +25,7 @@ args = parser.parse_args()
 
 benchmark = args.benchmark.split(',')[0]
 run_type = args.run_type.split(',')[0]
-percentile = args.percentile
+percentile = 100 - args.percentile
 sample_method = args.sample_method
 if args.branches:
     good_branches = args.branches.split(',')
@@ -517,7 +517,11 @@ for branch in good_branches:
 
     instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-    explanations = pl.read_parquet(explain_dir + "{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method))
+    #instances = instances.slice(0,100)
+
+    explanations = pl.read_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method))
+
+    #explanations = explanations.slice(0,100)
 
     instances = instances.hstack(explanations)
 
