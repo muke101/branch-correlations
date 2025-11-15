@@ -140,7 +140,7 @@ class BaseO3CPU(BaseCPU):
     LQEntries = Param.Unsigned(132, "Number of load queue entries")
     SQEntries = Param.Unsigned(72, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(
-        4, "Number of places to shift addr before check"
+        0, "Number of places to shift addr before check"
     )
     LSQCheckLoads = Param.Bool(
         True,

@@ -52,8 +52,6 @@ def run_alberta():
         stripped_name = bench.split('.')[1].split('_')[0]
         for workload in os.listdir(workloads+stripped_name):
 
-            if bench == "605.mcf_s" and "test" in workload: continue
-
             subprocess.run("cp -r "+workloads+stripped_name+"/"+workload+"/input/* .", shell=True)
             if bench == "602.gcc_s": binary = "./sgcc_peak.mytest-64"
             else: binary = "./"+bench.split('.')[1]+"_peak.mytest-64"
