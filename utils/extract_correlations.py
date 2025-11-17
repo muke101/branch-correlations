@@ -8,6 +8,7 @@ import numpy as np
 import polars as pl
 from numba import jit
 import argparse
+import gc
 
 selection_gamma = 2.5
 threshold_percent = 0.7
@@ -370,90 +371,71 @@ def coalecse_branches(explained_branches, patterns, stats):
     # each checkpoint has many instances, with different selections of impactful branches.
     # take the average of absolute impactfulness in the right direction for each branch, to select the overall most impactful branch in that checkpoint
 
-    correlated_branches = {}
+    unique_branches = defaultdict(list)
+    lengths = defaultdict(list)
+    rows = list(explained_branches.iter_rows(named=True))
 
-    workloads = explained_branches['workload'].unique()
+    for row in rows:
+        # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
+        # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
+        label, weight, explanation = row['label'], row['weight'], row['explanations']
 
-    for workload in workloads:
-        correlated_branches[workload] = {}
+        features = np.array([int(item['feature']) for item in explanation])
+        impacts = np.array([float(item['impact']) for item in explanation])
 
-        # Filter once per workload
-        workload_mask = explained_branches['workload'] == workload
-        workload_instances = explained_branches.filter(workload_mask)
+        taken = features & 1
+        pcs = features >> 1
 
-        checkpoints = workload_instances['checkpoint'].unique()
+        correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
 
-        for checkpoint in checkpoints:
+        valid_indices = correct_direction
+        if not np.any(valid_indices):
+            continue
 
-            unique_branches = defaultdict(list)
-            lengths = defaultdict(list)
-            checkpoint_mask = workload_instances['checkpoint'] == checkpoint
-            checkpoint_instances = workload_instances.filter(checkpoint_mask)
-            rows = list(checkpoint_instances.iter_rows(named=True))
+        valid_pcs = pcs[valid_indices]
+        valid_impacts = np.abs(impacts[valid_indices])
+        valid_taken = taken[valid_indices]
 
-            for row in rows:
-                # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
-                # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-                label, weight, explanation = row['label'], row['weight'], row['explanations']
+        unique_pcs = np.unique(valid_pcs)
 
-                features = np.array([int(item['feature']) for item in explanation])
-                impacts = np.array([float(item['impact']) for item in explanation])
+        for pc in unique_pcs:
+            pc_mask = valid_pcs == pc
+            series_length = int(pc_mask.sum())
+            pc_impacts_array = valid_impacts[pc_mask]
+            pc_taken_array = valid_taken[pc_mask]
 
-                taken = features & 1
-                pcs = features >> 1
+            avg_impact = fast_mean(pc_impacts_array)
+            unique_branches[pc].append((avg_impact, weight))
+            #unique_branches[pc].append(avg_impact)
+            lengths[pc].append(series_length)
 
-                correct_direction = ((impacts < 0) & (label == 0)) | ((impacts > 0) & (label == 1))
+            #if pc not in patterns:
+            #    patterns[pc] = Pattern(pc)
 
-                valid_indices = correct_direction
-                if not np.any(valid_indices):
-                    continue
+            #for taken_val, impact_val in zip(pc_taken_array, pc_impacts_array):
+            #    patterns[pc].add(taken_val, impact_val)
 
-                valid_pcs = pcs[valid_indices]
-                valid_impacts = np.abs(impacts[valid_indices])
-                valid_taken = taken[valid_indices]
+            #patterns[pc].finalise_instance(weight)
 
-                unique_pcs = np.unique(valid_pcs)
+        stats.instance_gini_coeff.append(gini(np.array(valid_impacts)))
 
-                for pc in unique_pcs:
-                    pc_mask = valid_pcs == pc
-                    series_length = int(pc_mask.sum())
-                    pc_impacts_array = valid_impacts[pc_mask]
-                    pc_taken_array = valid_taken[pc_mask]
+        if not unique_branches: continue
 
-                    avg_impact = fast_mean(pc_impacts_array)
-                    unique_branches[pc].append((avg_impact, weight))
-                    #unique_branches[pc].append(avg_impact)
-                    lengths[pc].append(series_length)
+    for pc in unique_branches:
+        impacts_weights = np.array(unique_branches[pc])
+        avg_impacts = impacts_weights[:, 0]
+        weights = impacts_weights[:, 1]
+        unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
+        #avg_impacts = np.array(unique_branches[pc])
+        #unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc])))
+        #lengths[pc] = fast_mean(np.array(lengths[pc]))
 
-                    #if pc not in patterns:
-                    #    patterns[pc] = Pattern(pc)
+    sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
-                    #for taken_val, impact_val in zip(pc_taken_array, pc_impacts_array):
-                    #    patterns[pc].add(taken_val, impact_val)
+    impacts_array = np.array([impact for _, impact in sorted_features])
+    stats.checkpoint_gini_coeff.append(gini(impacts_array))
 
-                    #patterns[pc].finalise_instance(weight)
-
-                stats.instance_gini_coeff.append(gini(np.array(valid_impacts)))
-
-                if not unique_branches: continue
-
-            for pc in unique_branches:
-                impacts_weights = np.array(unique_branches[pc])
-                avg_impacts = impacts_weights[:, 0]
-                weights = impacts_weights[:, 1]
-                unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
-                #avg_impacts = np.array(unique_branches[pc])
-                #unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc]))) 
-                #lengths[pc] = fast_mean(np.array(lengths[pc]))
-
-            sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
-
-            impacts_array = np.array([impact for _, impact in sorted_features])
-            stats.checkpoint_gini_coeff.append(gini(impacts_array))
-
-            correlated_branches[workload][checkpoint] = sorted_features
-
-    return correlated_branches
+    return sorted_features
 
 def weight_branches(correlated_branches, patterns, stats):
 
@@ -516,26 +498,31 @@ for branch in good_branches:
     stats = Stats(branch)
 
     instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
-
-    #instances = instances.slice(0,100)
-
-    explanations = pl.read_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method))
-
-    #explanations = explanations.slice(0,100)
-
-    instances = instances.hstack(explanations)
-
-    instances = filter_instances(instances)
-
     stats.selected_confidence_average = instances['output'].mean()
     stats.selected_confidence_stddev = instances['output'].std()
+
+
+    #instances = instances.slice(0,100)
 
     print("Averaging instances")
 
     patterns = {}
 
-    # combines results per-instances to select most impactful branches per checkpoint
-    correlated_branches = coalecse_branches(instances, patterns, stats)
+    correlated_branches = {}
+    for workload in instances['workload'].unique():
+        correlated_branches[workload] = {}
+        for checkpoint in instances.filter(pl.col('workload') == workload)['checkpoint'].unique():
+            instances_slice = instances.filter((pl.col('workload') == workload) & (pl.col('checkpoint') == checkpoint))
+            start = instances_slice['indx'][0]
+            end = instances_slice['indx'][-1]
+            explanations = pl.scan_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)).slice(start, (end-start)+1).collect()
+            instances_slice = instances_slice.hstack(explanations)
+            del explanations
+            instances_slice = filter_instances(instances_slice)
+            sorted_features = coalecse_branches(instances_slice, patterns, stats)
+            correlated_branches[workload][checkpoint] = sorted_features
+            del instances_slice
+            gc.collect()
 
     del instances
 
