@@ -84,8 +84,7 @@ def run_lime(row):
 
     exps = []
 
-    i = row['index']
-    instance = np.array(instances['full_history'][i])
+    instance = np.array(instances['full_history'])
     data = np.unpackbits(np.array(row['datas'], dtype=np.uint8)).reshape(num_samples, num_features)
     labels = np.array(row['perturbed_labels'], dtype=np.float32)
     zeros = np.zeros(labels.shape)
@@ -100,23 +99,24 @@ def run_lime(row):
 
 for branch in good_branches:
 
-    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type), columns=["full_history"])
-
     print('Branch:', branch)
 
     input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method)
     output_file = tmpdir+"{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
     chunk_size=5000
 
-    first_explanations = pl.scan_parquet(input_file).limit(1).with_row_index("index").collect()
-    sample = first_explanations.select(
-        pl.struct(["index", "datas", "perturbed_labels"]).map_elements(
+    first_explanation = pl.scan_parquet(input_file).limit(1).with_row_index("index").collect()
+    sample = first_explanation.select(
+        pl.struct(["index", "workload", "checkpoint", "label", "output", "history", "full_history", "weight", "datas", "perturbed_labels"]).map_elements(
             run_lime,
             return_dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float32)]))
         ).alias("explanations")
-    )
-    
-    schema = sample.to_arrow().schema
+    )   
+
+    first_explanation = first_explanation.drop(first_explanation.columns[-2:])
+    first_explanation = first_explanation.hstack(sample)
+         
+    schema = first_explanation.to_arrow().schema
     
     # Process in chunks and write to single file
     with pq.ParquetWriter(output_file, schema, compression='zstd') as writer:
@@ -131,17 +131,20 @@ for branch in good_branches:
                     break
             except:
                 break
-            
+
             # Process chunk
             processed = chunk.select(
-                pl.struct(["index", "datas", "perturbed_labels"]).map_elements(
+                pl.struct(["index", "workload", "checkpoint", "label", "output", "history", "full_history", "weight", "datas", "perturbed_labels"]).map_elements(
                     run_lime,
                     return_dtype=pl.List(pl.Struct([pl.Field("feature",pl.Int64),pl.Field("impact",pl.Float32)]))
                 ).alias("explanations")
-            )
-            
+            )   
+
+            chunk = chunk.drop(chunk.columns[-2:])
+            chunk = chunk.hstack(processed)
+
             # Write chunk to file immediately
-            writer.write_table(processed.to_arrow())
+            writer.write_table(chunk.to_arrow())
             
             offset += chunk_size
             

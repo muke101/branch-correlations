@@ -49,11 +49,11 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = "/mnt/datasets/lp721/"
+workdir = "/mnt/data/results/branch-project/"
 confidence_dir = workdir+"/confidence-scores/"
 
-dir_results = workdir+"/results/test/"+benchmark
-dir_h5 = workdir+"/datasets/"+benchmark
+dir_results = workdir+"/results-nomarker/test/"+benchmark
+dir_h5 = workdir+"/datasets-indirect/"+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
@@ -115,8 +115,8 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
     batch_size = int(total_memory//mem_per_instance)
     interval = batch_size // num_samples
 
-    for i, row in enumerate(instances.iter_rows()):
-        history = np.array(row[-2], dtype=np.int64)
+    for i, row in enumerate(instances.iter_rows(named=True)):
+        history = np.array(row["full_history"], dtype=np.int64)
         histories.append(history)
 
         if len(histories) == interval:
@@ -125,10 +125,9 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
                 num_features=num_features, num_samples=num_samples,
                 batch_size=batch_size
             ):
-                table = pa.table({
-                    "datas": [np.packbits(data)],
-                    "perturbed_labels": [perturbed_labels]
-                })
+                input_table = {k: pa.array([v]) for k,v in row.items()}
+                output_table = { "datas": [np.packbits(data)], "perturbed_labels": [perturbed_labels] }
+                table = pa.table({**input_table, **output_table})
                 result_queue.put(table)
 
             histories = []
@@ -140,10 +139,9 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
                 num_features=num_features, num_samples=num_samples,
                 batch_size=batch_size
             ):
-                table = pa.table({
-                    "datas": [np.packbits(data)],
-                    "perturbed_labels": [perturbed_labels]
-                })
+                input_table = {k: pa.array([v]) for k,v in row.items()}
+                output_table = { "datas": [np.packbits(data)], "perturbed_labels": [perturbed_labels] }
+                table = pa.table({**input_table, **output_table})
                 result_queue.put(table)
 
 if __name__ == "__main__":
@@ -163,7 +161,7 @@ if __name__ == "__main__":
 
         result_queue = mp.Queue(maxsize=50)
 
-        output_path = workdir+"/{}_branch_{}_{}_{}_perturbed_instances.parquet".format(benchmark, branch, run_type, sample_method)
+        output_path = workdir+"perturbed-instances/{}_branch_{}_{}_{}_perturbed_instances.parquet".format(benchmark, branch, run_type, sample_method)
 
         writer_proc = mp.Process(target=writer,
                                     args=(result_queue, output_path))

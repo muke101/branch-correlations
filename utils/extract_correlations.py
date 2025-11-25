@@ -497,7 +497,7 @@ for branch in good_branches:
 
     stats = Stats(branch)
 
-    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type)).with_row_index('indx')
     stats.selected_confidence_average = instances['output'].mean()
     stats.selected_confidence_stddev = instances['output'].std()
 
@@ -516,12 +516,10 @@ for branch in good_branches:
             start = instances_slice['indx'][0]
             end = instances_slice['indx'][-1]
             explanations = pl.scan_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)).slice(start, (end-start)+1).collect()
-            instances_slice = instances_slice.hstack(explanations)
-            del explanations
-            instances_slice = filter_instances(instances_slice)
-            sorted_features = coalecse_branches(instances_slice, patterns, stats)
+            explanations = filter_instances(explanations)
+            sorted_features = coalecse_branches(explanations, patterns, stats)
             correlated_branches[workload][checkpoint] = sorted_features
-            del instances_slice
+            del explanations
             gc.collect()
 
     del instances
@@ -548,7 +546,7 @@ for branch in good_branches:
 
     print("Selected branches for branch {}:".format(branch))
     c = 0
-    results_file = correlations_dir+"lime_"+str(percentile)+"_"+run_type+"-"+sample_method+"/"
+    results_file = correlations_dir+"/"+run_type+"_"+sample_method+"_"+str(args.percentile)+"/"
     if not os.path.exists(results_file): os.makedirs(results_file)
     results_file += "full"
     results_file = open(results_file, "w")
