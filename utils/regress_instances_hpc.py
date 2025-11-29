@@ -101,7 +101,7 @@ for branch in good_branches:
 
     print('Branch:', branch)
 
-    input_file = perturbed_dir + "{}_branch_{}_{}-{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method)
+    input_file = perturbed_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
     output_file = tmpdir+"{}_branch_{}_{}-{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
     chunk_size=5000
 
