@@ -84,7 +84,7 @@ def run_lime(row):
 
     exps = []
 
-    instance = np.array(instances['full_history'])
+    instance = np.array(row['full_history'])
     data = np.unpackbits(np.array(row['datas'], dtype=np.uint8)).reshape(num_samples, num_features)
     labels = np.array(row['perturbed_labels'], dtype=np.float32)
     zeros = np.zeros(labels.shape)
