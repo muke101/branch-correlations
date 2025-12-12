@@ -342,10 +342,7 @@ def fast_mean(array):
 def fast_weighted_mean(array, weights):
     return np.sum(array * weights) / np.sum(weights)
 
-def filter_instances(df):
-    # remove rows where the confidence is below a threshold
-
-    #NOTE: this might have had to happen before we ran lime
+def get_filter_threshold(df):
     df = df.with_columns(pl.col('output').abs().alias('output'))
 
     print("Average confidence: ", df['output'].mean())
@@ -353,8 +350,14 @@ def filter_instances(df):
 
     percentile_value = np.percentile(np.array(df['output']), percentile)
 
+    return percentile_value
+
+def filter_instances(df, threshold):
+    # remove rows where the confidence is below a threshold
+    df = df.with_columns(pl.col('output').abs().alias('output'))
+
     unfiltered_len = df.shape[0]
-    filtered = df.filter(df['output'] > percentile_value)
+    filtered = df.filter(df['output'] > threshold)
     filtered_len = filtered.shape[0]
 
     print("Unfiltered instances: "+str(unfiltered_len))
@@ -501,6 +504,7 @@ for branch in good_branches:
     stats.selected_confidence_average = instances['output'].mean()
     stats.selected_confidence_stddev = instances['output'].std()
 
+    threshold = get_filter_threshold(instances)
 
     #instances = instances.slice(0,100)
 
@@ -512,11 +516,9 @@ for branch in good_branches:
     for workload in instances['workload'].unique():
         correlated_branches[workload] = {}
         for checkpoint in instances.filter(pl.col('workload') == workload)['checkpoint'].unique():
-            instances_slice = instances.filter((pl.col('workload') == workload) & (pl.col('checkpoint') == checkpoint))
-            start = instances_slice['indx'][0]
-            end = instances_slice['indx'][-1]
-            explanations = pl.scan_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)).slice(start, (end-start)+1).collect()
-            explanations = filter_instances(explanations)
+            explanations = pl.scan_parquet(explain_dir + "{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method))
+            explanations = explanations.filter((pl.col('workload') == workload) & (pl.col('checkpoint') == checkpoint)).collect()
+            explanations = filter_instances(explanations, threshold)
             sorted_features = coalecse_branches(explanations, patterns, stats)
             correlated_branches[workload][checkpoint] = sorted_features
             del explanations
