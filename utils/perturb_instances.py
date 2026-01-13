@@ -115,34 +115,19 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
     batch_size = int(total_memory//mem_per_instance)
     interval = batch_size // num_samples
 
-    for i, row in enumerate(instances.iter_rows(named=True)):
-        history = np.array(row["full_history"], dtype=np.int64)
-        histories.append(history)
+    for i in range(0, len(instances), interval):
+        indxs = [i+j for j in range(interval) if i+j < len(instances)]
+        histories = np.array([instances['full_history'][indx] for indx in indxs], dtype=np.int64)
+        results = lime_explainer.perturb_instances(
+                    histories, eval_wrapper.probs_from_list_of_strings,
+                    num_features=num_features, num_samples=num_samples,
+                    batch_size=batch_size)
 
-        if len(histories) == interval:
-            for data, perturbed_labels in lime_explainer.perturb_instances(
-                histories, eval_wrapper.probs_from_list_of_strings,
-                num_features=num_features, num_samples=num_samples,
-                batch_size=batch_size
-            ):
-                input_table = {k: pa.array([v]) for k,v in row.items()}
-                output_table = { "datas": [np.packbits(data)], "perturbed_labels": [perturbed_labels] }
-                table = pa.table({**input_table, **output_table})
-                result_queue.put(table)
-
-            histories = []
-
-    # Handle remainder
-    if len(histories) > 0:
-            for data, perturbed_labels in lime_explainer.perturb_instances(
-                histories, eval_wrapper.probs_from_list_of_strings,
-                num_features=num_features, num_samples=num_samples,
-                batch_size=batch_size
-            ):
-                input_table = {k: pa.array([v]) for k,v in row.items()}
-                output_table = { "datas": [np.packbits(data)], "perturbed_labels": [perturbed_labels] }
-                table = pa.table({**input_table, **output_table})
-                result_queue.put(table)
+        for indx, (data, perturbed_labels) in zip(indxs, results):
+            input_table = {k: pa.array([v]) for k,v in instances.row(indx, named=True).items()}
+            output_table = { "datas": [np.packbits(data)], "perturbed_labels": [perturbed_labels] }
+            table = pa.table({**input_table, **output_table})
+            result_queue.put(table)
 
 if __name__ == "__main__":
     mp.set_start_method('spawn', force=True)
@@ -159,7 +144,7 @@ if __name__ == "__main__":
         slice_size = len(instances) // ngpus
         remainder = len(instances) % ngpus
 
-        result_queue = mp.Queue(maxsize=50)
+        result_queue = mp.Manager().Queue(maxsize=50)
 
         output_path = workdir+"perturbed-instances/{}_branch_{}_{}_{}_perturbed_instances.parquet".format(benchmark, branch, run_type, sample_method)
 
@@ -167,21 +152,20 @@ if __name__ == "__main__":
                                     args=(result_queue, output_path))
         writer_proc.start()
 
-        processes = []
+        args = []
         start = 0
         for device in range(ngpus):
-
             end = start + slice_size + (1 if device < remainder else 0)
             instances_slice = instances[start:end]
             start = end
+            args.append((instances_slice, branch, result_queue, device, num_features, num_samples))
 
-            proc = mp.Process(target=run_lime,
-                                args=(instances_slice, branch, result_queue, device, num_features, num_samples))
-            proc.start()
-            processes.append(proc)
-
-        for proc in processes:
-            proc.join()
-
-        result_queue.put(None)
-        writer_proc.join()
+        try:
+            with mp.Pool(processes=ngpus) as pool:
+                pool.starmap(run_lime, args)
+        finally:
+            result_queue.put(None)
+            writer_proc.join()
+            if writer_proc.exitcode != 0:
+                print(f"Writer failed with exit code {writer_proc.exitcode}")
+                exit(1)
