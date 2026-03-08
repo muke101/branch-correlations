@@ -97,7 +97,7 @@ for out_dir in os.listdir(base_dir):
             run = "LABEL_FILE="+label_file+" "+gem5+"build/ARM/gem5.fast --outdir="+outdir+" "+gem5+"configs/deprecated/example/se.py --cpu-type=DerivO3CPU --caches --l2cache --restore-simpoint-checkpoint -r "+str(cpt_number)+" --checkpoint-dir "+out_dir+" --restore-with-cpu=AtomicSimpleCPU --mem-size=50GB -c "+binary+" --options=\""+' '.join(command.split()[1:])+"\""
             run += cache_sizes[cpu_model]
             os.chdir(run_dir)
-            while psutil.virtual_memory().percent > 60 and psutil.cpu_percent() > 90: time.sleep(60*5)
+            while psutil.virtual_memory().percent > 60 or psutil.cpu_percent() > 90: time.sleep(60*5)
             p = Popen(run, shell=True)
             os.chdir(base_dir)
             procs.append(p)
