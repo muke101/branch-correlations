@@ -40,7 +40,7 @@ else:
 sample_method = "slice"
 if args.sample_method: sample_method = args.sample_method.split(',')[0]
 if sample_method == "random": num_samples = 4000
-elif sample_method == "slice": num_samples = 1000
+elif sample_method == "slice": num_samples = 4000
 else:
     print("Invalid sample method");
     exit(1)
@@ -48,8 +48,8 @@ if args.num_samples: num_samples = num_samples
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
 
-dir_results = '/mnt/data/results/branch-project/results-indirect/test/'+benchmark
-dir_h5 = '/mnt/data/results/branch-project/datasets-indirect/'+benchmark
+dir_results = '/mnt/data/results/branch-project/results-x86/test/'+benchmark
+dir_h5 = '/mnt/data/results/branch-project/datasets-x86/'+benchmark
 #good_branches = ['0x40a1ac'] #TODO: actually populate this somehow
 
 sys.path.append(dir_results)
@@ -82,7 +82,7 @@ lime_explainer = LimeTextExplainer(
     bow=False,
     feature_selection="lasso_path",
     mask_string="0x000:not_taken",  # Mask string for disabled addresses
-    sample_method=sample_method
+    #sample_method=sample_method
 )
 
 def gini(array):
@@ -102,14 +102,14 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
 
     exps = []
     interval = batch_size // num_samples
-    unique_histories = {}
-    histories = [np.array(instances['full_history'][0], dtype=np.int64)]
+    #unique_histories = {}
+    histories = [np.array(instances['history'][0], dtype=np.int32)]
 
     for i in range(1, len(instances)):
-        history = np.array(instances['full_history'][i], dtype=np.int64)
-        hashable_history = history.tobytes()
-        if hashable_history in unique_histories: exps.append(unique_histories[hashable_history])
-        else: histories.append(history)
+        history = np.array(instances['history'][i], dtype=np.int32)
+        #hashable_history = history.tobytes()
+        #if hashable_history in unique_histories: exps.append(unique_histories[hashable_history])
+        histories.append(history)
 
         if len(histories) == interval:
             batch_exps = lime_explainer.explain_instances(histories,
@@ -117,7 +117,7 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                                         num_features=num_features, num_samples=num_samples)
             for c, exp in enumerate(batch_exps):
                 exp = exp.as_list()
-                unique_histories[histories[c].tobytes()] = exp
+                #unique_histories[histories[c].tobytes()] = exp
                 exps.append(exp)
             histories = []
 
@@ -136,7 +136,8 @@ for branch in good_branches:
     eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
     # header: workload, checkpoint, label, output, history
-    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    #confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    confidence_scores = pl.read_parquet("/mnt/data/results/branch-project/explained-instances-old/641.leela_s_branch_0x417544_test_explained_instances_top90-random.parquet")
 
     #confidence_scores = confidence_scores.slice(0,100)
 
@@ -145,5 +146,7 @@ for branch in good_branches:
     # correlated_branches -> {workload: {checkpoint: [[num_feature most correlated branches] x num_instances]}}, this deepest dimension then has to get coalessed and then weighted
     correlated_branches = run_lime(confidence_scores, eval_wrapper, num_features, num_samples)
 
+    #print(correlated_branches)
+
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}-{}_{}_explained_instances_top100.parquet".format(benchmark, branch, run_type, sample_method))
+    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}-{}_{}_explained_instances_working_old.parquet".format(benchmark, branch, run_type, sample_method))
