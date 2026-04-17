@@ -73,9 +73,9 @@ class EvalWrapper:
             input_data (torch.Tensor): Input data of shape (batch_size, input_length).
         """
         with torch.no_grad():
-            input_data.to('cuda:'+self.device)
+            input_data = input_data.to('cuda:'+self.device)
             output = self.model(input_data)
-            probs = torch.sigmoid(output).cpu()
+            probs = torch.sigmoid(output)
         return probs
 
     def _prob_from_one_string(self, input_string: str) -> torch.Tensor:
@@ -98,7 +98,6 @@ class EvalWrapper:
         return (
             torch.stack([negative_class_answer, positive_class_answer])
             .transpose(0, 1)
-            .numpy()
         )
 
     @staticmethod
