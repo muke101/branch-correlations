@@ -76,6 +76,7 @@ model = BranchNet(config, training_phase_knobs)
 model.to('cuda:'+device)
 
 lime_explainer = LimeTextExplainer(
+    device,
     class_names=["not_taken", "taken"],
     char_level=False,
     split_expression=lambda x: x.split(" "),
@@ -102,13 +103,10 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
 
     exps = []
     interval = batch_size // num_samples
-    #unique_histories = {}
-    histories = [np.array(instances['history'][0], dtype=np.int32)]
+    histories = [np.array(instances['full_history'][0], dtype=np.int32)]
 
     for i in range(1, len(instances)):
-        history = np.array(instances['history'][i], dtype=np.int32)
-        #hashable_history = history.tobytes()
-        #if hashable_history in unique_histories: exps.append(unique_histories[hashable_history])
+        history = np.array(instances['full_history'][i], dtype=np.int32)
         histories.append(history)
 
         if len(histories) == interval:
@@ -117,7 +115,6 @@ def run_lime(instances, eval_wrapper, num_features, num_samples):
                                         num_features=num_features, num_samples=num_samples)
             for c, exp in enumerate(batch_exps):
                 exp = exp.as_list()
-                #unique_histories[histories[c].tobytes()] = exp
                 exps.append(exp)
             histories = []
 
@@ -136,10 +133,10 @@ for branch in good_branches:
     eval_wrapper = EvalWrapper.from_checkpoint(dir_ckpt, device, config_path=dir_config)
 
     # header: workload, checkpoint, label, output, history
-    #confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
-    confidence_scores = pl.read_parquet("/mnt/data/results/branch-project/explained-instances-old/641.leela_s_branch_0x417544_test_explained_instances_top90-random.parquet")
+    confidence_scores = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
+    #confidence_scores = pl.read_parquet("/mnt/data/results/branch-project/explained-instances-old/641.leela_s_branch_0x417544_test_explained_instances_top90-random.parquet")
 
-    #confidence_scores = confidence_scores.slice(0,100)
+    confidence_scores = confidence_scores.slice(0,100)
 
     print("Running lime")
 
@@ -149,4 +146,6 @@ for branch in good_branches:
     #print(correlated_branches)
 
     # Save the results
-    correlated_branches.write_parquet("/mnt/data/results/branch-project/explained-instances/{}_branch_{}-{}_{}_explained_instances_working_old.parquet".format(benchmark, branch, run_type, sample_method))
+    output = "/mnt/data/results/branch-project/explained-instances/{}_branch_{}-{}_{}_explained_instances_ridge.parquet".format(benchmark, branch, run_type, sample_method)
+    print("Writing to: "+output)
+    correlated_branches.write_parquet(output)

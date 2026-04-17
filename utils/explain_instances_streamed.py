@@ -100,6 +100,7 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
     histories = []
     torch.cuda.set_device(device)
     lime_explainer = LimeTextExplainer(
+        str(device),
         class_names=["not_taken", "taken"],
         char_level=False,
         split_expression=lambda x: x.split(" "),
@@ -117,7 +118,7 @@ def run_lime(instances, branch, result_queue, device, num_features, num_samples)
 
     for i in range(0, len(instances), interval):
         indxs = [i+j for j in range(interval) if i+j < len(instances)]
-        histories = np.array([instances['history'][indx] for indx in indxs], dtype=np.int64)
+        histories = np.array([instances['full_history'][indx] for indx in indxs], dtype=np.int64)
         exps = lime_explainer.explain_instances(
                     histories, eval_wrapper.probs_from_list_of_strings,
                     num_features=num_features, num_samples=num_samples,
@@ -137,7 +138,7 @@ if __name__ == "__main__":
         print('Branch:', branch)
 
         # header: workload, checkpoint, label, output, history
-        instances = pl.read_parquet("/mnt/data/results/branch-project/explained-instances-old/641.leela_s_branch_0x417544_test_explained_instances_top90-random.parquet")
+        instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
         #instances = instances.slice(0,100)
 
@@ -146,7 +147,8 @@ if __name__ == "__main__":
 
         result_queue = mp.Manager().Queue(maxsize=50)
 
-        output_path = workdir+"explained-instances/{}_branch_{}_{}_{}_explained_instances_working_old.parquet".format(benchmark, branch, run_type, sample_method)
+        output_path = workdir+"explained-instances/{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
+        print("Writing to "+output_path)
 
         writer_proc = mp.Process(target=writer,
                                     args=(result_queue, output_path))
