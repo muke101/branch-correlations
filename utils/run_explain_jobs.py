@@ -37,30 +37,13 @@ if args.num_samples: num_samples = num_samples
 workdir = "/mnt/datasets/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 
-def writer(result_queue):
-
-    while True:
-        try:
-            path = result_queue.get(timeout=60*5)  # Timeout to detect completion
-            if path is None:  # Sentinel value
-                break
-            subprocess.run("scp -i /home/lp721/.ssh/doc "+path+" muke@155.198.188.14:/mnt/data/results/branch-project/perturbed-instances/", shell=True, check=True)
-            subprocess.run("rm -f "+path, shell=True)
-
-        except queue.Empty:
-            continue  # Keep waiting
-
 if __name__ == "__main__":
-    result_queue = mp.Queue(maxsize=50)
-    writer_proc = mp.Process(target=writer, args=(result_queue,))
-    writer_proc.start()
     for benchmark in benchmarks:
         hard_branches = [i.strip() for i in open(hard_brs_dir+benchmark).readlines()[0].split(",")]
         for branch in hard_branches:
-            for run_type in ["test", "eval"]:
-                for sample_method in ["slice", "random"]:
-                    subprocess.run("python3 /home/lp721/Branch-Correlations/utils/perturb_instances.py --sample-method "+sample_method+" --benchmark "+benchmark+" --branches "+branch+" --run-type "+run_type+" --ngpus 4", shell=True, check=True)
-                    output_path = workdir+"/{}_branch_{}_{}_{}_perturbed_instances.parquet".format(benchmark, branch, run_type, sample_method)
-                    result_queue.put(output_path)
-    result_queue.put(None)
-    writer_proc.join()
+            for run_type in ["test"]:
+                for sample_method in ["random", "slice"]:
+                    subprocess.run("python3 /home/lp721/Branch-Correlations/utils/explain_instances_streamed.py --sample-method "+sample_method+" --benchmark "+benchmark+" --branches "+branch+" --run-type "+run_type+" --ngpus 4", shell=True, check=True)
+                    output_path = workdir+"/explained-instances/{}_branch_{}_{}_{}_explained_instances.parquet".format(benchmark, branch, run_type, sample_method)
+                    subprocess.run("rsync -e \"ssh -i /home/lp721/.ssh/doc\" --progress -av "+output_path+" muke@155.198.188.14:/mnt/data/results/branch-project/explained-instances/", shell=True, check=True)
+                    subprocess.run("rm -f "+output_path, shell=True)

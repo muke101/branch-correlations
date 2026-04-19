@@ -42,18 +42,18 @@ else:
 
 sample_method = "random"
 if args.sample_method: sample_method = args.sample_method.split(',')[0]
-if sample_method == "random": num_samples = 5000
-elif sample_method == "slice": num_samples = 5000
+if sample_method == "random": num_samples = 4000
+elif sample_method == "slice": num_samples = 4000
 else:
     print("Invalid sample method");
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = "/mnt/data/results/branch-project/"
+workdir = "/mnt/datasets/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 
-dir_results = workdir+"/results-x86/test/"+benchmark
-dir_h5 = workdir+"/datasets-x86/"+benchmark
+dir_results = workdir+"/results/test/"+benchmark
+dir_h5 = workdir+"/datasets/"+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())
