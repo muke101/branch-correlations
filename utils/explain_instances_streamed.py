@@ -49,11 +49,11 @@ else:
     exit(1)
 if args.num_samples: num_samples = num_samples
 
-workdir = "/mnt/data/results/branch-project/"
+workdir = "/mnt/datasets/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 
-dir_results = workdir+"/results-x86/test/"+benchmark
-dir_h5 = workdir+"/datasets-x86/"+benchmark
+dir_results = workdir+"/results/test/"+benchmark
+dir_h5 = workdir+"/datasets/"+benchmark
 
 sys.path.append(dir_results)
 sys.path.append(os.getcwd())

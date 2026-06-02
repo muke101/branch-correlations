@@ -41,7 +41,7 @@ if args.sample_method: sample_method = args.sample_method.split(',')[0]
 num_samples = 4000
 if args.num_samples: num_samples = args.num_samples
 
-workdir = "/mnt/data/results/branch-project/"
+workdir = "/mnt/datasets/lp721/"
 confidence_dir = workdir+"/confidence-scores/"
 perturbed_dir = workdir+"/perturbed-instances/"
 
