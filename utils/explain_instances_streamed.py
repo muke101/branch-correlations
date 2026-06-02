@@ -42,8 +42,8 @@ else:
 
 sample_method = "random"
 if args.sample_method: sample_method = args.sample_method.split(',')[0]
-if sample_method == "random": num_samples = 5000
-elif sample_method == "slice": num_samples = 5000
+if sample_method == "random": num_samples = 4000
+elif sample_method == "slice": num_samples = 4000
 else:
     print("Invalid sample method");
     exit(1)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         # header: workload, checkpoint, label, output, history
         instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type))
 
-        #instances = instances.slice(0,100)
+        instances = instances.slice(0,100)
 
         slice_size = len(instances) // ngpus
         remainder = len(instances) % ngpus
