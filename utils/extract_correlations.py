@@ -36,7 +36,7 @@ else:
     good_branches = [i.strip() for i in open(benchmark+"_branches").readlines()[0].split(",")]
 
 confidence_dir = "/mnt/data/results/branch-project/confidence-scores/"
-explain_dir = "/mnt/data/results/branch-project/explanations/"
+explain_dir = "/mnt/data/results/branch-project/explained-instances/"
 correlations_dir = "/work/muke/Branch-Correlations/correlations/"+benchmark+"/"
 dir_results = '/mnt/data/results/branch-project/results-nomarker/test/'+benchmark
 dir_h5 = '/mnt/data/results/branch-project/datasets-nomarker/'+benchmark
@@ -381,7 +381,7 @@ def coalecse_branches(explained_branches, patterns, stats):
     for row in rows:
         # iterate over instance, collect all impacts per PC, record instance average along with instance weighting
         # then for each PC take the weighted gmean of average impacts across instances in the checkpoint
-        label, weight, explanation = row['label'], row['weight'], row['explanations']
+        label, explanation = row['label'], row['explanation']
 
         features = np.array([int(item['feature']) for item in explanation])
         impacts = np.array([float(item['impact']) for item in explanation])
@@ -408,8 +408,7 @@ def coalecse_branches(explained_branches, patterns, stats):
             pc_taken_array = valid_taken[pc_mask]
 
             avg_impact = fast_mean(pc_impacts_array)
-            unique_branches[pc].append((avg_impact, weight))
-            #unique_branches[pc].append(avg_impact)
+            unique_branches[pc].append(avg_impact)
             lengths[pc].append(series_length)
 
             #if pc not in patterns:
@@ -425,13 +424,9 @@ def coalecse_branches(explained_branches, patterns, stats):
         if not unique_branches: continue
 
     for pc in unique_branches:
-        impacts_weights = np.array(unique_branches[pc])
-        avg_impacts = impacts_weights[:, 0]
-        weights = impacts_weights[:, 1]
-        unique_branches[pc] = (fast_weighted_mean(avg_impacts, weights=weights), fast_mean(np.array(lengths[pc]))) # weighted average
-        #avg_impacts = np.array(unique_branches[pc])
-        #unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc])))
-        #lengths[pc] = fast_mean(np.array(lengths[pc]))
+        avg_impacts = np.array(unique_branches[pc])
+        unique_branches[pc] = (fast_mean(avg_impacts), fast_mean(np.array(lengths[pc])))
+        lengths[pc] = fast_mean(np.array(lengths[pc]))
 
     sorted_features = sorted(unique_branches.items(), key=lambda i: i[1][0], reverse=True)
 
@@ -500,7 +495,7 @@ for branch in good_branches:
 
     stats = Stats(branch)
 
-    instances = pl.read_parquet(confidence_dir + "{}_branch_{}_{}_confidences_filtered.parquet".format(benchmark, branch, run_type)).with_row_index('indx')
+    instances = pl.read_parquet(explain_dir + "{}_branch_{}_{}_random_explained_instances_1000.parquet".format(benchmark, branch, run_type), columns=["output","workload","checkpoint"])#.with_row_index('indx')
     stats.selected_confidence_average = instances['output'].mean()
     stats.selected_confidence_stddev = instances['output'].std()
 
@@ -548,13 +543,13 @@ for branch in good_branches:
 
     print("Selected branches for branch {}:".format(branch))
     c = 0
-    results_file = correlations_dir+"/"+run_type+"_"+sample_method+"_"+str(args.percentile)+"/"
+    results_file = correlations_dir+"/"+run_type+"_"+sample_method+"_"+str(args.percentile)+"_1000/"
     if not os.path.exists(results_file): os.makedirs(results_file)
     results_file += "full"
     results_file = open(results_file, "w")
     for pc, item in selected_branches[:100]:
         impact, length = item
-        print("{}, {}, {}".format(hex(pc), impact, length))#, end=', ' if c < len(selected_branches) - 1 else '\n')
+        print("{}, {}, {}".format(hex(pc), impact, length), end=', ' if c < len(selected_branches) - 1 else '\n')
         results_file.write("{}, {}, {}\n".format(hex(pc), impact, length)) 
         c += 1
     results_file.close()

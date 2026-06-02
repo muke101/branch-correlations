@@ -76,7 +76,6 @@ def filter_instances(loader):
 
     #print("Collected unique histories")
 
-    unique_histories = {}
     workload_list = []
     checkpoint_list = []
     output_list = []
@@ -89,17 +88,11 @@ def filter_instances(loader):
             outputs = model(batch_x)
         for i in range(len(outputs)):
             workload = workloads[i]
-            if workload not in unique_histories:
-                unique_histories[workload] = {}
             checkpoint = int(checkpoints[i])
-            if checkpoint not in unique_histories[workload]:
-                unique_histories[workload][checkpoint] = defaultdict(int)
             history = batch_x[i].cpu().numpy().astype(np.int16)
             output = outputs[i].cpu()
             label = batch_y[i].cpu()
             if ((output > 0 and label == 1) or (output < 0 and label == 0)):
-                unique_histories[workload][checkpoint][history.tobytes()] += 1
-                if unique_histories[workload][checkpoint][history.tobytes()] > 1: continue
                 workload_list.append(workload)
                 checkpoint_list.append(checkpoint)
                 history_list.append(history)
@@ -109,14 +102,6 @@ def filter_instances(loader):
 
     print("Ran inferences")
 
-    weights = []
-    for i in range(len(workload_list)):
-        workload = workload_list[i]
-        checkpoint = checkpoint_list[i]
-        history = history_list[i]
-        total = sum(unique_histories[workload][checkpoint].values())
-        weights.append(unique_histories[workload][checkpoint][history.tobytes()]/total)
-
     df = pl.DataFrame({
         "workload": np.array(workload_list),
         "checkpoint": np.array(checkpoint_list, dtype=np.uint8),
@@ -124,7 +109,6 @@ def filter_instances(loader):
         "output": np.array(output_list),
         "history": np.array(history_list, dtype=np.int16),
         "full_history": np.array(full_history_list),
-        "weight": np.array(weights)
     })
 
     return df
